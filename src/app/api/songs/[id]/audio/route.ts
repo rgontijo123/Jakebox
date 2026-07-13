@@ -11,7 +11,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const { id } = await params;
   const song = await db.song.findUnique({ where: { id } });
-  if (!song || song.userId !== session.user.id || song.deletedAt) {
+  const isOwnerRole = session.user.role === "owner" || session.user.role === "admin";
+  if (!song || (song.userId !== session.user.id && !isOwnerRole) || song.deletedAt) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

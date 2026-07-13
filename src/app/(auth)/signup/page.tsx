@@ -37,6 +37,7 @@ export default function SignupPage() {
       return;
     }
     router.push("/create");
+    router.refresh(); // re-fetch server components (Header) so they see the new session
   }
 
   return (

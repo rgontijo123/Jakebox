@@ -24,6 +24,7 @@ export default function LoginPage() {
       return;
     }
     router.push("/create");
+    router.refresh(); // re-fetch server components (Header) so they see the new session
   }
 
   return (
