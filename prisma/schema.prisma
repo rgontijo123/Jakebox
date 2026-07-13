@@ -99,17 +99,20 @@ enum GenerationStatus {
 }
 
 model Generation {
-  id     String           @id @default(cuid())
-  userId String
-  user   User             @relation(fields: [userId], references: [id])
-  status GenerationStatus @default(pending)
+  id      String           @id @default(cuid())
+  batchId String // groups multiple versions generated from the same submission
+  userId  String
+  user    User             @relation(fields: [userId], references: [id])
+  status  GenerationStatus @default(pending)
 
   stylePrompt  String
   instrumental Boolean @default(false)
   language     String  @default("en")
 
-  // [{ type: "verse" | "chorus" | "bridge" | "intro" | "outro" | "pre_chorus", text: string }]
-  lyricsSections Json
+  // raw lyrics text, Suno-style: sections marked inline with tags like
+  // [Verse], [Chorus] rather than split into separate structured fields --
+  // makes it trivial to paste a full lyric block in one go.
+  lyricsText String @default("")
 
   targetDurationSeconds Int
   actualDurationSeconds Int?
@@ -128,6 +131,7 @@ model Generation {
 
   @@index([userId])
   @@index([status])
+  @@index([batchId])
 }
 
 model Song {
@@ -142,6 +146,10 @@ model Song {
   format         String // "mp3" | "wav"
   durationSeconds Int
   fileSizeBytes   Int
+
+  // [{ word: string, start: number, end: number }] in seconds, from
+  // ElevenLabs' with_timestamps option -- powers the synced lyrics player.
+  wordTimestamps Json?
 
   deletedAt DateTime? // soft delete, keeps row for dispute/takedown handling
 

@@ -18,18 +18,22 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  const song = generation.songs[0];
   return NextResponse.json({
     id: generation.id,
+    batchId: generation.batchId,
     status: generation.status,
     stylePrompt: generation.stylePrompt,
+    lyricsText: generation.lyricsText,
     errorMessage: generation.errorMessage,
     creditsCharged: generation.creditsCharged,
     creditsRefunded: generation.creditsRefunded,
-    song: generation.songs[0]
+    song: song
       ? {
-          id: generation.songs[0].id,
-          title: generation.songs[0].title,
-          durationSeconds: generation.songs[0].durationSeconds,
+          id: song.id,
+          title: song.title,
+          durationSeconds: song.durationSeconds,
+          wordTimestamps: song.wordTimestamps,
         }
       : null,
   });

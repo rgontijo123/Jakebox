@@ -4,35 +4,21 @@
 const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 const BASE_URL = "https://api.elevenlabs.io/v1";
 
-export type LyricSection = {
-  type: "verse" | "chorus" | "bridge" | "intro" | "outro" | "pre_chorus";
-  text: string;
-};
-
 export type GenerateMusicParams = {
   stylePrompt: string;
-  lyricsSections: LyricSection[];
+  lyricsText: string; // raw text, Suno-style, may contain [Verse]/[Chorus]/etc tags inline
   instrumental: boolean;
   targetDurationSeconds: number;
 };
 
+export type WordTimestamp = { word: string; startMs: number; endMs: number };
+
 export type GenerateMusicResult = {
   audio: Buffer;
   format: "mp3";
-  durationSeconds: number;
+  title: string | null;
+  wordTimestamps: WordTimestamp[];
 };
-
-function buildPrompt(params: GenerateMusicParams): string {
-  if (params.instrumental || params.lyricsSections.length === 0) {
-    return params.stylePrompt;
-  }
-
-  const lyricsText = params.lyricsSections
-    .map((s) => `[${s.type.replace("_", "-")}]\n${s.text}`)
-    .join("\n\n");
-
-  return `${params.stylePrompt}\n\nLyrics:\n${lyricsText}`;
-}
 
 export class ElevenLabsError extends Error {
   constructor(
@@ -45,16 +31,67 @@ export class ElevenLabsError extends Error {
   }
 }
 
+function buildPrompt(params: GenerateMusicParams): string {
+  if (params.instrumental || !params.lyricsText.trim()) {
+    return params.stylePrompt;
+  }
+  return `${params.stylePrompt}\n\nLyrics:\n${params.lyricsText}`;
+}
+
+/** Splits a multipart/mixed response (one JSON part with metadata +
+ * word timestamps, one audio/mpeg part with the raw MP3) into its pieces.
+ * Operates on Buffers throughout so the binary audio part never gets
+ * mangled by a string round-trip. */
+function parseMultipart(body: Buffer, boundary: string): { json: unknown; audio: Buffer } {
+  const boundaryBuf = Buffer.from(`--${boundary}`);
+  const parts: Buffer[] = [];
+  let searchStart = 0;
+
+  while (true) {
+    const start = body.indexOf(boundaryBuf, searchStart);
+    if (start === -1) break;
+    const partStart = start + boundaryBuf.length;
+    const nextBoundary = body.indexOf(boundaryBuf, partStart);
+    if (nextBoundary === -1) break;
+    parts.push(body.subarray(partStart, nextBoundary));
+    searchStart = nextBoundary;
+  }
+
+  let json: unknown = null;
+  let audio: Buffer | null = null;
+
+  for (const part of parts) {
+    const headerEnd = part.indexOf("\r\n\r\n");
+    if (headerEnd === -1) continue;
+    const headers = part.subarray(0, headerEnd).toString("utf-8");
+    // trim the leading \r\n left over from the boundary line, and the
+    // trailing \r\n-- before the next boundary marker
+    let content = part.subarray(headerEnd + 4);
+    if (content.subarray(-2).toString() === "\r\n") {
+      content = content.subarray(0, -2);
+    }
+
+    if (headers.includes("application/json")) {
+      json = JSON.parse(content.toString("utf-8"));
+    } else if (headers.includes("audio/")) {
+      audio = content;
+    }
+  }
+
+  if (!audio) {
+    throw new Error("ElevenLabs response didn't include an audio part");
+  }
+  return { json, audio };
+}
+
 export async function generateMusic(params: GenerateMusicParams): Promise<GenerateMusicResult> {
   if (!ELEVENLABS_API_KEY) {
     throw new Error("ELEVENLABS_API_KEY is not set");
   }
 
-  const musicLengthMs = Math.round(
-    Math.min(params.targetDurationSeconds, 300) * 1000,
-  );
+  const musicLengthMs = Math.round(Math.min(params.targetDurationSeconds, 300) * 1000);
 
-  const res = await fetch(`${BASE_URL}/music`, {
+  const res = await fetch(`${BASE_URL}/music/detailed`, {
     method: "POST",
     headers: {
       "xi-api-key": ELEVENLABS_API_KEY,
@@ -64,6 +101,7 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
       prompt: buildPrompt(params),
       music_length_ms: musicLengthMs,
       force_instrumental: params.instrumental,
+      with_timestamps: !params.instrumental,
     }),
   });
 
@@ -76,15 +114,26 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     );
   }
 
-  const arrayBuffer = await res.arrayBuffer();
-  const audio = Buffer.from(arrayBuffer);
+  const contentType = res.headers.get("content-type") ?? "";
+  const bodyBuffer = Buffer.from(await res.arrayBuffer());
 
-  // ElevenLabs doesn't return exact duration in headers for this endpoint,
-  // so callers should measure the actual file (see lib/audio.ts) rather
-  // than trust the requested length.
+  const boundaryMatch = contentType.match(/boundary=([^;]+)/);
+  if (!boundaryMatch) {
+    // no timestamps requested (instrumental) -- plain audio response
+    return { audio: bodyBuffer, format: "mp3", title: null, wordTimestamps: [] };
+  }
+
+  const { json, audio } = parseMultipart(bodyBuffer, boundaryMatch[1]);
+  const meta = json as {
+    song_metadata?: { title?: string };
+    words_timestamps?: { word: string; start_ms: number; end_ms: number }[];
+  } | null;
+
   return {
     audio,
     format: "mp3",
-    durationSeconds: params.targetDurationSeconds,
+    title: meta?.song_metadata?.title ?? null,
+    wordTimestamps:
+      meta?.words_timestamps?.map((w) => ({ word: w.word, startMs: w.start_ms, endMs: w.end_ms })) ?? [],
   };
 }

@@ -1,13 +1,15 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { moderateGenerationRequest } from "@/lib/moderation";
 import { chargeForGeneration, refundForGeneration, secondsToCredits, MAX_GENERATION_SECONDS } from "@/lib/credits";
-import { generateMusic, ElevenLabsError, type LyricSection } from "@/lib/elevenlabs";
+import { generateMusic, ElevenLabsError } from "@/lib/elevenlabs";
 import { getAudioDurationSeconds } from "@/lib/audio";
 import { saveSongAudio, newStorageKey } from "@/lib/storage";
 
 const DAILY_GENERATION_LIMIT = 10;
+const MAX_VERSIONS = 2;
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -20,91 +22,103 @@ export async function POST(req: Request) {
   const stylePrompt = (body?.stylePrompt as string | undefined)?.trim();
   const instrumental = Boolean(body?.instrumental);
   const language = (body?.language as string | undefined) ?? "en";
-  const lyricsSections = (body?.lyricsSections as LyricSection[] | undefined) ?? [];
+  const lyricsText = ((body?.lyricsText as string | undefined) ?? "").trim();
   const targetDurationSeconds = Math.min(
     Math.max(Number(body?.targetDurationSeconds) || 60, 10),
     MAX_GENERATION_SECONDS,
   );
+  const versions = Math.min(Math.max(Number(body?.versions) || 1, 1), MAX_VERSIONS);
 
   if (!stylePrompt) {
     return NextResponse.json({ error: "Style prompt is required" }, { status: 400 });
   }
-  if (!instrumental && lyricsSections.length === 0) {
-    return NextResponse.json({ error: "Add at least one lyrics section, or mark as instrumental" }, { status: 400 });
+  if (!instrumental && !lyricsText) {
+    return NextResponse.json({ error: "Add some lyrics, or mark as instrumental" }, { status: 400 });
   }
 
-  // Rate limit: block a compromised/abusive account from mass-generating.
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const recentCount = await db.generation.count({ where: { userId, createdAt: { gte: since } } });
-  if (recentCount >= DAILY_GENERATION_LIMIT) {
+  if (recentCount + versions > DAILY_GENERATION_LIMIT) {
     return NextResponse.json({ error: "Daily generation limit reached, try again tomorrow" }, { status: 429 });
   }
 
-  const lyricsText = lyricsSections.map((s) => s.text).join("\n");
   const moderation = await moderateGenerationRequest({ stylePrompt, lyricsText });
 
-  const generation = await db.generation.create({
-    data: {
-      userId,
-      status: moderation.flagged ? "rejected_moderation" : "pending",
-      stylePrompt,
-      instrumental,
-      language,
-      lyricsSections: lyricsSections as unknown as object,
-      targetDurationSeconds,
-    },
-  });
+  const batchId = randomUUID();
+  const creditsPerVersion = secondsToCredits(targetDurationSeconds);
 
-  await db.moderationLog.create({
-    data: {
-      generationId: generation.id,
-      userId,
-      stage: moderation.stage === "none" ? "openai_moderation" : moderation.stage,
-      flagged: moderation.flagged,
-      categories: moderation.categories ?? undefined,
-      action: moderation.flagged ? "blocked" : "allowed",
-    },
-  });
+  const generationIds: string[] = [];
+  for (let i = 0; i < versions; i++) {
+    const generation = await db.generation.create({
+      data: {
+        batchId,
+        userId,
+        status: moderation.flagged ? "rejected_moderation" : "pending",
+        stylePrompt,
+        instrumental,
+        language,
+        lyricsText,
+        targetDurationSeconds,
+      },
+    });
+    generationIds.push(generation.id);
+
+    await db.moderationLog.create({
+      data: {
+        generationId: generation.id,
+        userId,
+        stage: moderation.stage === "none" ? "openai_moderation" : moderation.stage,
+        flagged: moderation.flagged,
+        categories: moderation.categories ?? undefined,
+        action: moderation.flagged ? "blocked" : "allowed",
+      },
+    });
+  }
 
   if (moderation.flagged) {
     return NextResponse.json(
-      { error: "This request was rejected by our content policy.", generationId: generation.id },
+      { error: "This request was rejected by our content policy.", batchId },
       { status: 422 },
     );
   }
 
-  const credits = secondsToCredits(targetDurationSeconds);
+  // charge for all versions up front; refund per-generation on shortfall/failure
   try {
-    await chargeForGeneration(userId, generation.id, credits);
+    for (const generationId of generationIds) {
+      await chargeForGeneration(userId, generationId, creditsPerVersion);
+    }
   } catch {
-    await db.generation.update({ where: { id: generation.id }, data: { status: "failed", errorMessage: "Insufficient credits" } });
+    // roll back any generations we did manage to charge, and fail the rest
+    for (const generationId of generationIds) {
+      await db.generation.update({
+        where: { id: generationId },
+        data: { status: "failed", errorMessage: "Insufficient credits" },
+      });
+    }
     return NextResponse.json({ error: "Insufficient credits" }, { status: 402 });
   }
 
-  await db.generation.update({
-    where: { id: generation.id },
-    data: { status: "processing", creditsCharged: credits },
+  await db.generation.updateMany({
+    where: { id: { in: generationIds } },
+    data: { status: "processing", creditsCharged: creditsPerVersion },
   });
 
-  // NOTE: fire-and-forget in-process background work. This is fine for
-  // `npm run dev` (long-lived Node process) but will NOT survive on Vercel's
-  // serverless runtime, which can freeze/kill the function after the
-  // response is sent. Before deploying to production, swap this call for a
-  // real background job (Inngest), per the architecture plan.
-  runGenerationJob(generation.id, userId, {
-    stylePrompt,
-    lyricsSections,
-    instrumental,
-    targetDurationSeconds,
-  }).catch((err) => console.error("Background generation job crashed", err));
+  for (const generationId of generationIds) {
+    runGenerationJob(generationId, userId, {
+      stylePrompt,
+      lyricsText,
+      instrumental,
+      targetDurationSeconds,
+    }).catch((err) => console.error("Background generation job crashed", err));
+  }
 
-  return NextResponse.json({ generationId: generation.id });
+  return NextResponse.json({ batchId });
 }
 
 async function runGenerationJob(
   generationId: string,
   userId: string,
-  params: { stylePrompt: string; lyricsSections: LyricSection[]; instrumental: boolean; targetDurationSeconds: number },
+  params: { stylePrompt: string; lyricsText: string; instrumental: boolean; targetDurationSeconds: number },
 ) {
   try {
     const result = await generateMusic(params);
@@ -117,11 +131,14 @@ async function runGenerationJob(
       data: {
         generationId,
         userId,
-        title: params.stylePrompt.slice(0, 80),
+        title: result.title ?? params.stylePrompt.slice(0, 80),
         audioUrl: storageKey,
         format: result.format,
         durationSeconds: actualDurationSeconds,
         fileSizeBytes: result.audio.byteLength,
+        wordTimestamps: result.wordTimestamps.length
+          ? (result.wordTimestamps as unknown as object[])
+          : undefined,
       },
     });
 

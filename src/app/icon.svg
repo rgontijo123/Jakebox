@@ -1,0 +1,61 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Jake the cat: based on a real photo, white/cream fur with ginger patches, peeking pose -->
+
+  <!-- ears -->
+  <path d="M 66 92 L 46 34 L 100 78 Z" fill="#FDF6EA" />
+  <path d="M 174 92 L 196 32 L 138 80 Z" fill="#E28B3D" />
+  <path d="M 70 84 L 58 50 L 92 76 Z" fill="#F6C9C9" />
+  <path d="M 170 84 L 180 52 L 148 74 Z" fill="#F6C9C9" />
+
+  <!-- head: white/cream base -->
+  <path
+    d="M 120 220
+       C 68 220, 42 184, 42 146
+       C 42 110, 64 84, 92 76
+       C 100 72, 110 70, 120 70
+       C 130 70, 140 72, 148 76
+       C 176 84, 198 110, 198 146
+       C 198 184, 172 220, 120 220 Z"
+    fill="#FDF6EA"
+  />
+
+  <!-- ginger patch: top of head, off to one side, like the photo -->
+  <path
+    d="M 148 76
+       C 176 84, 198 110, 198 146
+       C 198 168, 190 186, 176 198
+       C 182 170, 176 138, 156 112
+       C 144 96, 128 84, 116 78
+       C 124 72, 138 72, 148 76 Z"
+    fill="#E28B3D"
+  />
+  <path
+    d="M 92 76
+       C 82 79, 73 85, 66 92
+       C 72 88, 82 86, 90 90
+       C 98 94, 100 102, 94 107
+       C 88 111, 80 108, 78 100
+       C 74 106, 76 114, 84 117
+       C 94 121, 104 113, 102 102
+       C 100 92, 100 82, 108 76
+       C 102 75, 97 75, 92 76 Z"
+    fill="#E28B3D"
+  />
+
+  <!-- big round dark eyes, looking straight ahead (curious/peeking) -->
+  <circle cx="96" cy="140" r="15" fill="#241C14" />
+  <circle cx="146" cy="140" r="15" fill="#241C14" />
+  <circle cx="100" cy="135" r="3.5" fill="#FDF6EA" opacity="0.85" />
+  <circle cx="150" cy="135" r="3.5" fill="#FDF6EA" opacity="0.85" />
+
+  <!-- nose -->
+  <path d="M 120 158 L 112 167 C 115 172, 125 172, 128 167 Z" fill="#E8A97E" />
+
+  <!-- subtle mouth -->
+  <path d="M 120 172 C 116 177, 110 178, 106 176 M 120 172 C 124 177, 130 178, 134 176"
+        stroke="#B5794F" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7" />
+
+  <!-- peeking paws at the bottom edge -->
+  <path d="M 84 220 C 84 208, 92 200, 102 200 C 111 200, 116 208, 116 220" fill="#FDF6EA" />
+  <path d="M 124 220 C 124 208, 129 200, 138 200 C 148 200, 156 208, 156 220" fill="#FDF6EA" />
+</svg>

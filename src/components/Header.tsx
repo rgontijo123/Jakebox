@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { auth, signOut } from "@/auth";
 
 export async function Header() {
@@ -6,7 +7,8 @@ export async function Header() {
 
   return (
     <header className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
-      <Link href="/" className="font-semibold tracking-tight">
+      <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+        <Image src="/branding/jake-logo.svg" alt="" width={28} height={28} />
         Jakebox
       </Link>
 
