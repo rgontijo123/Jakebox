@@ -1,0 +1,196 @@
+// Jakebox data model — see docs/Jakebox_Architecture_v1.docx for full context
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  owner
+  admin
+  user
+}
+
+enum UserStatus {
+  active
+  banned
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  displayName   String?
+  role          UserRole @default(user)
+  status        UserStatus @default(active)
+  creditBalance Int      @default(0)
+
+  tosAcceptedAt DateTime?
+  tosVersion    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creditTransactions CreditTransaction[]
+  payments           Payment[]
+  generations        Generation[]
+  songs              Song[]
+  moderationLogs     ModerationLog[]
+  supportReports     SupportReport[]
+}
+
+enum CreditTransactionType {
+  purchase
+  signup_bonus
+  generation_charge
+  generation_refund
+  admin_adjustment
+}
+
+model CreditTransaction {
+  id             String                 @id @default(cuid())
+  userId         String
+  user           User                   @relation(fields: [userId], references: [id])
+  type           CreditTransactionType
+  amount         Int // signed: positive = credit, negative = debit
+  balanceAfter   Int
+
+  relatedPaymentId    String?
+  relatedGenerationId String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+  refunded
+}
+
+model Payment {
+  id                      String        @id @default(cuid())
+  userId                  String
+  user                    User          @relation(fields: [userId], references: [id])
+  stripeCheckoutSessionId String?       @unique
+  stripePaymentIntentId   String?       @unique
+  amountUsdCents          Int
+  creditsPurchased        Int
+  status                  PaymentStatus @default(pending)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum GenerationStatus {
+  pending
+  processing
+  completed
+  failed
+  rejected_moderation
+}
+
+model Generation {
+  id     String           @id @default(cuid())
+  userId String
+  user   User             @relation(fields: [userId], references: [id])
+  status GenerationStatus @default(pending)
+
+  stylePrompt  String
+  instrumental Boolean @default(false)
+  language     String  @default("en")
+
+  // [{ type: "verse" | "chorus" | "bridge" | "intro" | "outro" | "pre_chorus", text: string }]
+  lyricsSections Json
+
+  targetDurationSeconds Int
+  actualDurationSeconds Int?
+
+  creditsCharged  Int @default(0)
+  creditsRefunded Int @default(0)
+
+  elevenLabsRequestId String?
+  errorMessage         String?
+
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  songs          Song[]
+  moderationLogs ModerationLog[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Song {
+  id           String     @id @default(cuid())
+  generationId String
+  generation   Generation @relation(fields: [generationId], references: [id])
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+
+  title          String
+  audioUrl       String
+  format         String // "mp3" | "wav"
+  durationSeconds Int
+  fileSizeBytes   Int
+
+  deletedAt DateTime? // soft delete, keeps row for dispute/takedown handling
+
+  createdAt DateTime @default(now())
+
+  supportReports SupportReport[]
+
+  @@index([userId])
+  @@index([generationId])
+}
+
+enum ModerationStage {
+  keyword_filter
+  openai_moderation
+  elevenlabs_rejection
+}
+
+model ModerationLog {
+  id           String          @id @default(cuid())
+  generationId String?
+  generation   Generation?     @relation(fields: [generationId], references: [id])
+  userId       String
+  user         User            @relation(fields: [userId], references: [id])
+  stage        ModerationStage
+  flagged      Boolean
+  categories   Json?
+  action       String // "blocked" | "allowed"
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([generationId])
+}
+
+enum SupportReportStatus {
+  open
+  reviewed
+  actioned
+}
+
+model SupportReport {
+  id      String               @id @default(cuid())
+  userId  String
+  user    User                 @relation(fields: [userId], references: [id])
+  songId  String?
+  song    Song?                @relation(fields: [songId], references: [id])
+  message String
+  status  SupportReportStatus  @default(open)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
