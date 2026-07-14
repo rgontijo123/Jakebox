@@ -11,6 +11,43 @@ import { saveSongAudio, newStorageKey } from "@/lib/storage";
 const DAILY_GENERATION_LIMIT = 10;
 const MAX_VERSIONS = 2;
 
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  }
+
+  const generations = await db.generation.findMany({
+    where: { userId: session.user.id },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+    include: { songs: { where: { deletedAt: null } } },
+  });
+
+  return NextResponse.json({
+    generations: generations.map((g) => {
+      const song = g.songs[0];
+      return {
+        id: g.id,
+        batchId: g.batchId,
+        status: g.status,
+        stylePrompt: g.stylePrompt,
+        lyricsText: g.lyricsText,
+        errorMessage: g.errorMessage,
+        createdAt: g.createdAt.toISOString(),
+        song: song
+          ? {
+              id: song.id,
+              title: song.title,
+              durationSeconds: song.durationSeconds,
+              wordTimestamps: song.wordTimestamps,
+            }
+          : null,
+      };
+    }),
+  });
+}
+
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -109,6 +146,7 @@ export async function POST(req: Request) {
       lyricsText,
       instrumental,
       targetDurationSeconds,
+      language,
     }).catch((err) => console.error("Background generation job crashed", err));
   }
 
@@ -118,7 +156,13 @@ export async function POST(req: Request) {
 async function runGenerationJob(
   generationId: string,
   userId: string,
-  params: { stylePrompt: string; lyricsText: string; instrumental: boolean; targetDurationSeconds: number },
+  params: {
+    stylePrompt: string;
+    lyricsText: string;
+    instrumental: boolean;
+    targetDurationSeconds: number;
+    language: string;
+  },
 ) {
   try {
     const result = await generateMusic(params);

@@ -9,6 +9,20 @@ export type GenerateMusicParams = {
   lyricsText: string; // raw text, Suno-style, may contain [Verse]/[Chorus]/etc tags inline
   instrumental: boolean;
   targetDurationSeconds: number;
+  language: string; // e.g. "pt-BR", "en" -- see LANGUAGE_NAMES below
+};
+
+// The Music API has no dedicated language/locale parameter -- it infers
+// pronunciation from the prompt text, so we spell it out explicitly. This
+// matters most for Portuguese: "Portuguese" alone tends to default toward
+// European pronunciation, which reads as noticeably wrong to Brazilian ears.
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  "pt-BR": "Brazilian Portuguese (pt-BR)",
+  "pt-PT": "European Portuguese (pt-PT)",
+  es: "Spanish",
+  de: "German",
+  ja: "Japanese",
 };
 
 export type WordTimestamp = { word: string; startMs: number; endMs: number };
@@ -32,10 +46,16 @@ export class ElevenLabsError extends Error {
 }
 
 function buildPrompt(params: GenerateMusicParams): string {
+  const languageName = LANGUAGE_NAMES[params.language] ?? params.language;
+  const styleWithLanguage =
+    params.instrumental || languageName === "English"
+      ? params.stylePrompt
+      : `${params.stylePrompt}. Vocals sung in ${languageName}.`;
+
   if (params.instrumental || !params.lyricsText.trim()) {
-    return params.stylePrompt;
+    return styleWithLanguage;
   }
-  return `${params.stylePrompt}\n\nLyrics:\n${params.lyricsText}`;
+  return `${styleWithLanguage}\n\nLyrics:\n${params.lyricsText}`;
 }
 
 /** Splits a multipart/mixed response (one JSON part with metadata +

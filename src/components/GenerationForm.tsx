@@ -14,7 +14,7 @@ Nothing standing in my way
 This is our moment, our moment to shine
 Everything's gonna be just fine`;
 
-export function GenerationForm() {
+export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) => void }) {
   const router = useRouter();
   const [stylePrompt, setStylePrompt] = useState("");
   const [instrumental, setInstrumental] = useState(false);
@@ -66,11 +66,19 @@ export function GenerationForm() {
       return;
     }
 
-    router.push(`/generations/${data.batchId}`);
+    setStylePrompt("");
+    setLyricsText("");
+    setRightsConfirmed(false);
+
+    if (onCreated) {
+      onCreated(data.batchId);
+    } else {
+      router.push(`/generations/${data.batchId}`);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full max-w-2xl">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
       <label className="flex flex-col gap-1 text-sm">
         Style / genre prompt
         <textarea
@@ -96,7 +104,8 @@ export function GenerationForm() {
             className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1"
           >
             <option value="en">English</option>
-            <option value="pt">Portuguese</option>
+            <option value="pt-BR">Portuguese (Brazil)</option>
+            <option value="pt-PT">Portuguese (Portugal)</option>
             <option value="es">Spanish</option>
             <option value="de">German</option>
             <option value="ja">Japanese</option>

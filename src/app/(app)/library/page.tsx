@@ -1,45 +1,21 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { db } from "@/lib/db";
-import { LibraryList } from "@/components/LibraryList";
+import { WorkspaceList } from "@/components/WorkspaceList";
 
 export default async function LibraryPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const songs = await db.song.findMany({
-    where: { userId: session.user.id, deletedAt: null },
-    orderBy: { createdAt: "desc" },
-    include: { generation: { select: { stylePrompt: true, lyricsText: true } } },
-  });
-
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-16 gap-8">
-      <div className="w-full max-w-4xl flex items-center justify-between">
+      <div className="w-full max-w-3xl flex items-center justify-between">
         <h1 className="text-2xl font-semibold">My library</h1>
         <a href="/create" className="text-sm underline text-zinc-400 hover:text-zinc-100">
           + New song
         </a>
       </div>
-
-      <div className="w-full max-w-4xl">
-        {songs.length === 0 ? (
-          <p className="text-sm text-zinc-500">
-            No songs yet. <a href="/create" className="underline">Create your first one</a>.
-          </p>
-        ) : (
-          <LibraryList
-            songs={songs.map((s) => ({
-              id: s.id,
-              title: s.title,
-              stylePrompt: s.generation.stylePrompt,
-              lyricsText: s.generation.lyricsText,
-              wordTimestamps: s.wordTimestamps as { word: string; startMs: number; endMs: number }[] | null,
-              durationSeconds: s.durationSeconds,
-              createdAt: s.createdAt.toISOString(),
-            }))}
-          />
-        )}
+      <div className="w-full max-w-3xl">
+        <WorkspaceList />
       </div>
     </main>
   );
