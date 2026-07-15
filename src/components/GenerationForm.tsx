@@ -90,18 +90,18 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
         />
       </label>
 
-      <div className="flex items-center gap-6">
+      <div className="flex flex-col gap-3">
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={instrumental} onChange={(e) => setInstrumental(e.target.checked)} />
           Instrumental only (no lyrics)
         </label>
 
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex flex-col gap-1 text-sm">
           Language
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1"
+            className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 w-full"
           >
             <option value="en">English</option>
             <option value="pt-BR">Portuguese (Brazil)</option>

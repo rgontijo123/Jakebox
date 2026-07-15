@@ -47,15 +47,27 @@ export class ElevenLabsError extends Error {
 
 function buildPrompt(params: GenerateMusicParams): string {
   const languageName = LANGUAGE_NAMES[params.language] ?? params.language;
-  const styleWithLanguage =
-    params.instrumental || languageName === "English"
-      ? params.stylePrompt
-      : `${params.stylePrompt}. Vocals sung in ${languageName}.`;
+  const needsLanguageHint = !params.instrumental && languageName !== "English";
+
+  // Lead with the language instruction (models weight earlier tokens more
+  // heavily) and repeat it right before the lyrics too -- a single mention
+  // at the end of a long style description was getting lost, especially on
+  // longer songs where ElevenLabs is documented to drift accent/language
+  // partway through. The bracketed "[X accent]" tag is confirmed to work
+  // for their Text-to-Speech v3 model; it's undocumented for Music, but
+  // costs nothing to include since Music already respects bracketed
+  // production tags like [Verse]/[Chorus] elsewhere in the prompt.
+  const styleWithLanguage = needsLanguageHint
+    ? `IMPORTANT: All vocals must be sung entirely in natural ${languageName}, with authentic ${languageName} pronunciation maintained consistently for the whole song, from the first word to the last. [${languageName} accent] ${params.stylePrompt}`
+    : params.stylePrompt;
 
   if (params.instrumental || !params.lyricsText.trim()) {
     return styleWithLanguage;
   }
-  return `${styleWithLanguage}\n\nLyrics:\n${params.lyricsText}`;
+
+  const lyricsHeader = needsLanguageHint ? `Lyrics (sung in ${languageName}):` : "Lyrics:";
+  const accentTagLine = needsLanguageHint ? `[${languageName} accent]\n` : "";
+  return `${styleWithLanguage}\n\n${lyricsHeader}\n${accentTagLine}${params.lyricsText}`;
 }
 
 /** Splits a multipart/mixed response (one JSON part with metadata +

@@ -5,6 +5,36 @@ export type LyricLine = { isTag: boolean; text: string; words: LyricToken[] };
 
 const TAG_RE = /^\s*\[([^\]]+)]\s*$/;
 
+// Section-header words people commonly type without brackets (English and
+// Portuguese), optionally followed by a number ("Verse 2") or a " - "
+// production note ("Bridge - instrumental, guitar solo"). Left unbracketed,
+// these get sung as if they were lyrics -- including English stage
+// directions dropped into an otherwise Portuguese song, which is exactly
+// the kind of thing that makes the vocal pronunciation go haywire.
+const TAG_WORDS = [
+  "intro", "verse\\s*\\d*", "pre-?chorus", "chorus", "final chorus", "hook",
+  "bridge", "outro",
+  "introdu[cç][aã]o", "verso\\s*\\d*", "refr[aã]o", "pr[eé]-refr[aã]o",
+  "refr[aã]o final", "ponte", "final",
+];
+const IMPLICIT_TAG_RE = new RegExp(`^(${TAG_WORDS.join("|")})\\s*(-.*)?$`, "i");
+
+/** Wraps bare section headers ("Chorus", "Bridge - guitar solo") in
+ * brackets so they're treated as structural tags, not sung lyrics, by both
+ * the ElevenLabs prompt and the synced-lyrics view. Idempotent -- lines
+ * already in `[Tag]` form pass through untouched. */
+export function normalizeLyricsTags(lyricsText: string): string {
+  return lyricsText
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || TAG_RE.test(trimmed)) return line;
+      if (IMPLICIT_TAG_RE.test(trimmed)) return `[${trimmed}]`;
+      return line;
+    })
+    .join("\n");
+}
+
 /** Zips raw lyrics text (Suno-style, with [Verse]/[Chorus]/etc tag lines)
  * against ElevenLabs' flat, sequential word-timestamp list. Section tags
  * don't consume timestamps -- only sung words do. Alignment is a simple

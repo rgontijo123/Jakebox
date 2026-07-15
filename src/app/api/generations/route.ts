@@ -7,6 +7,7 @@ import { chargeForGeneration, refundForGeneration, secondsToCredits, MAX_GENERAT
 import { generateMusic, ElevenLabsError } from "@/lib/elevenlabs";
 import { getAudioDurationSeconds } from "@/lib/audio";
 import { saveSongAudio, newStorageKey } from "@/lib/storage";
+import { normalizeLyricsTags } from "@/lib/lyrics";
 
 const DAILY_GENERATION_LIMIT = 10;
 const MAX_VERSIONS = 2;
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
   const stylePrompt = (body?.stylePrompt as string | undefined)?.trim();
   const instrumental = Boolean(body?.instrumental);
   const language = (body?.language as string | undefined) ?? "en";
-  const lyricsText = ((body?.lyricsText as string | undefined) ?? "").trim();
+  const lyricsText = normalizeLyricsTags(((body?.lyricsText as string | undefined) ?? "").trim());
   const targetDurationSeconds = Math.min(
     Math.max(Number(body?.targetDurationSeconds) || 60, 10),
     MAX_GENERATION_SECONDS,
