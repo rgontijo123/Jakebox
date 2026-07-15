@@ -28,6 +28,13 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
 
   const estimatedCredits = Math.max(MIN_CREDITS, Math.round(duration * CREDITS_PER_SECOND)) * versions;
 
+  // Rough guide for comfortable, unhurried pacing: ~2.3 sung words/second,
+  // plus ~15s slack for intro/instrumental breaks. If the chosen duration
+  // is much shorter than this, the vocals tend to get crammed in and rushed.
+  const lyricsWordCount = lyricsText.trim() ? lyricsText.trim().split(/\s+/).filter(Boolean).length : 0;
+  const recommendedSeconds = lyricsWordCount > 0 ? Math.ceil(lyricsWordCount / 2.3) + 15 : 0;
+  const durationTooShort = !instrumental && recommendedSeconds > duration + 5;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -143,6 +150,19 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
             onChange={(e) => setDuration(Number(e.target.value))}
           />
         </label>
+        {durationTooShort && (
+          <p className="text-xs text-amber-400">
+            Your lyrics ({lyricsWordCount} words) need about {recommendedSeconds}s for unhurried pacing —
+            at {duration}s the vocals will likely sound rushed.{" "}
+            <button
+              type="button"
+              onClick={() => setDuration(Math.min(300, recommendedSeconds))}
+              className="underline"
+            >
+              Bump to {Math.min(300, recommendedSeconds)}s
+            </button>
+          </p>
+        )}
 
         <div className="flex items-center gap-2 text-sm">
           <span className="text-zinc-400">Versions:</span>

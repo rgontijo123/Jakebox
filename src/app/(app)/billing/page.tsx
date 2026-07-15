@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { CreditPacks } from "@/components/CreditPacks";
 
 const TYPE_LABELS: Record<string, string> = {
   purchase: "Purchase",
@@ -32,9 +33,7 @@ export default async function BillingPage() {
         </span>
       </div>
 
-      <div className="w-full max-w-2xl rounded-md border border-zinc-800 p-6 text-center text-sm text-zinc-500">
-        Credit purchases aren&apos;t open yet — this is still an early build. Come back soon.
-      </div>
+      <CreditPacks />
 
       <div className="w-full max-w-2xl">
         <h2 className="text-sm font-medium text-zinc-400 mb-3">History</h2>

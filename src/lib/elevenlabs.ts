@@ -49,21 +49,24 @@ function buildPrompt(params: GenerateMusicParams): string {
   const languageName = LANGUAGE_NAMES[params.language] ?? params.language;
   const needsLanguageHint = !params.instrumental && languageName !== "English";
 
-  // Lead with the language instruction (models weight earlier tokens more
-  // heavily) and repeat it right before the lyrics too -- a single mention
-  // at the end of a long style description was getting lost, especially on
-  // longer songs where ElevenLabs is documented to drift accent/language
-  // partway through. The bracketed "[X accent]" tag is confirmed to work
-  // for their Text-to-Speech v3 model; it's undocumented for Music, but
-  // costs nothing to include since Music already respects bracketed
-  // production tags like [Verse]/[Chorus] elsewhere in the prompt.
-  const styleWithLanguage = needsLanguageHint
-    ? `IMPORTANT: All vocals must be sung entirely in natural ${languageName}, with authentic ${languageName} pronunciation maintained consistently for the whole song, from the first word to the last. [${languageName} accent] ${params.stylePrompt}`
-    : params.stylePrompt;
-
   if (params.instrumental || !params.lyricsText.trim()) {
-    return styleWithLanguage;
+    // No vocals -- language/pacing hints below don't apply, keep the style
+    // prompt untouched so instrumentation description stays front and center.
+    return params.stylePrompt;
   }
+
+  // Lead with a short language/accent tag (models weight earlier tokens
+  // more heavily) and repeat it right before the lyrics too -- a single
+  // mention at the end of a long style description was getting lost. Kept
+  // deliberately terse here: an earlier, much longer "IMPORTANT: all vocals
+  // must be sung entirely in..." preamble fixed the pronunciation but
+  // seemed to crowd out the actual instrumentation description that
+  // followed it (drums/guitar barely audible) -- a short tag should keep
+  // the language signal without burying the style prompt under it.
+  const pacingHint = "Natural, unhurried vocal pacing with clear breathing room between phrases -- not rushed.";
+  const styleWithLanguage = needsLanguageHint
+    ? `[${languageName} vocals, native accent] ${params.stylePrompt}. ${pacingHint}`
+    : `${params.stylePrompt}. ${pacingHint}`;
 
   const lyricsHeader = needsLanguageHint ? `Lyrics (sung in ${languageName}):` : "Lyrics:";
   const accentTagLine = needsLanguageHint ? `[${languageName} accent]\n` : "";
