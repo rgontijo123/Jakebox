@@ -35,6 +35,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ batchId
               title: song.title,
               durationSeconds: song.durationSeconds,
               wordTimestamps: song.wordTimestamps,
+              hasVideo: !!song.videoUrl,
             }
           : null,
       };

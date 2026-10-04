@@ -7,12 +7,14 @@ export function AdminGenerationRow(props: {
   userId: string;
   userEmail: string;
   userBanned: boolean;
+  userCreditBalance: number;
   status: string;
   stylePrompt: string;
   createdAt: string;
   songId: string | null;
 }) {
   const [banned, setBanned] = useState(props.userBanned);
+  const [balance, setBalance] = useState(props.userCreditBalance);
   const [expanded, setExpanded] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -24,6 +26,24 @@ export function AdminGenerationRow(props: {
     if (res.ok) {
       const data = await res.json();
       setBanned(data.status === "banned");
+    }
+  }
+
+  async function adjustCredits() {
+    const raw = prompt(`Adjust credits for ${props.userEmail} (current: ${balance}). Enter a signed amount, e.g. 500 or -100:`);
+    if (raw === null) return;
+    const amount = Number(raw);
+    if (!Number.isInteger(amount) || amount === 0) return;
+    setBusy(true);
+    const res = await fetch(`/api/admin/users/${props.userId}/credits`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount }),
+    });
+    setBusy(false);
+    if (res.ok) {
+      const data = await res.json();
+      setBalance(data.balance);
     }
   }
 
@@ -44,6 +64,14 @@ export function AdminGenerationRow(props: {
               {expanded ? "Hide" : "Play"}
             </button>
           )}
+          <button
+            onClick={adjustCredits}
+            disabled={busy}
+            className="text-zinc-500 hover:text-zinc-100 disabled:opacity-50"
+            title="Adjust credits"
+          >
+            {balance} cr
+          </button>
           <button
             onClick={toggleBan}
             disabled={busy}

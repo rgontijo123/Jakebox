@@ -1,15 +1,17 @@
 import { db } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
 
-/** 1 credit = 1 second of generated audio = $0.01 retail (~4x markup over
- * ElevenLabs' $0.15/min = $0.0025/sec cost). */
-export const CREDITS_PER_SECOND = 1;
-export const MIN_GENERATION_CREDITS = 30; // 30s floor, blocks trivial-retry abuse
-export const MAX_GENERATION_SECONDS = 300; // ElevenLabs cap: 5 min/generation
-
-export function secondsToCredits(seconds: number): number {
-  return Math.max(MIN_GENERATION_CREDITS, Math.round(seconds * CREDITS_PER_SECOND));
-}
+/** Flat price per generation, 1 credit = $0.01. Providers now bill per
+ * generation call regardless of output length (MusicAPI: ~$0.29 for a pair
+ * of songs, flat, whether the output is 20s or 4 minutes) rather than per
+ * second -- charging users by requested duration stopped matching real cost
+ * once MusicAPI became the primary provider. 100 credits (~3-4x markup over
+ * that per-generation cost) replaces the old duration-based math; a
+ * generation either succeeds and keeps the charge, or fails and gets fully
+ * refunded (see runGenerationJob's catch path) -- there's no partial refund
+ * to compute anymore since price no longer depends on output length. */
+export const CREDITS_PER_GENERATION = 100;
+export const MAX_GENERATION_SECONDS = 300; // still caps what we ask providers for
 
 type Tx = Prisma.TransactionClient;
 
@@ -52,6 +54,14 @@ export async function grantPurchase(userId: string, credits: number, paymentId: 
   return db.$transaction((tx) =>
     applyLedgerEntry(tx, { userId, type: "purchase", amount: credits, relatedPaymentId: paymentId }),
   );
+}
+
+/** Manual top-up outside the normal purchase flow -- used for owner/admin
+ * accounts testing the product, where charging themselves through Stripe
+ * makes no sense but provider usage still costs real money and stays
+ * worth tracking in the ledger. */
+export async function grantAdminAdjustment(userId: string, credits: number) {
+  return db.$transaction((tx) => applyLedgerEntry(tx, { userId, type: "admin_adjustment", amount: credits }));
 }
 
 /** Throws if the user can't cover the charge -- caller should catch and

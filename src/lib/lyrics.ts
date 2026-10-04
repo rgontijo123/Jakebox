@@ -3,7 +3,14 @@ export type WordTimestamp = { word: string; startMs: number; endMs: number };
 export type LyricToken = { text: string; startMs: number | null; endMs: number | null };
 export type LyricLine = { isTag: boolean; text: string; words: LyricToken[] };
 
-const TAG_RE = /^\s*\[([^\]]+)]\s*$/;
+// Square brackets mark song-structure tags ([Verse], [Chorus]); curly braces
+// mark non-sung production/stage-direction cues ({ghostly synth textures,
+// no vocals}). Both are whole-line annotations that never get sung, so both
+// must be excluded from word-timestamp alignment the same way -- treating a
+// curly cue as regular lyric text was consuming real timestamps meant for
+// actual sung words, desyncing the highlighted-word display for the rest of
+// the song from that point on.
+const TAG_RE = /^\s*[[{]([^\]}]+)[\]}]\s*$/;
 
 // Section-header words people commonly type without brackets (English and
 // Portuguese), optionally followed by a number ("Verse 2") or a " - "
@@ -33,6 +40,42 @@ export function normalizeLyricsTags(lyricsText: string): string {
       return line;
     })
     .join("\n");
+}
+
+/** Colons/semicolons ('Grandma said: "..."') introduce a written-language
+ * clause break that isn't natural in a lyric line -- observed to make the
+ * singing voice stutter/glitch right at the mark -- so those always become
+ * a comma-pause. Deliberately leaves periods/exclamation/question marks
+ * alone even mid-line: an earlier version also flattened those to commas,
+ * but they're what gives a lyric its emphasis and rhythm, and there's no
+ * confirmed glitch tied to them (unlike colons) -- doing so risked making
+ * vocals sound more like flat spoken narration than singing. */
+export function normalizeLyricsPunctuation(lyricsText: string): string {
+  return lyricsText
+    .split("\n")
+    .map((line) => {
+      const out = line.replace(/\s*[:;]\s*/g, ", ");
+      return out;
+    })
+    .join("\n");
+}
+
+/** Picks a fallback song title when ElevenLabs doesn't return one (observed
+ * to happen with composition-plan/music_v2 requests). Falling back to the
+ * raw style prompt ("romantic techno, melodic techno") reads as a genre tag,
+ * not a song name -- the first actual sung line is a much better stand-in,
+ * same instinct as how a lot of song titles get picked in practice. Only
+ * falls through to the style prompt when there's no usable lyric line
+ * (instrumental tracks). */
+export function deriveFallbackTitle(lyricsText: string, stylePrompt: string): string {
+  const firstLine = lyricsText
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => l && !TAG_RE.test(l));
+
+  const title = firstLine ?? stylePrompt;
+  const trimmed = title.trim();
+  return trimmed.length > 80 ? `${trimmed.slice(0, 77)}...` : trimmed || "Untitled Track";
 }
 
 /** Zips raw lyrics text (Suno-style, with [Verse]/[Chorus]/etc tag lines)

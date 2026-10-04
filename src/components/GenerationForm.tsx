@@ -1,10 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { VoiceRecorderModal } from "@/components/VoiceRecorderModal";
 
-const CREDITS_PER_SECOND = 1;
-const MIN_CREDITS = 30;
+// Keep in sync with CREDITS_PER_GENERATION in src/lib/credits.ts -- can't
+// import it directly, that module pulls in the server-only Prisma client.
+const CREDITS_PER_GENERATION = 100;
+
+// Persisted across page navigations (not just across generations on the same
+// page) so going to check a result and coming back to Create doesn't lose
+// what you typed -- these two are the expensive-to-retype fields.
+const STYLE_STORAGE_KEY = "jakebox:draft:stylePrompt";
+const LYRICS_STORAGE_KEY = "jakebox:draft:lyricsText";
+const LANGUAGE_STORAGE_KEY = "jakebox:draft:language";
 
 const LYRICS_PLACEHOLDER = `[Verse]
 Walking down a sunny road today
@@ -14,7 +23,18 @@ Nothing standing in my way
 This is our moment, our moment to shine
 Everything's gonna be just fine`;
 
-export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) => void }) {
+export type RemixSeed = { stylePrompt: string; lyricsText: string; nonce: number };
+export type StyleSeed = { value: string; nonce: number };
+
+export function GenerationForm({
+  onCreated,
+  remixSeed,
+  styleSeed,
+}: {
+  onCreated?: (batchId: string) => void;
+  remixSeed?: RemixSeed | null;
+  styleSeed?: StyleSeed | null;
+}) {
   const router = useRouter();
   const [stylePrompt, setStylePrompt] = useState("");
   const [instrumental, setInstrumental] = useState(false);
@@ -26,7 +46,84 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const estimatedCredits = Math.max(MIN_CREDITS, Math.round(duration * CREDITS_PER_SECOND)) * versions;
+  const [referenceSongId, setReferenceSongId] = useState("");
+  const [voicePersonaId, setVoicePersonaId] = useState("");
+  const [recentSongs, setRecentSongs] = useState<{ id: string; title: string }[]>([]);
+  const [voices, setVoices] = useState<{ id: string; name: string; status: string }[]>([]);
+  const [showRecorder, setShowRecorder] = useState(false);
+  const usingSpecialMode = Boolean(referenceSongId || voicePersonaId);
+
+  async function loadRecentSongs() {
+    const res = await fetch("/api/generations?page=1");
+    if (!res.ok) return;
+    const data = await res.json();
+    setRecentSongs(
+      data.generations
+        .filter((g: { status: string; song: { id: string; title: string } | null }) => g.status === "completed" && g.song)
+        .map((g: { song: { id: string; title: string } }) => ({ id: g.song.id, title: g.song.title })),
+    );
+  }
+
+  async function loadVoices() {
+    const res = await fetch("/api/voice-personas");
+    if (!res.ok) return;
+    const data = await res.json();
+    setVoices(data.personas);
+  }
+
+  useEffect(() => {
+    // Populate the reference-song and voice pickers on mount, can't be
+    // computed during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadRecentSongs();
+    loadVoices();
+  }, []);
+
+  // Restore on mount client-side only, to avoid an SSR/client hydration
+  // mismatch (the server always renders the empty initial state).
+  useEffect(() => {
+    setStylePrompt(localStorage.getItem(STYLE_STORAGE_KEY) ?? "");
+    setLyricsText(localStorage.getItem(LYRICS_STORAGE_KEY) ?? "");
+    setLanguage(localStorage.getItem(LANGUAGE_STORAGE_KEY) ?? "en");
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(STYLE_STORAGE_KEY, stylePrompt);
+  }, [stylePrompt]);
+
+  useEffect(() => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  }, [language]);
+
+  useEffect(() => {
+    localStorage.setItem(LYRICS_STORAGE_KEY, lyricsText);
+  }, [lyricsText]);
+
+  // Remix: WorkspaceList hands us an existing song's style/lyrics through
+  // this seed (keyed by `nonce` so remixing the same song twice in a row
+  // still re-applies it, since setting the same value again wouldn't
+  // otherwise re-trigger the effect).
+  useEffect(() => {
+    if (!remixSeed) return;
+    setStylePrompt(remixSeed.stylePrompt);
+    setLyricsText(remixSeed.lyricsText);
+    setInstrumental(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remixSeed?.nonce]);
+
+  // Applying a saved style preset from the sidebar -- only touches the style
+  // field, keyed by nonce for the same reason as remixSeed above.
+  useEffect(() => {
+    if (!styleSeed) return;
+    // External trigger (sidebar click), same pattern as remixSeed above.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStylePrompt(styleSeed.value);
+    document.getElementById("style-textarea")?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [styleSeed?.nonce]);
+
+  const estimatedCredits = CREDITS_PER_GENERATION * versions;
 
   // Rough guide for comfortable, unhurried pacing: ~2.3 sung words/second,
   // plus ~15s slack for intro/instrumental breaks. If the chosen duration
@@ -63,6 +160,8 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
         lyricsText: instrumental ? "" : lyricsText,
         targetDurationSeconds: duration,
         versions,
+        referenceSongId: referenceSongId || undefined,
+        voicePersonaId: voicePersonaId || undefined,
       }),
     });
     const data = await res.json();
@@ -73,8 +172,9 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
       return;
     }
 
-    setStylePrompt("");
-    setLyricsText("");
+    // Keep stylePrompt/lyricsText filled in after a successful submit --
+    // iterating on the same song (different duration, different rhythm)
+    // shouldn't require retyping/repasting them every time.
     setRightsConfirmed(false);
 
     if (onCreated) {
@@ -89,11 +189,12 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
       <label className="flex flex-col gap-1 text-sm">
         Style / genre prompt
         <textarea
+          id="style-textarea"
           value={stylePrompt}
           onChange={(e) => setStylePrompt(e.target.value)}
           placeholder="e.g. upbeat 80s synth-pop, female vocals, driving bassline"
-          rows={2}
-          className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm"
+          rows={6}
+          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm resize-y min-h-[8rem]"
         />
       </label>
 
@@ -120,15 +221,70 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
         </label>
       </div>
 
+      <div className="flex flex-col gap-3 rounded-lg border border-zinc-800 p-3">
+        <label className="flex flex-col gap-1 text-sm">
+          Reference song <span className="text-zinc-500">(optional -- inspires the new song&apos;s style)</span>
+          <select
+            value={referenceSongId}
+            onChange={(e) => {
+              setReferenceSongId(e.target.value);
+              if (e.target.value) setVoicePersonaId("");
+            }}
+            className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 w-full"
+          >
+            <option value="">None</option>
+            {recentSongs.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.title}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          Voice <span className="text-zinc-500">(optional -- sings with a cloned voice instead of the default)</span>
+          <select
+            value={voicePersonaId}
+            onChange={(e) => {
+              setVoicePersonaId(e.target.value);
+              if (e.target.value) setReferenceSongId("");
+            }}
+            className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2 w-full"
+          >
+            <option value="">Default voice</option>
+            {voices
+              .filter((v) => v.status === "ready")
+              .map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={() => setShowRecorder(true)}
+          className="self-start text-xs text-zinc-400 hover:text-zinc-100 underline"
+        >
+          + Record a new voice
+        </button>
+        {usingSpecialMode && (
+          <p className="text-xs text-zinc-500">
+            Using a reference song or voice generates a single version, not A/B.
+          </p>
+        )}
+      </div>
+
       {!instrumental && (
         <label className="flex flex-col gap-1 text-sm">
           Lyrics
           <textarea
+            id="lyrics-textarea"
             value={lyricsText}
             onChange={(e) => setLyricsText(e.target.value)}
             placeholder={LYRICS_PLACEHOLDER}
-            rows={10}
-            className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-mono"
+            rows={24}
+            className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-mono resize-y min-h-[16rem]"
           />
           <span className="text-xs text-zinc-500">
             Paste a full lyric in one go, mark sections inline with tags like{" "}
@@ -172,7 +328,8 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
                 key={v}
                 type="button"
                 onClick={() => setVersions(v)}
-                className={`px-3 py-1 rounded-full transition-colors ${
+                disabled={usingSpecialMode}
+                className={`px-3 py-1 rounded-full transition-colors disabled:opacity-40 ${
                   versions === v ? "bg-[#F5B900] text-black" : "text-zinc-400 hover:text-zinc-100"
                 }`}
               >
@@ -180,7 +337,7 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
               </button>
             ))}
           </div>
-          {versions === 2 && (
+          {versions === 2 && !usingSpecialMode && (
             <span className="text-xs text-zinc-500">2 full generations, compare and keep your favorite</span>
           )}
         </div>
@@ -189,7 +346,7 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
       <p className="text-sm text-zinc-400">
         Estimated cost: <span className="text-zinc-100 font-medium">{estimatedCredits} credits</span>{" "}
         {versions === 2 ? "(2 versions) " : ""}
-        (refunded automatically if a song comes in shorter, or a version fails)
+        (refunded automatically if a version fails)
       </p>
 
       <label className="flex items-start gap-2 text-sm text-zinc-400">
@@ -212,6 +369,13 @@ export function GenerationForm({ onCreated }: { onCreated?: (batchId: string) =>
       >
         {loading ? "Submitting..." : "Generate song"}
       </button>
+
+      {showRecorder && (
+        <VoiceRecorderModal
+          onClose={() => setShowRecorder(false)}
+          onCreated={loadVoices}
+        />
+      )}
     </form>
   );
 }

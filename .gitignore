@@ -44,3 +44,13 @@ next-env.d.ts
 
 # locally-stored generated audio (dev only)
 /storage
+
+# background video loops for the auto-generated song video (large binaries,
+# fetched/copied locally rather than committed)
+/backgrounds
+
+# ad-hoc video clip exports / FableCut project scratch (large binaries)
+/VideoClipe
+.claude/
+__pycache__/
+*.pyc

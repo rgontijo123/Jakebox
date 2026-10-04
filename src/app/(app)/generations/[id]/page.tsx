@@ -8,7 +8,13 @@ type GenerationEntry = {
   id: string;
   status: "pending" | "processing" | "completed" | "failed" | "rejected_moderation";
   errorMessage: string | null;
-  song: { id: string; title: string; durationSeconds: number; wordTimestamps: WordTimestamp[] | null } | null;
+  song: {
+    id: string;
+    title: string;
+    durationSeconds: number;
+    wordTimestamps: WordTimestamp[] | null;
+    hasVideo: boolean;
+  } | null;
 };
 
 type BatchResponse = {
@@ -87,6 +93,7 @@ export default function BatchResultPage({ params }: { params: Promise<{ id: stri
                   stylePrompt={data.stylePrompt}
                   lyricsText={data.lyricsText}
                   wordTimestamps={g.song.wordTimestamps}
+                  hasVideo={g.song.hasVideo}
                 />
               )}
             </div>

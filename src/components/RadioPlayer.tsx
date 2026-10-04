@@ -9,12 +9,14 @@ export function RadioPlayer({
   stylePrompt,
   lyricsText,
   wordTimestamps,
+  hasVideo = false,
 }: {
   songId: string;
   title: string;
   stylePrompt: string;
   lyricsText: string;
   wordTimestamps: WordTimestamp[] | null;
+  hasVideo?: boolean;
 }) {
   const player = usePlayer();
   const isActive = player.current?.songId === songId;
@@ -23,7 +25,7 @@ export function RadioPlayer({
   const lines = alignLyrics(lyricsText, wordTimestamps ?? []);
 
   function handlePlay() {
-    player.play({ songId, title, stylePrompt, lyricsText, wordTimestamps });
+    player.play({ songId, title, stylePrompt, lyricsText, wordTimestamps, hasVideo });
   }
 
   return (
@@ -44,6 +46,15 @@ export function RadioPlayer({
         )}
         {isActive && player.isPlaying ? "Playing" : "Play"}
       </button>
+
+      {hasVideo && (
+        <a
+          href={`/api/songs/${songId}/video?download=1`}
+          className="self-start text-xs text-zinc-500 hover:text-zinc-100 underline -mt-2"
+        >
+          Baixar vídeo
+        </a>
+      )}
 
       {lines.length > 0 && (
         <div className="max-h-72 overflow-y-auto rounded-lg bg-black/40 p-4 flex flex-col gap-2.5 text-sm leading-relaxed">

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { AdminGenerationRow } from "@/components/AdminGenerationRow";
+import { AdminCreditLookup } from "@/components/AdminCreditLookup";
 
 export default async function AdminPage({
   searchParams,
@@ -26,7 +27,10 @@ export default async function AdminPage({
       : undefined,
     orderBy: { createdAt: "desc" },
     take: 100,
-    include: { user: { select: { email: true, status: true } }, songs: { select: { id: true }, take: 1 } },
+    include: {
+      user: { select: { email: true, status: true, creditBalance: true } },
+      songs: { select: { id: true }, take: 1 },
+    },
   });
 
   return (
@@ -44,6 +48,8 @@ export default async function AdminPage({
         </form>
       </div>
 
+      <AdminCreditLookup />
+
       <div className="w-full max-w-4xl flex flex-col divide-y divide-zinc-800 border border-zinc-800 rounded-md">
         {generations.length === 0 && <p className="p-4 text-sm text-zinc-500">No generations found.</p>}
         {generations.map((g) => (
@@ -53,6 +59,7 @@ export default async function AdminPage({
             userId={g.userId}
             userEmail={g.user.email}
             userBanned={g.user.status === "banned"}
+            userCreditBalance={g.user.creditBalance}
             status={g.status}
             stylePrompt={g.stylePrompt}
             createdAt={g.createdAt.toISOString()}

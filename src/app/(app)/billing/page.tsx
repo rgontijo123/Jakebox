@@ -27,9 +27,15 @@ export default async function BillingPage() {
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-16 gap-8">
       <div className="w-full max-w-2xl flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Billing</h1>
-        <span className="text-sm text-zinc-400">
-          <span className="text-zinc-100 font-medium">{user?.creditBalance ?? 0}</span> credits
+        <div>
+          <h1 className="text-2xl font-semibold">Billing</h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            100 credits = one full song generation, audio and video clip included.
+          </p>
+        </div>
+        <span className="text-sm text-zinc-400 text-right shrink-0 pl-4">
+          <span className="block text-2xl text-zinc-100 font-semibold">{user?.creditBalance ?? 0}</span>
+          credits left
         </span>
       </div>
 

@@ -78,8 +78,8 @@ export default function SignupPage() {
           I agree to the{" "}
           <a href="/acceptable-use" className="underline">
             Acceptable Use Policy
-          </a>{" "}
-          and confirm generated music is powered by ElevenLabs Music.
+          </a>
+          .
         </label>
 
         {error && <p className="text-sm text-red-400">{error}</p>}

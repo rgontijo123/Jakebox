@@ -39,6 +39,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: string }).role;
+        // The Credentials provider doesn't get the same automatic
+        // name/email-to-token copy OAuth providers get -- without this,
+        // session.user.name stays undefined and the UI always falls back
+        // to showing the email instead of the display name.
+        token.name = user.name;
       }
       return token;
     },
@@ -46,6 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         (session.user as { role?: string }).role = token.role as string | undefined;
+        session.user.name = token.name as string | undefined;
       }
       return session;
     },

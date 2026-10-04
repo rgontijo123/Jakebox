@@ -5,6 +5,19 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* A flat #000 background read as "very black" -- a couple of very faint
+   color washes (brand gold top-left, a cool blue top-right) add depth and
+   warmth without turning this into a colorful UI. Fixed so it doesn't
+   scroll/repeat oddly on long pages. */
+body {
+  background-color: #09090b;
+  background-image:
+    radial-gradient(1100px 550px at 8% -10%, rgba(245, 185, 0, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(56, 130, 246, 0.12), transparent 55%),
+    radial-gradient(700px 500px at 50% 100%, rgba(168, 85, 247, 0.06), transparent 60%);
+  background-attachment: fixed;
+}
+
 @keyframes spin-slow {
   from {
     transform: rotate(0deg);

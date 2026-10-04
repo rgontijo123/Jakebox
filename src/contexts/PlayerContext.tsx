@@ -9,6 +9,7 @@ export type PlayableSong = {
   stylePrompt: string;
   lyricsText: string;
   wordTimestamps: WordTimestamp[] | null;
+  hasVideo: boolean;
 };
 
 type PlayerState = {

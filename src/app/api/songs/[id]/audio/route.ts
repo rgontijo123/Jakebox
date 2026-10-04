@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { readSongAudio } from "@/lib/storage";
+import { rangeResponse } from "@/lib/rangeResponse";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -19,13 +20,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const buffer = await readSongAudio(song.audioUrl);
   const download = new URL(req.url).searchParams.get("download") === "1";
 
-  return new NextResponse(new Uint8Array(buffer), {
-    headers: {
-      "Content-Type": song.format === "wav" ? "audio/wav" : "audio/mpeg",
-      "Content-Length": String(buffer.byteLength),
-      ...(download
-        ? { "Content-Disposition": `attachment; filename="${song.title.replace(/[^a-z0-9]/gi, "_")}.${song.format}"` }
-        : {}),
-    },
+  const contentType =
+    song.format === "wav" ? "audio/wav" : song.format === "ogg" ? "audio/ogg" : "audio/mpeg";
+
+  return rangeResponse(req, buffer, contentType, {
+    ...(download
+      ? { "Content-Disposition": `attachment; filename="${song.title.replace(/[^a-z0-9]/gi, "_")}.${song.format}"` }
+      : {}),
   });
 }

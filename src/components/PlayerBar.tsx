@@ -16,7 +16,7 @@ export function PlayerBar() {
   if (!current) return null;
 
   return (
-    <div className="sticky bottom-0 z-20 border-t border-zinc-800 bg-black/95 backdrop-blur px-4 py-3 flex items-center gap-4">
+    <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-zinc-800 bg-black/95 backdrop-blur px-4 py-3 flex items-center gap-4">
       <div className="flex items-center gap-3 min-w-0 w-56">
         <div className={`shrink-0 rounded-full bg-[#F5B900]/10 p-1 ${isPlaying ? "animate-spin-slow" : ""}`}>
           <Image src="/branding/jake-logo.svg" alt="" width={32} height={32} />
@@ -62,6 +62,15 @@ export function PlayerBar() {
       >
         Download
       </a>
+
+      {current.hasVideo && (
+        <a
+          href={`/api/songs/${current.songId}/video?download=1`}
+          className="shrink-0 text-xs text-zinc-500 hover:text-zinc-100 underline"
+        >
+          Vídeo
+        </a>
+      )}
     </div>
   );
 }

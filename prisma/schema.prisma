@@ -41,6 +41,9 @@ model User {
   songs              Song[]
   moderationLogs     ModerationLog[]
   supportReports     SupportReport[]
+  videoStudioJobs    VideoStudioJob[]
+  stylePresets       StylePreset[]
+  voicePersonas      VoicePersona[]
 }
 
 enum CreditTransactionType {
@@ -147,15 +150,35 @@ model Song {
   durationSeconds Int
   fileSizeBytes   Int
 
+  // Which backend actually generated this song ("elevenlabs" | "treblo" |
+  // "mureka" | "musicapi") -- musicProvider.ts falls through to the next
+  // configured provider on a quota/credit error, so this records which one
+  // won for a given generation. Nullable: rows created before this field
+  // existed don't have it.
+  provider String?
+
   // [{ word: string, start: number, end: number }] in seconds, from
   // ElevenLabs' with_timestamps option -- powers the synced lyrics player.
   wordTimestamps Json?
+
+  // Auto-generated vertical video (waveform + title/style text, see
+  // src/lib/video.ts) -- storage key under storage/videos/, mirroring
+  // audioUrl. Null if video generation hasn't run yet or failed (it's
+  // best-effort and never blocks the song itself from completing).
+  videoUrl String?
+
+  // A still frame grabbed from that same generated video, used as the
+  // song's cover thumbnail in the library list -- storage key under
+  // storage/thumbnails/. Null whenever videoUrl is (no video, no frame to
+  // grab from).
+  thumbnailUrl String?
 
   deletedAt DateTime? // soft delete, keeps row for dispute/takedown handling
 
   createdAt DateTime @default(now())
 
-  supportReports SupportReport[]
+  supportReports  SupportReport[]
+  videoStudioJobs VideoStudioJob[]
 
   @@index([userId])
   @@index([generationId])
@@ -182,6 +205,93 @@ model ModerationLog {
 
   @@index([userId])
   @@index([generationId])
+}
+
+enum VideoStudioJobStatus {
+  running
+  done
+  error
+}
+
+// Tracks a lyric-video render handed off to the separate VideoSubtitles
+// Flask service (see src/lib/videoStudio.ts) -- a richer Whisper-aligned
+// captioned video + short-clip pipeline than Song.videoUrl's own lightweight
+// auto-generated waveform video. That service is a local, single-user tool
+// (no auth of its own), so access to /video and /studio in Jakebox is
+// restricted to owner/admin.
+model VideoStudioJob {
+  id     String @id @default(cuid())
+  songId String
+  song   Song   @relation(fields: [songId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // The identifier VideoSubtitles uses for this render (its filenames are
+  // derived from it directly) -- sanitized from the song title plus a
+  // uniqueness suffix, see videoStudio.ts. Unique here too since it's the
+  // join key back to the Flask side.
+  name String @unique
+
+  status       VideoStudioJobStatus @default(running)
+  errorMessage String?
+
+  videoUrl        String?
+  durationSeconds Int?
+  promoText       String?
+  shortUrl        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([songId])
+}
+
+// User-saved style/genre prompts, reusable across generations from the
+// Create sidebar -- separate from the free-text stylePrompt on Generation,
+// which stays a per-submission snapshot.
+model StylePreset {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  name   String
+  prompt String
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum VoicePersonaStatus {
+  pending
+  ready
+  failed
+}
+
+// A voice cloned via MusicAPI's create-voice endpoint from a recorded/
+// uploaded sample (see src/lib/musicapi.ts) -- reusable as the singer
+// across later generations (task_type: "persona_music") once `personaId`
+// is populated. The source recording is kept only long enough to be
+// hosted at a public URL for the provider to fetch (see publicHost.ts);
+// this row's `personaId` is what actually matters afterward.
+model VoicePersona {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+  name   String
+
+  status       VoicePersonaStatus @default(pending)
+  personaId    String? // set once MusicAPI's create-voice task completes
+  errorMessage String?
+  // Local storage key for the original recording/upload -- kept permanently
+  // (separate from the short-lived R2 public URL used only to hand the
+  // audio to MusicAPI) so the user can play back what they recorded, e.g.
+  // to confirm it actually captured their voice before generating a song.
+  audioUrl     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 enum SupportReportStatus {
