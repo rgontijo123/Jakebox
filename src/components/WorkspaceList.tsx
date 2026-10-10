@@ -186,7 +186,7 @@ export function WorkspaceList({
 
                 <div className="min-w-0 flex-1 flex flex-col gap-3">
                   <div className="min-w-0">
-                    <p className="text-base font-semibold truncate">
+                    <p className="text-base font-semibold line-clamp-2">
                       {row.song?.title ?? (isWorking ? "Generating…" : row.stylePrompt.slice(0, 40))}
                     </p>
                     <p className="text-sm text-zinc-400 line-clamp-3 mt-1">
