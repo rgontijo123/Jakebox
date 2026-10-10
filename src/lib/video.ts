@@ -25,12 +25,14 @@ const LOGO_SIZE = 150;
 const LOGO_Y = 50;
 const BRAND_TEXT_Y = LOGO_Y + LOGO_SIZE + 12;
 const TITLE_Y = BRAND_TEXT_Y + 44;
-// The drive-letter colon needs escaping even inside a single-quoted filter
-// option value -- fontfile parsing treats it specially regardless of the
-// surrounding quotes (confirmed by trial: unescaped, it silently falls back
-// to a default font instead of erroring).
-const FONT_BOLD = "C\\:/Windows/Fonts/arialbd.ttf";
-const FONT_REGULAR = "C\\:/Windows/Fonts/arial.ttf";
+// Bundled in the repo (public/fonts/, OFL-licensed) rather than referencing
+// a system font path -- C:\Windows\Fonts\arial.ttf doesn't exist on Render's
+// Linux runtime, which made every drawtext call (and therefore the whole
+// video render) fail in production while still looking fine in local dev.
+// toFilterPath below still runs it through the same colon-escaping a
+// Windows absolute path needs; on Linux the path has no colon to escape.
+const FONT_BOLD = toFilterPath(path.join(process.cwd(), "public", "fonts", "Lato-Bold.ttf"));
+const FONT_REGULAR = toFilterPath(path.join(process.cwd(), "public", "fonts", "Lato-Regular.ttf"));
 
 // Real drone footage (seamless boomerang loops built for the Musicas
 // megamix project -- copied locally under backgrounds/drone/, gitignored:
