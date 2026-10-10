@@ -4,6 +4,10 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Required outside Vercel (Render, Railway, etc. aren't auto-trusted) --
+  // without this, Auth.js rejects the request's host header and every auth
+  // route fails with a generic "Configuration" error page.
+  trustHost: true,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
