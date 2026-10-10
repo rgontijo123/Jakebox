@@ -19,7 +19,7 @@ export default function Home() {
           Get started
         </a>
         <a
-          href="/pricing"
+          href="/billing"
           className="rounded-full border border-zinc-700 px-6 py-3 text-sm font-medium hover:border-zinc-500 transition-colors"
         >
           Pricing
