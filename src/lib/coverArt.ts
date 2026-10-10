@@ -1,14 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
-import { writeFile, unlink, readFile } from "node:fs/promises";
+import { unlink, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { PALETTES, LOGO_PATH, pickByHash } from "./video";
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- no types published for this package
 const ffmpegPath: string = require("ffmpeg-static");
 
-// "Nano Banana" -- Google's image-generation Gemini variant, same
-// GEMINI_API_KEY already configured for Jakebox's free Google AI Studio tier.
-const MODEL = "gemini-2.5-flash-image";
+const SIZE = 720;
+const LOGO_SIZE = 280;
 
 function run(args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -23,81 +23,45 @@ function run(args: string[]): Promise<void> {
   });
 }
 
-// Gemini returns PNG -- the thumbnail route serves everything as
-// image/jpeg (see api/songs/[id]/thumbnail/route.ts), and center-cropping
-// to a perfect square here means the frontend never has to deal with
-// whatever aspect ratio the model actually honored.
-async function toSquareJpeg(pngBuffer: Buffer): Promise<Buffer> {
+/** Branded square cover: a gradient background (same palette set and
+ * per-song hash pick as the waveform video, so a song's video and cover
+ * agree visually) with the Jakebox logo centered. No per-song AI image --
+ * Gemini's image model turned out to require Google Cloud billing even on
+ * a "free tier" API key (confirmed: 429 RESOURCE_EXHAUSTED, limit 0), which
+ * isn't worth it before Jakebox has any paying users. Pure ffmpeg, so this
+ * never fails for quota/cost reasons -- only returns null if ffmpeg itself
+ * errors, which callers treat as "fall back to the video still-frame". */
+export async function generateCoverArt(params: { title: string; styleSummary: string }): Promise<Buffer | null> {
   const tmpDir = os.tmpdir();
   const id = randomUUID();
-  const inPath = path.join(tmpDir, `jakebox-cover-in-${id}.png`);
-  const outPath = path.join(tmpDir, `jakebox-cover-out-${id}.jpg`);
-  await writeFile(inPath, pngBuffer);
+  const outPath = path.join(tmpDir, `jakebox-cover-${id}.jpg`);
+
+  const [c0, c1] = pickByHash(params.title, PALETTES);
+
   try {
     await run([
       "-y",
+      "-f",
+      "lavfi",
       "-i",
-      inPath,
-      "-vf",
-      "scale=720:720:force_original_aspect_ratio=increase,crop=720:720",
+      `gradients=size=${SIZE}x${SIZE}:duration=1:c0=0x${c0}:c1=0x${c1}:x0=0:y0=0:x1=${SIZE}:y1=${SIZE}:speed=0.02`,
+      "-i",
+      LOGO_PATH,
+      "-filter_complex",
+      `[1:v]scale=${LOGO_SIZE}:${LOGO_SIZE}[logo];[0:v][logo]overlay=(W-w)/2:(H-h)/2[v]`,
+      "-map",
+      "[v]",
+      "-frames:v",
+      "1",
       "-q:v",
       "3",
       outPath,
     ]);
     return await readFile(outPath);
-  } finally {
-    await unlink(inPath).catch(() => {});
-    await unlink(outPath).catch(() => {});
-  }
-}
-
-/** AI-generated album cover matching the song's style -- best-effort, same
- * as the video generation step: returns null (never throws) on any failure,
- * including GEMINI_API_KEY not being set, so a finished song is never held
- * up or failed over cover art. Callers fall back to the waveform-video
- * still-frame thumbnail when this returns null. */
-export async function generateCoverArt(params: { title: string; styleSummary: string }): Promise<Buffer | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
-
-  const prompt =
-    `Album cover artwork for a song titled "${params.title}", musical style: ${params.styleSummary}. ` +
-    "A striking, professional album cover illustration/photo capturing the mood and genre. " +
-    "No text, no words, no letters, no typography anywhere in the image.";
-
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseModalities: ["IMAGE"],
-            imageConfig: { aspectRatio: "1:1" },
-          },
-        }),
-      },
-    );
-
-    if (!res.ok) {
-      console.error("Gemini cover art request failed", res.status, await res.text().catch(() => ""));
-      return null;
-    }
-
-    const data = await res.json();
-    const parts = data?.candidates?.[0]?.content?.parts ?? [];
-    const imagePart = parts.find((p: { inlineData?: { data?: string } }) => p.inlineData?.data);
-    if (!imagePart) {
-      console.error("Gemini cover art response had no image part", JSON.stringify(data).slice(0, 500));
-      return null;
-    }
-
-    const pngBuffer = Buffer.from(imagePart.inlineData.data as string, "base64");
-    return await toSquareJpeg(pngBuffer);
   } catch (err) {
     console.error("Cover art generation failed", err);
     return null;
+  } finally {
+    await unlink(outPath).catch(() => {});
   }
 }

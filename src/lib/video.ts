@@ -16,7 +16,7 @@ const HEIGHT = 1280; // 9:16, vertical -- matches Reels/Stories/TikTok
 // without distortion or a white box behind it. The SVG counterpart
 // (public/branding/jake-logo.svg) can't be fed to ffmpeg directly:
 // ffmpeg-static isn't built with librsvg support.
-const LOGO_PATH = path.join(process.cwd(), "public", "icons", "icon-512.png");
+export const LOGO_PATH = path.join(process.cwd(), "public", "icons", "icon-512.png");
 const LOGO_SIZE = 150;
 // Top of the branding block (logo + "Made with Jakebox"). Placed above the
 // title/subtitle/author card, rather than at the bottom, so it stays fully
@@ -42,7 +42,7 @@ const FONT_REGULAR = "C\\:/Windows/Fonts/arial.ttf";
 const DRONE_DIR = path.join(process.cwd(), "backgrounds", "drone");
 const DRONE_CLIPS = ["boomerang_forest_river.mp4", "boomerang_lake_mountains.mp4", "boomerang_beach_ocean.mp4", "boomerang_misty_park.mp4"];
 
-const PALETTES: [string, string][] = [
+export const PALETTES: [string, string][] = [
   ["2b1055", "7597de"],
   ["0f0c29", "302b63"],
   ["1a2980", "26d0ce"],
@@ -53,7 +53,7 @@ const PALETTES: [string, string][] = [
   ["4b134f", "c94b4b"],
 ];
 
-function pickByHash<T>(name: string, options: T[]): T {
+export function pickByHash<T>(name: string, options: T[]): T {
   const digest = createHash("sha256").update(name).digest("hex");
   const idx = parseInt(digest.slice(0, 8), 16) % options.length;
   return options[idx];
