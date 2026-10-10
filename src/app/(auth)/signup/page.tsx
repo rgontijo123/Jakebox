@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { PASSWORD_REQUIREMENTS_HINT } from "@/lib/passwordPolicy";
+import OAuthButtons from "@/components/OAuthButtons";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -45,6 +47,8 @@ export default function SignupPage() {
       <form onSubmit={handleSubmit} className="w-full max-w-sm flex flex-col gap-4">
         <h1 className="text-2xl font-semibold mb-2">Create your account</h1>
 
+        <OAuthButtons />
+
         <label className="flex flex-col gap-1 text-sm">
           Email
           <input
@@ -62,10 +66,13 @@ export default function SignupPage() {
             type="password"
             required
             minLength={8}
+            pattern="(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}"
+            title={PASSWORD_REQUIREMENTS_HINT}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm"
           />
+          <span className="text-xs text-zinc-500">{PASSWORD_REQUIREMENTS_HINT}</span>
         </label>
 
         <label className="flex items-start gap-2 text-sm text-zinc-400">

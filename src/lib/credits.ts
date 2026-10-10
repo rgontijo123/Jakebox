@@ -65,11 +65,14 @@ export async function grantAdminAdjustment(userId: string, credits: number) {
 }
 
 /** Throws if the user can't cover the charge -- caller should catch and
- * surface "insufficient credits" to the user. */
+ * surface "insufficient credits" to the user. owner/admin accounts skip the
+ * balance check (their usage still costs real provider money and stays
+ * tracked in the ledger below, but it should never block them mid-test). */
 export async function chargeForGeneration(userId: string, generationId: string, credits: number) {
   return db.$transaction(async (tx) => {
     const user = await tx.user.findUniqueOrThrow({ where: { id: userId } });
-    if (user.creditBalance < credits) {
+    const isUnlimited = user.role === "owner" || user.role === "admin";
+    if (!isUnlimited && user.creditBalance < credits) {
       throw new Error("INSUFFICIENT_CREDITS");
     }
     return applyLedgerEntry(tx, {

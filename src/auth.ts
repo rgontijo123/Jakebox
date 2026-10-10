@@ -1,7 +1,13 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import Facebook from "next-auth/providers/facebook";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { upsertOAuthUser } from "@/lib/oauthUser";
+
+const MAX_FAILED_ATTEMPTS = 3;
+const LOCKOUT_MINUTES = 15;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   // Required outside Vercel (Render, Railway, etc. aren't auto-trusted) --
@@ -24,10 +30,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!email || !password) return null;
 
         const user = await db.user.findUnique({ where: { email: email.toLowerCase() } });
-        if (!user || user.status === "banned") return null;
+        if (!user || user.status === "banned" || !user.passwordHash) return null;
+
+        if (user.lockedUntil && user.lockedUntil > new Date()) return null;
 
         const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return null;
+        if (!valid) {
+          const attempts = user.failedLoginAttempts + 1;
+          await db.user.update({
+            where: { id: user.id },
+            data: {
+              failedLoginAttempts: attempts,
+              lockedUntil:
+                attempts >= MAX_FAILED_ATTEMPTS
+                  ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000)
+                  : undefined,
+            },
+          });
+          return null;
+        }
+
+        if (user.failedLoginAttempts > 0 || user.lockedUntil) {
+          await db.user.update({
+            where: { id: user.id },
+            data: { failedLoginAttempts: 0, lockedUntil: null },
+          });
+        }
 
         return {
           id: user.id,
@@ -37,9 +65,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         };
       },
     }),
+    // Only registered once real credentials exist -- an empty clientId
+    // would otherwise throw at startup before the user has created the
+    // OAuth app in Google/Meta's developer console.
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [Google({ clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET })]
+      : []),
+    ...(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET
+      ? [Facebook({ clientId: process.env.FACEBOOK_CLIENT_ID, clientSecret: process.env.FACEBOOK_CLIENT_SECRET })]
+      : []),
   ],
   callbacks: {
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user, account }) => {
+      if (account && (account.provider === "google" || account.provider === "facebook")) {
+        // No Account/Session tables -- OAuth identity isn't persisted, just
+        // the resulting User row, found-or-created by email on every sign-in.
+        const dbUser = await upsertOAuthUser(user.email ?? "", user.name);
+        token.id = dbUser.id;
+        token.role = dbUser.role;
+        token.name = dbUser.displayName ?? user.name ?? undefined;
+        return token;
+      }
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: string }).role;

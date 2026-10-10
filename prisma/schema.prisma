@@ -23,7 +23,11 @@ enum UserStatus {
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
-  passwordHash  String
+  // Nullable: an account created via Google/Facebook sign-in has no
+  // password at all. The Credentials provider's authorize() treats a null
+  // passwordHash as "this account can't log in with a password" rather
+  // than attempting bcrypt.compare against it.
+  passwordHash  String?
   displayName   String?
   role          UserRole @default(user)
   status        UserStatus @default(active)
@@ -32,18 +36,41 @@ model User {
   tosAcceptedAt DateTime?
   tosVersion    String?
 
+  // Login lockout: failedLoginAttempts resets to 0 on any successful login
+  // or password reset; lockedUntil is set once it hits the 3-attempt
+  // threshold (see authorize() in src/auth.ts) and cleared the same way.
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  creditTransactions CreditTransaction[]
-  payments           Payment[]
-  generations        Generation[]
-  songs              Song[]
-  moderationLogs     ModerationLog[]
-  supportReports     SupportReport[]
-  videoStudioJobs    VideoStudioJob[]
-  stylePresets       StylePreset[]
-  voicePersonas      VoicePersona[]
+  creditTransactions  CreditTransaction[]
+  payments            Payment[]
+  generations         Generation[]
+  songs               Song[]
+  moderationLogs      ModerationLog[]
+  supportReports      SupportReport[]
+  videoStudioJobs     VideoStudioJob[]
+  stylePresets        StylePreset[]
+  voicePersonas       VoicePersona[]
+  passwordResetTokens PasswordResetToken[]
+}
+
+// Forgot-password flow: the raw token is only ever emailed to the user,
+// never stored -- tokenHash (sha256) is what's persisted, same pattern as
+// passwordHash on User, so a DB leak alone can't be used to reset accounts.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 enum CreditTransactionType {

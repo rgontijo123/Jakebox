@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import OAuthButtons from "@/components/OAuthButtons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,12 +18,28 @@ export default function LoginPage() {
     setLoading(true);
 
     const res = await signIn("credentials", { email, password, redirect: false });
-    setLoading(false);
 
     if (res?.error) {
-      setError("Invalid email or password");
+      // authorize() doesn't surface a distinct "locked" error through
+      // NextAuth's own error codes (collapsed for security reasons), so
+      // this cross-checks separately to show the right message.
+      const statusRes = await fetch("/api/auth/login-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const status = await statusRes.json().catch(() => null);
+      setLoading(false);
+
+      if (status?.locked) {
+        const until = new Date(status.lockedUntil).toLocaleTimeString();
+        setError(`Too many failed attempts. Try again after ${until}, or reset your password below.`);
+      } else {
+        setError("Invalid email or password");
+      }
       return;
     }
+    setLoading(false);
     router.push("/create");
     router.refresh(); // re-fetch server components (Header) so they see the new session
   }
@@ -31,6 +48,8 @@ export default function LoginPage() {
     <main className="flex flex-1 flex-col items-center justify-center px-6 py-16">
       <form onSubmit={handleSubmit} className="w-full max-w-sm flex flex-col gap-4">
         <h1 className="text-2xl font-semibold mb-2">Log in</h1>
+
+        <OAuthButtons />
 
         <label className="flex flex-col gap-1 text-sm">
           Email
@@ -44,7 +63,12 @@ export default function LoginPage() {
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          Password
+          <div className="flex items-center justify-between">
+            Password
+            <a href="/forgot-password" className="text-xs text-zinc-500 underline">
+              Forgot password?
+            </a>
+          </div>
           <input
             type="password"
             required
