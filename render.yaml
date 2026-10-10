@@ -1,6 +1,11 @@
+# Named jakebox-eu (not jakebox) and pinned to Frankfurt so this Blueprint
+# deploy creates a brand-new service/database pair in the right region
+# instead of colliding with the pre-existing "jakebox" service in Oregon
+# (created manually, pre-Blueprint). Rename once the Oregon one is retired.
 services:
   - type: web
-    name: jakebox
+    name: jakebox-eu
+    region: frankfurt
     runtime: node
     plan: starter
     buildCommand: npm install && npx prisma generate && npx prisma migrate deploy && npm run build
@@ -13,7 +18,9 @@ services:
       - key: NODE_VERSION
         value: 24.15.0
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: jakebox-eu-db
+          property: connectionString
       - key: TREBLO_API_KEY
         sync: false
       - key: TREBLO_MODEL_VERSION
@@ -46,3 +53,8 @@ services:
         sync: false
       - key: R2_PUBLIC_BASE_URL
         sync: false
+
+databases:
+  - name: jakebox-eu-db
+    region: frankfurt
+    plan: free
