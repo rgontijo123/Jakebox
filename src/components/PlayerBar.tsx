@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { usePlayer } from "@/contexts/PlayerContext";
 
 function formatTime(seconds: number): string {
@@ -17,14 +16,9 @@ export function PlayerBar() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-zinc-800 bg-black/95 backdrop-blur px-4 py-3 flex items-center gap-4">
-      <div className="flex items-center gap-3 min-w-0 w-56">
-        <div className={`shrink-0 rounded-full bg-[#F5B900]/10 p-1 ${isPlaying ? "animate-spin-slow" : ""}`}>
-          <Image src="/branding/jake-logo.svg" alt="" width={32} height={32} />
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{current.title}</p>
-          <p className="text-xs text-zinc-500 truncate">{current.stylePrompt}</p>
-        </div>
+      <div className="min-w-0 w-56">
+        <p className="text-sm font-medium truncate">{current.title}</p>
+        <p className="text-xs text-zinc-500 truncate">{current.stylePrompt}</p>
       </div>
 
       <button
