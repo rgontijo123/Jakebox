@@ -159,38 +159,39 @@ export function WorkspaceList({
               onClick={() => row.status === "completed" && setExpandedId(isExpanded ? null : row.id)}
               role={row.status === "completed" ? "button" : undefined}
               tabIndex={row.status === "completed" ? 0 : undefined}
-              className={`flex flex-col gap-3 px-6 py-5 ${
+              className={`flex flex-col gap-3 px-6 py-6 ${
                 row.status === "completed" ? "cursor-pointer hover:bg-zinc-900" : ""
               }`}
             >
-              <div className="flex items-stretch gap-4">
+              <div className="flex items-stretch gap-5">
                 {row.song?.hasThumbnail ? (
                   // eslint-disable-next-line @next/next/no-img-element -- served
                   // through an authenticated API route, not a static/optimizable asset
                   // Sized to roughly span the title/meta row plus the button
-                  // row next to it (up from the original 40px box) -- a fixed
-                  // size rather than a percentage-height trick, since a flex
-                  // item's height:100% doesn't reliably resolve against an
-                  // auto-height row in practice.
+                  // row next to it, large enough for an AI-generated cover
+                  // (see src/lib/coverArt.ts) to actually read as cover art
+                  // rather than a thumbnail -- a fixed size rather than a
+                  // percentage-height trick, since a flex item's height:100%
+                  // doesn't reliably resolve against an auto-height row.
                   <img
                     src={`/api/songs/${row.song.id}/thumbnail`}
                     alt=""
-                    className="shrink-0 w-[91px] h-[91px] rounded-lg object-cover"
+                    className="shrink-0 w-[140px] h-[140px] rounded-xl object-cover"
                   />
                 ) : (
-                  <div className="shrink-0 w-[91px] h-[91px] rounded-lg bg-[#F5B900]/10 flex items-center justify-center">
-                    <Image src="/branding/jake-logo.svg" alt="" width={32} height={32} />
+                  <div className="shrink-0 w-[140px] h-[140px] rounded-xl bg-[#F5B900]/10 flex items-center justify-center">
+                    <Image src="/branding/jake-logo.svg" alt="" width={44} height={44} />
                   </div>
                 )}
 
                 <div className="min-w-0 flex-1 flex flex-col gap-3">
                   <div className="flex items-center gap-3">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">
+                      <p className="text-base font-semibold truncate">
                         {row.song?.title ?? (isWorking ? "Generating…" : row.stylePrompt.slice(0, 40))}
                       </p>
-                      <p className="text-xs text-zinc-500 line-clamp-2">
-                        <span className="text-zinc-400">{LANGUAGE_LABEL[row.language] ?? row.language}</span>
+                      <p className="text-sm text-zinc-400 line-clamp-3 mt-1">
+                        <span className="text-zinc-300">{LANGUAGE_LABEL[row.language] ?? row.language}</span>
                         {" · "}
                         {row.stylePrompt}
                       </p>

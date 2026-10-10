@@ -18,6 +18,7 @@ import {
 } from "@/lib/storage";
 import { normalizeLyricsTags, normalizeLyricsPunctuation, deriveFallbackTitle } from "@/lib/lyrics";
 import { generateSongVideo } from "@/lib/video";
+import { generateCoverArt } from "@/lib/coverArt";
 import { publishTempPublicUrl, cleanupTempPublicUrl } from "@/lib/publicHost";
 
 const DAILY_GENERATION_LIMIT = 10;
@@ -295,6 +296,21 @@ async function runGenerationJob(
       },
     });
 
+    // Best-effort: an AI-generated cover matching the song's style, never a
+    // reason to fail the generation itself (no GEMINI_API_KEY, quota, etc).
+    // Takes priority over the waveform-video still-frame fallback below.
+    let coverThumbnailKey: string | null = null;
+    try {
+      const cover = await generateCoverArt({ title, styleSummary: params.stylePrompt });
+      if (cover) {
+        coverThumbnailKey = newThumbnailStorageKey(generationId);
+        await saveSongThumbnail(coverThumbnailKey, cover);
+        await db.song.update({ where: { id: song.id }, data: { thumbnailUrl: coverThumbnailKey } });
+      }
+    } catch (err) {
+      console.error("Cover art generation failed (song itself still succeeded)", err);
+    }
+
     // Best-effort: an automatic vertical video (waveform + title/style,
     // see src/lib/video.ts) is a nice-to-have on top of the song, never a
     // reason to fail the generation itself if ffmpeg has a bad day.
@@ -310,10 +326,19 @@ async function runGenerationJob(
         wordTimestamps: result.wordTimestamps,
       });
       const videoKey = newVideoStorageKey(generationId);
-      const thumbnailKey = newThumbnailStorageKey(generationId);
       await saveSongVideo(videoKey, video);
-      await saveSongThumbnail(thumbnailKey, thumbnail);
-      await db.song.update({ where: { id: song.id }, data: { videoUrl: videoKey, thumbnailUrl: thumbnailKey } });
+      // Only fall back to the waveform-frame thumbnail when the AI cover
+      // above didn't produce one -- the cover art always wins.
+      if (coverThumbnailKey) {
+        await db.song.update({ where: { id: song.id }, data: { videoUrl: videoKey } });
+      } else {
+        const fallbackThumbnailKey = newThumbnailStorageKey(generationId);
+        await saveSongThumbnail(fallbackThumbnailKey, thumbnail);
+        await db.song.update({
+          where: { id: song.id },
+          data: { videoUrl: videoKey, thumbnailUrl: fallbackThumbnailKey },
+        });
+      }
     } catch (err) {
       console.error("Video generation failed (song itself still succeeded)", err);
     }
