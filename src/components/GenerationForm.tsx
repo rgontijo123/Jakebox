@@ -4,9 +4,18 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VoiceRecorderModal } from "@/components/VoiceRecorderModal";
 
-// Keep in sync with CREDITS_PER_GENERATION in src/lib/credits.ts -- can't
-// import it directly, that module pulls in the server-only Prisma client.
+// Keep in sync with src/lib/credits.ts's creditsForDuration -- can't import
+// it directly, that module pulls in the server-only Prisma client.
 const CREDITS_PER_GENERATION = 100;
+const BASE_DURATION_SECONDS = 60;
+const EXTRA_CREDITS_PER_STEP = 25;
+const EXTRA_DURATION_STEP_SECONDS = 30;
+
+function creditsForDuration(durationSeconds: number): number {
+  if (durationSeconds <= BASE_DURATION_SECONDS) return CREDITS_PER_GENERATION;
+  const extraSteps = Math.ceil((durationSeconds - BASE_DURATION_SECONDS) / EXTRA_DURATION_STEP_SECONDS);
+  return CREDITS_PER_GENERATION + extraSteps * EXTRA_CREDITS_PER_STEP;
+}
 
 // Persisted across page navigations (not just across generations on the same
 // page) so going to check a result and coming back to Create doesn't lose
@@ -131,7 +140,7 @@ export function GenerationForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [styleSeed?.nonce]);
 
-  const estimatedCredits = CREDITS_PER_GENERATION * versions;
+  const estimatedCredits = creditsForDuration(duration) * versions;
 
   // Rough guide for comfortable, unhurried pacing: ~2.3 sung words/second,
   // plus ~15s slack for intro/instrumental breaks. If the chosen duration
@@ -307,7 +316,12 @@ export function GenerationForm({
 
       <div className="flex flex-col gap-3">
         <label className="flex flex-col gap-2 text-sm">
-          Target duration: {duration}s
+          <span className="flex items-center gap-2">
+            Target duration: {duration}s
+            <span className="rounded-full bg-[#F5B900]/15 text-[#F5B900] text-xs font-medium px-2 py-0.5">
+              {creditsForDuration(duration) * versions} credits
+            </span>
+          </span>
           <input
             type="range"
             min={10}

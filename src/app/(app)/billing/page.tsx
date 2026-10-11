@@ -38,7 +38,7 @@ export default async function BillingPage() {
         <div>
           <h1 className="text-2xl font-semibold">Billing</h1>
           <p className="text-sm text-zinc-500 mt-1">
-            100 credits = one full song generation, audio and video clip included.
+            100 credits = one song up to 60s (audio + video clip), +25 credits per extra 30s.
           </p>
         </div>
         <span className="text-sm text-zinc-400 text-right shrink-0 pl-4">

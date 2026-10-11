@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { moderateGenerationRequest } from "@/lib/moderation";
-import { chargeForGeneration, refundForGeneration, CREDITS_PER_GENERATION, MAX_GENERATION_SECONDS } from "@/lib/credits";
+import { chargeForGeneration, refundForGeneration, creditsForDuration, MAX_GENERATION_SECONDS } from "@/lib/credits";
 import { generateMusic, MusicGenerationError } from "@/lib/musicProvider";
 import { generateWithReference, generateWithPersona } from "@/lib/musicapi";
 import { getAudioDurationSeconds } from "@/lib/audio";
@@ -161,7 +161,7 @@ export async function POST(req: Request) {
   const moderation = await moderateGenerationRequest({ stylePrompt, lyricsText });
 
   const batchId = randomUUID();
-  const creditsPerVersion = CREDITS_PER_GENERATION;
+  const creditsPerVersion = creditsForDuration(targetDurationSeconds);
 
   const generationIds: string[] = [];
   for (let i = 0; i < versions; i++) {

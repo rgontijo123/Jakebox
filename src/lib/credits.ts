@@ -1,17 +1,27 @@
 import { db } from "@/lib/db";
 import type { Prisma } from "@/generated/prisma/client";
 
-/** Flat price per generation, 1 credit = $0.01. Providers now bill per
- * generation call regardless of output length (MusicAPI: ~$0.29 for a pair
- * of songs, flat, whether the output is 20s or 4 minutes) rather than per
- * second -- charging users by requested duration stopped matching real cost
- * once MusicAPI became the primary provider. 100 credits (~3-4x markup over
- * that per-generation cost) replaces the old duration-based math; a
- * generation either succeeds and keeps the charge, or fails and gets fully
- * refunded (see runGenerationJob's catch path) -- there's no partial refund
- * to compute anymore since price no longer depends on output length. */
+/** Base price for a generation up to BASE_DURATION_SECONDS, 1 credit = $0.01.
+ * Providers actually bill per generation call regardless of output length
+ * (MusicAPI: ~$0.29 for a pair of songs, flat, whether the output is 20s or
+ * 4 minutes), so this duration scaling is a deliberate pricing/UX choice
+ * (users expect a longer song to cost more), not a reflection of real
+ * provider cost -- the markup just gets larger for longer songs. */
 export const CREDITS_PER_GENERATION = 100;
+export const BASE_DURATION_SECONDS = 60;
+export const EXTRA_CREDITS_PER_STEP = 25;
+export const EXTRA_DURATION_STEP_SECONDS = 30;
 export const MAX_GENERATION_SECONDS = 300; // still caps what we ask providers for
+
+/** 100 credits up to 60s, then +25 credits per 30s (or part thereof) beyond
+ * that -- e.g. 90s=125, 120s=150, 300s=300. Used both to charge (per
+ * version, since each version is an independent full generation at this
+ * duration) and to show the live estimate in GenerationForm. */
+export function creditsForDuration(durationSeconds: number): number {
+  if (durationSeconds <= BASE_DURATION_SECONDS) return CREDITS_PER_GENERATION;
+  const extraSteps = Math.ceil((durationSeconds - BASE_DURATION_SECONDS) / EXTRA_DURATION_STEP_SECONDS);
+  return CREDITS_PER_GENERATION + extraSteps * EXTRA_CREDITS_PER_STEP;
+}
 
 type Tx = Prisma.TransactionClient;
 

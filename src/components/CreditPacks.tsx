@@ -81,7 +81,7 @@ export function CreditPacks() {
                   <span className="font-medium">{pack.credits.toLocaleString()}</span> credits
                 </p>
                 <p className="text-xs text-zinc-500">
-                  ≈ {songs} full songs · ${perSong.toFixed(2)}/song
+                  ≈ {songs} songs at 60s (longer songs cost more) · ${perSong.toFixed(2)}/song
                 </p>
               </div>
 
