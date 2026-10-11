@@ -8,6 +8,10 @@ export function Footer() {
       <Link href="/terms" className="hover:text-zinc-300">
         Terms of Use
       </Link>
+      <span className="text-zinc-700">&middot;</span>
+      <Link href="/privacy" className="hover:text-zinc-300">
+        Privacy Policy
+      </Link>
     </footer>
   );
 }

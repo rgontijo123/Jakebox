@@ -83,8 +83,8 @@ export default function SignupPage() {
             className="mt-1"
           />
           I agree to the{" "}
-          <a href="/acceptable-use" className="underline">
-            Acceptable Use Policy
+          <a href="/terms" className="underline">
+            Terms of Use
           </a>
           .
         </label>
