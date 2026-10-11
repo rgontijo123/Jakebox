@@ -51,7 +51,14 @@ export function GenerationForm({
   const [recentSongs, setRecentSongs] = useState<{ id: string; title: string }[]>([]);
   const [voices, setVoices] = useState<{ id: string; name: string; status: string }[]>([]);
   const [showRecorder, setShowRecorder] = useState(false);
+  const [credits, setCredits] = useState<{ creditBalance: number; unlimited: boolean } | null>(null);
   const usingSpecialMode = Boolean(referenceSongId || voicePersonaId);
+
+  async function loadCredits() {
+    const res = await fetch("/api/me/credits");
+    if (!res.ok) return;
+    setCredits(await res.json());
+  }
 
   async function loadRecentSongs() {
     const res = await fetch("/api/generations?page=1");
@@ -77,6 +84,7 @@ export function GenerationForm({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadRecentSongs();
     loadVoices();
+    loadCredits();
   }, []);
 
   // Restore on mount client-side only, to avoid an SSR/client hydration
@@ -176,6 +184,9 @@ export function GenerationForm({
     // iterating on the same song (different duration, different rhythm)
     // shouldn't require retyping/repasting them every time.
     setRightsConfirmed(false);
+    // The charge already happened server-side before this response came
+    // back, so the displayed balance is stale until this re-fetch.
+    loadCredits();
 
     if (onCreated) {
       onCreated(data.batchId);
@@ -343,11 +354,21 @@ export function GenerationForm({
         </div>
       </div>
 
-      <p className="text-sm text-zinc-400">
-        Estimated cost: <span className="text-zinc-100 font-medium">{estimatedCredits} credits</span>{" "}
-        {versions === 2 ? "(2 versions) " : ""}
-        (refunded automatically if a version fails)
-      </p>
+      <div className="text-sm text-zinc-400 flex flex-col gap-0.5">
+        <p>
+          Estimated cost: <span className="text-zinc-100 font-medium">{estimatedCredits} credits</span>{" "}
+          {versions === 2 ? "(2 versions) " : ""}
+          (refunded automatically if a version fails)
+        </p>
+        {credits && !credits.unlimited && (
+          <p className={credits.creditBalance < estimatedCredits ? "text-red-400" : ""}>
+            You have {credits.creditBalance} credits — after this you&apos;ll have{" "}
+            {Math.max(0, credits.creditBalance - estimatedCredits)}
+            {credits.creditBalance < estimatedCredits && " (not enough credits for this)"}
+          </p>
+        )}
+        {credits?.unlimited && <p>You have unlimited credits (owner/admin)</p>}
+      </div>
 
       <label className="flex items-start gap-2 text-sm text-zinc-400">
         <input

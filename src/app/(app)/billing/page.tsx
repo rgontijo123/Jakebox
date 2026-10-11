@@ -16,13 +16,21 @@ export default async function BillingPage() {
   if (!session?.user?.id) redirect("/login");
 
   const [user, transactions] = await Promise.all([
-    db.user.findUnique({ where: { id: session.user.id }, select: { creditBalance: true } }),
+    db.user.findUnique({ where: { id: session.user.id }, select: { creditBalance: true, role: true } }),
     db.creditTransaction.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
       take: 50,
     }),
   ]);
+
+  // owner/admin generations still debit creditBalance for cost-tracking
+  // (see chargeForGeneration) without ever being blocked by it, so the raw
+  // number can go negative -- shown as "Unlimited" instead, same as
+  // CreditBadge. A non-staff balance can't actually go negative (charges are
+  // blocked once insufficient), but clamp defensively anyway.
+  const isUnlimited = user?.role === "owner" || user?.role === "admin";
+  const displayBalance = isUnlimited ? "Unlimited" : Math.max(0, user?.creditBalance ?? 0);
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-16 gap-8">
@@ -34,8 +42,8 @@ export default async function BillingPage() {
           </p>
         </div>
         <span className="text-sm text-zinc-400 text-right shrink-0 pl-4">
-          <span className="block text-2xl text-zinc-100 font-semibold">{user?.creditBalance ?? 0}</span>
-          credits left
+          <span className="block text-2xl text-zinc-100 font-semibold">{displayBalance}</span>
+          {!isUnlimited && "credits left"}
         </span>
       </div>
 
