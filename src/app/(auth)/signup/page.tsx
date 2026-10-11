@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { PASSWORD_REQUIREMENTS_HINT } from "@/lib/passwordPolicy";
 import OAuthButtons from "@/components/OAuthButtons";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -62,8 +63,7 @@ export default function SignupPage() {
 
         <label className="flex flex-col gap-1 text-sm">
           Password
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={8}
             pattern="(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}"

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { PASSWORD_REQUIREMENTS_HINT } from "@/lib/passwordPolicy";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -50,8 +51,7 @@ export default function ResetPasswordPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1 text-sm">
               New password
-              <input
-                type="password"
+              <PasswordInput
                 required
                 minLength={8}
                 pattern="(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}"
@@ -65,8 +65,7 @@ export default function ResetPasswordPage() {
 
             <label className="flex flex-col gap-1 text-sm">
               Confirm new password
-              <input
-                type="password"
+              <PasswordInput
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

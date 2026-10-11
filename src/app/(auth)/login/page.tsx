@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import OAuthButtons from "@/components/OAuthButtons";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -69,8 +70,7 @@ export default function LoginPage() {
               Forgot password?
             </a>
           </div>
-          <input
-            type="password"
+          <PasswordInput
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
