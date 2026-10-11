@@ -25,6 +25,11 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Jakebox",
   },
+  // Google Search Console domain ownership check -- needed to move the
+  // OAuth consent screen's branding out of "Testing" mode.
+  verification: {
+    google: "m1EqUdNX4_QClhrhq8SxH0eBN5PoFbvT63Yxr4ihwOg",
+  },
 };
 
 export const viewport: Viewport = {
