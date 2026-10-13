@@ -203,7 +203,10 @@ export function WorkspaceList({
                         </span>
                       )}
                       {(row.status === "failed" || row.status === "rejected_moderation") && (
-                        <span className="text-red-400">{STATUS_LABEL[row.status]}</span>
+                        <span className="text-red-400">
+                          {STATUS_LABEL[row.status]}
+                          {row.errorMessage ? `: ${row.errorMessage}` : ""}
+                        </span>
                       )}
                       <span className="text-zinc-600">{formatDate(row.createdAt)}</span>
                       {row.song && <span className="text-zinc-500">{formatDuration(row.song.durationSeconds)}</span>}

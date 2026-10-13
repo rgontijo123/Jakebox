@@ -32,21 +32,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await db.user.findUnique({ where: { email: email.toLowerCase() } });
         if (!user || user.status === "banned" || !user.passwordHash) return null;
 
-        if (user.lockedUntil && user.lockedUntil > new Date()) return null;
+        // Owner/admin accounts are exempt from the failed-attempt lockout --
+        // they're trusted operators, not the audience the lockout protects
+        // against, and getting locked out themselves is just an outage.
+        const exemptFromLockout = user.role === "owner" || user.role === "admin";
+
+        if (!exemptFromLockout && user.lockedUntil && user.lockedUntil > new Date()) return null;
 
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) {
-          const attempts = user.failedLoginAttempts + 1;
-          await db.user.update({
-            where: { id: user.id },
-            data: {
-              failedLoginAttempts: attempts,
-              lockedUntil:
-                attempts >= MAX_FAILED_ATTEMPTS
-                  ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000)
-                  : undefined,
-            },
-          });
+          if (!exemptFromLockout) {
+            const attempts = user.failedLoginAttempts + 1;
+            await db.user.update({
+              where: { id: user.id },
+              data: {
+                failedLoginAttempts: attempts,
+                lockedUntil:
+                  attempts >= MAX_FAILED_ATTEMPTS
+                    ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000)
+                    : undefined,
+              },
+            });
+          }
           return null;
         }
 
