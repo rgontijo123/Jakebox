@@ -81,7 +81,7 @@ export function VideoStudioPanel({ songs }: { songs: Song[] }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-end gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3">
         <label className="flex flex-col gap-1 text-sm flex-1">
           Song
           <select

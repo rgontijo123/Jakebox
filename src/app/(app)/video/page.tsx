@@ -3,8 +3,10 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { VideoStudioPanel } from "@/components/VideoStudioPanel";
 
-// Internal tool on top of the local VideoSubtitles Flask service -- see
-// videoStudio.ts. Restricted to owner/admin, same as /admin.
+// Internal tool on top of the VideoSubtitles Flask service (deployed
+// separately -- see VIDEO_STUDIO_URL in render.yaml, defaults to a local
+// instance for dev). See videoStudio.ts. Restricted to owner/admin, same
+// as /admin.
 export default async function VideoPage() {
   const session = await auth();
   const role = (session?.user as { role?: string } | undefined)?.role;
@@ -27,8 +29,7 @@ export default async function VideoPage() {
         </a>
       </div>
       <p className="w-full max-w-3xl text-sm text-zinc-500 -mt-4">
-        Turns a song into a Whisper-aligned captioned lyric video via the local Video Studio service.
-        Requires <code className="text-zinc-400">python app.py</code> running in VideoSubtitles.
+        Turns a song into a Whisper-aligned captioned lyric video via the Video Studio service.
       </p>
       <div className="w-full max-w-3xl">
         <VideoStudioPanel songs={songs} />
