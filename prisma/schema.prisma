@@ -52,6 +52,7 @@ model User {
   moderationLogs      ModerationLog[]
   supportReports      SupportReport[]
   videoStudioJobs     VideoStudioJob[]
+  clipVideoJobs       ClipVideoJob[]
   stylePresets        StylePreset[]
   voicePersonas       VoicePersona[]
   passwordResetTokens PasswordResetToken[]
@@ -206,6 +207,7 @@ model Song {
 
   supportReports  SupportReport[]
   videoStudioJobs VideoStudioJob[]
+  clipVideoJobs   ClipVideoJob[]
 
   @@index([userId])
   @@index([generationId])
@@ -266,6 +268,40 @@ model VideoStudioJob {
   durationSeconds Int?
   promoText       String?
   shortUrl        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([songId])
+}
+
+enum ClipVideoJobStatus {
+  processing
+  done
+  error
+}
+
+// Lets a user upload their own footage (2-6 clips) and have it stitched
+// into one video -- normalized to a common canvas, crossfaded between
+// clips, topped with one of their own finished songs -- entirely with
+// ffmpeg server-side (see clipVideo.ts), no external AI video provider
+// involved. Clip count is capped at MAX_CLIPS (clipVideo.ts) rather than
+// left unbounded, to keep ffmpeg processing time and upload size sane on a
+// shared Render instance.
+model ClipVideoJob {
+  id     String @id @default(cuid())
+  songId String
+  song   Song   @relation(fields: [songId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  status       ClipVideoJobStatus @default(processing)
+  errorMessage String?
+
+  clipCount       Int
+  videoUrl        String?
+  durationSeconds Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

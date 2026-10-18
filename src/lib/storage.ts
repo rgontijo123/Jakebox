@@ -49,3 +49,22 @@ export async function readSongThumbnail(storageKey: string): Promise<Buffer> {
 export function newThumbnailStorageKey(generationId: string): string {
   return `${generationId}.jpg`;
 }
+
+// Separate root from saveSongVideo's VIDEOS_ROOT -- these are user-uploaded
+// clip compilations (ClipVideoJob), not the auto-generated waveform video
+// that lives on Song.videoUrl, and keeping them apart avoids any chance of
+// a storageKey collision between the two.
+const CLIP_VIDEOS_ROOT = path.join(process.cwd(), "storage", "clip-videos");
+
+export async function saveClipVideo(storageKey: string, buffer: Buffer): Promise<void> {
+  await mkdir(CLIP_VIDEOS_ROOT, { recursive: true });
+  await writeFile(path.join(CLIP_VIDEOS_ROOT, storageKey), buffer);
+}
+
+export async function readClipVideo(storageKey: string): Promise<Buffer> {
+  return readFile(path.join(CLIP_VIDEOS_ROOT, storageKey));
+}
+
+export function newClipVideoStorageKey(jobId: string): string {
+  return `${jobId}.mp4`;
+}
