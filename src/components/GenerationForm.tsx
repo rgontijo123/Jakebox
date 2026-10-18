@@ -94,6 +94,12 @@ export function GenerationForm({
     loadRecentSongs();
     loadVoices();
     loadCredits();
+
+    // Refetch when the tab regains focus -- covers an admin top-up (or a
+    // generation charge from another tab/device) landing while this page
+    // was already open, which the initial-mount fetch above can't see.
+    window.addEventListener("focus", loadCredits);
+    return () => window.removeEventListener("focus", loadCredits);
   }, []);
 
   // Restore on mount client-side only, to avoid an SSR/client hydration
@@ -186,6 +192,10 @@ export function GenerationForm({
 
     if (!res.ok) {
       setError(data.error ?? "Something went wrong");
+      // A failed submit is often itself caused by a stale balance (e.g. an
+      // admin top-up that landed while this tab was already open) -- refetch
+      // so the displayed number matches what the server just said.
+      loadCredits();
       return;
     }
 
