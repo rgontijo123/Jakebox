@@ -147,11 +147,11 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     requestBody.prompt = stripStageDirections(params.lyricsText);
   }
 
-  const createRes = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/create`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(requestBody),
-  });
+  const createRes = await fetchWithTimeout(
+    `${BASE_URL}/api/v1/sonic/create`,
+    { method: "POST", headers, body: JSON.stringify(requestBody) },
+    45_000,
+  );
 
   if (!createRes.ok) {
     const body = await createRes.json().catch(() => null);
@@ -197,11 +197,11 @@ export async function createVoicePersona(audioUrl: string): Promise<{ personaId:
   if (!MUSICAPI_KEY) throw new Error("MUSICAPI_KEY is not set");
   const headers = { Authorization: `Bearer ${MUSICAPI_KEY}`, "Content-Type": "application/json" };
 
-  const createRes = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/create-voice`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ audio_url: audioUrl }),
-  });
+  const createRes = await fetchWithTimeout(
+    `${BASE_URL}/api/v1/sonic/create-voice`,
+    { method: "POST", headers, body: JSON.stringify({ audio_url: audioUrl }) },
+    45_000,
+  );
   if (!createRes.ok) {
     const body = await createRes.json().catch(() => null);
     throw new MusicApiError(body?.error ?? `MusicAPI create-voice request failed (${createRes.status})`, createRes.status);
@@ -258,11 +258,11 @@ export async function generateWithPersona(
     requestBody.prompt = stripStageDirections(params.lyricsText);
   }
 
-  const createRes = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/create`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(requestBody),
-  });
+  const createRes = await fetchWithTimeout(
+    `${BASE_URL}/api/v1/sonic/create`,
+    { method: "POST", headers, body: JSON.stringify(requestBody) },
+    45_000,
+  );
   if (!createRes.ok) {
     const body = await createRes.json().catch(() => null);
     throw new MusicApiError(body?.error ?? `MusicAPI persona request failed (${createRes.status})`, createRes.status);
@@ -313,11 +313,11 @@ export async function generateWithReference(
     requestBody.prompt = stripStageDirections(params.lyricsText);
   }
 
-  const createRes = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/upload-cover`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(requestBody),
-  });
+  const createRes = await fetchWithTimeout(
+    `${BASE_URL}/api/v1/sonic/upload-cover`,
+    { method: "POST", headers, body: JSON.stringify(requestBody) },
+    45_000,
+  );
   if (!createRes.ok) {
     const body = await createRes.json().catch(() => null);
     throw new MusicApiError(body?.error ?? `MusicAPI upload-cover request failed (${createRes.status})`, createRes.status);

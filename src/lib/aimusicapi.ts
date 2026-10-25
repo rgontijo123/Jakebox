@@ -143,11 +143,11 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     requestBody.prompt = stripStageDirections(params.lyricsText);
   }
 
-  const createRes = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/create`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(requestBody),
-  });
+  const createRes = await fetchWithTimeout(
+    `${BASE_URL}/api/v1/sonic/create`,
+    { method: "POST", headers, body: JSON.stringify(requestBody) },
+    45_000,
+  );
 
   if (!createRes.ok) {
     const body = await createRes.json().catch(() => null);

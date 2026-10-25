@@ -195,11 +195,11 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     requestBody.bpm = extractBpm(params.stylePrompt);
   }
 
-  const createRes = await fetchWithTimeout(`${BASE_URL}/generations/${MODEL_VERSION}`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(requestBody),
-  });
+  const createRes = await fetchWithTimeout(
+    `${BASE_URL}/generations/${MODEL_VERSION}`,
+    { method: "POST", headers, body: JSON.stringify(requestBody) },
+    45_000,
+  );
 
   if (!createRes.ok) {
     const body = await createRes.json().catch(() => null);
