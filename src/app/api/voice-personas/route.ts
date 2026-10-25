@@ -80,10 +80,17 @@ export async function POST(req: Request) {
     await db.voicePersona.update({ where: { id: persona.id }, data: { status: "ready", personaId } });
     return NextResponse.json({ persona: { id: persona.id, name, status: "ready" } });
   } catch (err) {
+    // createVoicePersona (musicapi.ts) was never confirmed against a real
+    // response before this -- logging the raw error here (not just the
+    // sanitized message sent to the client) is what makes a real schema
+    // mismatch diagnosable instead of a silent generic failure.
+    console.error("Voice persona creation failed", err);
     const message =
       err instanceof MusicApiError || err instanceof PublicHostUnavailableError
         ? err.message
-        : "Voice creation failed";
+        : err instanceof Error
+          ? `Voice creation failed: ${err.message}`
+          : "Voice creation failed";
     await db.voicePersona.update({ where: { id: persona.id }, data: { status: "failed", errorMessage: message } });
     return NextResponse.json({ error: message }, { status: 502 });
   } finally {

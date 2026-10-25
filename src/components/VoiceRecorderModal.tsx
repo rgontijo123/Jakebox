@@ -65,7 +65,14 @@ export function VoiceRecorderModal({
       mediaRecorderRef.current = recorder;
       setRecording(true);
       setSeconds(0);
-      timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
+      // Recompute from a wall-clock timestamp rather than trusting the
+      // interval to fire once a second -- mobile browsers throttle (or
+      // fully suspend) setInterval when the tab/screen goes to the
+      // background, which is exactly what happens here if you're reading
+      // something aloud without looking at the phone. A naive counter
+      // just freezes; this self-corrects whenever the tick does fire.
+      const startedAt = Date.now();
+      timerRef.current = setInterval(() => setSeconds(Math.floor((Date.now() - startedAt) / 1000)), 500);
     } catch (err) {
       stream.getTracks().forEach((t) => t.stop());
       setError(`Couldn't start recording: ${err instanceof Error ? err.message : String(err)}`);
