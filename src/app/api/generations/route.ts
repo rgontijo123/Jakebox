@@ -225,17 +225,31 @@ export async function POST(req: Request) {
     data: { status: "processing", creditsCharged: isStaff ? 0 : creditsPerVersion },
   });
 
-  for (const generationId of generationIds) {
-    runGenerationJob(generationId, userId, isStaff, {
-      stylePrompt,
-      lyricsText,
-      instrumental,
-      targetDurationSeconds,
-      language,
-      referenceSong,
-      personaId: resolvedPersonaId,
-    }).catch((err) => console.error("Background generation job crashed", err));
-  }
+  // Chained, not fired in parallel: each runGenerationJob call also does
+  // cover-art generation (coverArt.ts) and video rendering (video.ts) --
+  // real ffmpeg/image work on this same Node process, not just an external
+  // API call. Two versions running those steps at once roughly doubles
+  // peak memory, which was enough to OOM-crash the instance (same failure
+  // mode as the music_lab service before its Whisper model was downsized).
+  // Running them one after another keeps peak memory to one generation's
+  // worth, at the cost of the second version finishing later.
+  (async () => {
+    for (const generationId of generationIds) {
+      try {
+        await runGenerationJob(generationId, userId, isStaff, {
+          stylePrompt,
+          lyricsText,
+          instrumental,
+          targetDurationSeconds,
+          language,
+          referenceSong,
+          personaId: resolvedPersonaId,
+        });
+      } catch (err) {
+        console.error("Background generation job crashed", err);
+      }
+    }
+  })();
 
   return NextResponse.json({ batchId });
 }
