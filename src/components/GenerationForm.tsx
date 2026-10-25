@@ -372,16 +372,24 @@ export function GenerationForm({
               </button>
             ))}
           </div>
-          {versions === 2 && !usingSpecialMode && (
-            <span className="text-xs text-zinc-500">2 full generations, compare and keep your favorite</span>
-          )}
+          {/* Always mounted, visibility toggled via CSS rather than
+              conditionally adding/removing this node -- a page translator
+              extension (e.g. Chrome's built-in Google Translate) rewrites
+              text nodes directly in the DOM, and React inserting/removing a
+              sibling around text it's also touching is what throws
+              "insertBefore: node is not a child of this node" and crashes
+              the page. Toggling a class on an always-present node avoids
+              that whole class of conflict. */}
+          <span className={`text-xs text-zinc-500 ${versions === 2 && !usingSpecialMode ? "" : "hidden"}`}>
+            2 full generations, compare and keep your favorite
+          </span>
         </div>
       </div>
 
       <div className="text-sm text-zinc-400 flex flex-col gap-0.5">
         <p>
           Estimated cost: <span className="text-zinc-100 font-medium">{estimatedCredits} credits</span>{" "}
-          {versions === 2 ? "(2 versions) " : ""}
+          <span className={versions === 2 ? "" : "hidden"}>(2 versions) </span>
           (refunded automatically if a version fails)
         </p>
         {credits && !credits.unlimited && (
