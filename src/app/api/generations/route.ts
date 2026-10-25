@@ -366,7 +366,20 @@ async function runGenerationJob(
       },
     });
   } catch (err) {
-    const message = err instanceof MusicGenerationError ? err.message : "Generation failed";
+    // Same lesson as voice-personas' fix: swallowing the raw error here
+    // (previously only ever surfacing err.message for a MusicGenerationError,
+    // silently discarding everything else) left every other failure mode --
+    // a provider schema mismatch, a bug in this file, anything from
+    // cover-art/video generation that somehow escaped their own try/catch --
+    // completely undiagnosable, showing only a bare "Generation failed" with
+    // nothing logged anywhere to explain it.
+    console.error("Generation job failed", generationId, err);
+    const message =
+      err instanceof MusicGenerationError
+        ? err.message
+        : err instanceof Error
+          ? `Generation failed: ${err.message}`
+          : "Generation failed";
     const generation = await db.generation.findUniqueOrThrow({ where: { id: generationId } });
     await refundForGeneration(userId, generationId, generation.creditsCharged);
     await db.generation.update({
