@@ -38,6 +38,7 @@
 import { MusicGenerationError, type GenerateMusicParams, type GenerateMusicResult } from "@/lib/musicProviderTypes";
 import { transcodeToMp3 } from "@/lib/audio";
 import { deriveFallbackTitle } from "@/lib/lyrics";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
 export type { GenerateMusicParams, GenerateMusicResult } from "@/lib/musicProviderTypes";
 
@@ -91,7 +92,15 @@ const TERMINAL_FAILURE = /fail|error|reject|cancel/i;
 async function pollUntilDone(taskId: string, headers: Record<string, string>): Promise<SonicSong> {
   const maxAttempts = 60; // ~5 min at 5s intervals
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const res = await fetch(`${BASE_URL}/api/v1/sonic/task/${taskId}`, { headers });
+    let res: Response;
+    try {
+      res = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/task/${taskId}`, { headers });
+    } catch {
+      // a hung connection shouldn't burn the whole attempt budget on one
+      // stuck request -- count it as a failed attempt and keep polling
+      await new Promise((r) => setTimeout(r, 5000));
+      continue;
+    }
     // 202 { type: "not_ready" } before either song exists yet -- not an
     // error, just keep polling.
     if (res.status !== 202 && !res.ok) {
@@ -138,7 +147,7 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     requestBody.prompt = stripStageDirections(params.lyricsText);
   }
 
-  const createRes = await fetch(`${BASE_URL}/api/v1/sonic/create`, {
+  const createRes = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/create`, {
     method: "POST",
     headers,
     body: JSON.stringify(requestBody),
@@ -161,7 +170,7 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     throw new MusicApiError("MusicAPI response didn't include an audio URL", 502);
   }
 
-  const audioRes = await fetch(audioUrl);
+  const audioRes = await fetchWithTimeout(audioUrl, {}, 60_000);
   if (!audioRes.ok) {
     throw new MusicApiError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
   }
@@ -188,7 +197,7 @@ export async function createVoicePersona(audioUrl: string): Promise<{ personaId:
   if (!MUSICAPI_KEY) throw new Error("MUSICAPI_KEY is not set");
   const headers = { Authorization: `Bearer ${MUSICAPI_KEY}`, "Content-Type": "application/json" };
 
-  const createRes = await fetch(`${BASE_URL}/api/v1/sonic/create-voice`, {
+  const createRes = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/create-voice`, {
     method: "POST",
     headers,
     body: JSON.stringify({ audio_url: audioUrl }),
@@ -203,7 +212,13 @@ export async function createVoicePersona(audioUrl: string): Promise<{ personaId:
 
   const maxAttempts = 36; // ~3 min at 5s intervals -- voice cloning is a lighter job than a full song
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const res = await fetch(`${BASE_URL}/api/v1/sonic/task/${taskId}`, { headers });
+    let res: Response;
+    try {
+      res = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/task/${taskId}`, { headers });
+    } catch {
+      await new Promise((r) => setTimeout(r, 5000));
+      continue;
+    }
     if (res.status !== 202 && !res.ok) {
       const body = await res.json().catch(() => null);
       throw new MusicApiError(body?.error ?? `MusicAPI voice status check failed (${res.status})`, res.status);
@@ -243,7 +258,7 @@ export async function generateWithPersona(
     requestBody.prompt = stripStageDirections(params.lyricsText);
   }
 
-  const createRes = await fetch(`${BASE_URL}/api/v1/sonic/create`, {
+  const createRes = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/create`, {
     method: "POST",
     headers,
     body: JSON.stringify(requestBody),
@@ -260,7 +275,7 @@ export async function generateWithPersona(
   const audioUrl = song.audio_url;
   if (!audioUrl) throw new MusicApiError("MusicAPI persona response didn't include an audio URL", 502);
 
-  const audioRes = await fetch(audioUrl);
+  const audioRes = await fetchWithTimeout(audioUrl, {}, 60_000);
   if (!audioRes.ok) throw new MusicApiError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
   const downloaded = Buffer.from(await audioRes.arrayBuffer());
   const sourceFormat = audioUrl.endsWith(".wav") ? "wav" : audioUrl.endsWith(".ogg") ? "ogg" : "mp3";
@@ -298,7 +313,7 @@ export async function generateWithReference(
     requestBody.prompt = stripStageDirections(params.lyricsText);
   }
 
-  const createRes = await fetch(`${BASE_URL}/api/v1/sonic/upload-cover`, {
+  const createRes = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/upload-cover`, {
     method: "POST",
     headers,
     body: JSON.stringify(requestBody),
@@ -315,7 +330,7 @@ export async function generateWithReference(
   const audioUrl = song.audio_url;
   if (!audioUrl) throw new MusicApiError("MusicAPI upload-cover response didn't include an audio URL", 502);
 
-  const audioRes = await fetch(audioUrl);
+  const audioRes = await fetchWithTimeout(audioUrl, {}, 60_000);
   if (!audioRes.ok) throw new MusicApiError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
   const downloaded = Buffer.from(await audioRes.arrayBuffer());
   const sourceFormat = audioUrl.endsWith(".wav") ? "wav" : audioUrl.endsWith(".ogg") ? "ogg" : "mp3";

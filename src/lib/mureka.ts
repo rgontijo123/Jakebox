@@ -39,6 +39,7 @@
 
 import { MusicGenerationError, type GenerateMusicParams, type GenerateMusicResult } from "@/lib/musicProviderTypes";
 import { transcodeToMp3 } from "@/lib/audio";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
 export type { GenerateMusicParams, GenerateMusicResult } from "@/lib/musicProviderTypes";
 
@@ -110,7 +111,13 @@ const TERMINAL_SUCCESS = /success|succeed|complete|done/i;
 async function pollUntilDone(endpointBase: string, taskId: string, headers: Record<string, string>): Promise<MurekaTask> {
   const maxAttempts = 60; // ~5 min at 5s intervals
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const res = await fetch(`${BASE_URL}${endpointBase}/query/${taskId}`, { headers });
+    let res: Response;
+    try {
+      res = await fetchWithTimeout(`${BASE_URL}${endpointBase}/query/${taskId}`, { headers });
+    } catch {
+      await new Promise((r) => setTimeout(r, 5000));
+      continue;
+    }
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       throw new MurekaError(errorMessageFrom(body) ?? `Mureka status check failed (${res.status})`, res.status);
@@ -148,7 +155,7 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     requestBody.lyrics = stripStageDirections(params.lyricsText);
   }
 
-  const createRes = await fetch(`${BASE_URL}${endpointBase}/generate`, {
+  const createRes = await fetchWithTimeout(`${BASE_URL}${endpointBase}/generate`, {
     method: "POST",
     headers,
     body: JSON.stringify(requestBody),
@@ -173,7 +180,7 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     throw new MurekaError("Mureka response didn't include an audio URL", 502);
   }
 
-  const audioRes = await fetch(audioUrl);
+  const audioRes = await fetchWithTimeout(audioUrl, {}, 60_000);
   if (!audioRes.ok) {
     throw new MurekaError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
   }

@@ -35,6 +35,7 @@
 import { MusicGenerationError, type GenerateMusicParams, type GenerateMusicResult } from "@/lib/musicProviderTypes";
 import { transcodeToMp3 } from "@/lib/audio";
 import { deriveFallbackTitle } from "@/lib/lyrics";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
 export type { GenerateMusicParams, GenerateMusicResult } from "@/lib/musicProviderTypes";
 
@@ -88,7 +89,13 @@ const TERMINAL_FAILURE = /fail|error|reject|cancel/i;
 async function pollUntilDone(taskId: string, headers: Record<string, string>): Promise<SonicSong> {
   const maxAttempts = 60; // ~5 min at 5s intervals
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const res = await fetch(`${BASE_URL}/api/v1/sonic/task/${taskId}`, { headers });
+    let res: Response;
+    try {
+      res = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/task/${taskId}`, { headers });
+    } catch {
+      await new Promise((r) => setTimeout(r, 5000));
+      continue;
+    }
     // 202 mid-render (stream_audio_url, audio_url still null) -- not an
     // error, just keep polling.
     if (res.status !== 202 && !res.ok) {
@@ -136,7 +143,7 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     requestBody.prompt = stripStageDirections(params.lyricsText);
   }
 
-  const createRes = await fetch(`${BASE_URL}/api/v1/sonic/create`, {
+  const createRes = await fetchWithTimeout(`${BASE_URL}/api/v1/sonic/create`, {
     method: "POST",
     headers,
     body: JSON.stringify(requestBody),
@@ -159,7 +166,7 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     throw new AiMusicApiError("AIMusicAPI response didn't include an audio URL", 502);
   }
 
-  const audioRes = await fetch(audioUrl);
+  const audioRes = await fetchWithTimeout(audioUrl, {}, 60_000);
   if (!audioRes.ok) {
     throw new AiMusicApiError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
   }

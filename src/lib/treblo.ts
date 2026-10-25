@@ -11,6 +11,7 @@
 
 import { MusicGenerationError, type GenerateMusicParams, type GenerateMusicResult } from "@/lib/musicProviderTypes";
 import { transcodeToMp3 } from "@/lib/audio";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 
 export type { GenerateMusicParams, GenerateMusicResult } from "@/lib/musicProviderTypes";
 
@@ -124,7 +125,13 @@ async function pollUntilDone(
 ): Promise<TrebloGenerationResponse> {
   const maxAttempts = 60; // ~5 min at 5s intervals
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const res = await fetch(`${BASE_URL}/generations/${taskId}`, { headers });
+    let res: Response;
+    try {
+      res = await fetchWithTimeout(`${BASE_URL}/generations/${taskId}`, { headers });
+    } catch {
+      await new Promise((r) => setTimeout(r, 5000));
+      continue;
+    }
     if (!res.ok) {
       const body = await res.json().catch(() => null);
       throw new TrebloError(body?.error_message ?? `Treblo status check failed (${res.status})`, res.status);
@@ -188,7 +195,7 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     requestBody.bpm = extractBpm(params.stylePrompt);
   }
 
-  const createRes = await fetch(`${BASE_URL}/generations/${MODEL_VERSION}`, {
+  const createRes = await fetchWithTimeout(`${BASE_URL}/generations/${MODEL_VERSION}`, {
     method: "POST",
     headers,
     body: JSON.stringify(requestBody),
@@ -208,7 +215,7 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
   const finished = await pollUntilDone(taskId, headers, !params.instrumental);
 
   const audioUrl = finished.song_paths![0];
-  const audioRes = await fetch(audioUrl);
+  const audioRes = await fetchWithTimeout(audioUrl, {}, 60_000);
   if (!audioRes.ok) {
     throw new TrebloError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
   }
