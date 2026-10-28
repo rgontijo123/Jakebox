@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { VoiceRecorderModal } from "@/components/VoiceRecorderModal";
 
 // Keep in sync with src/lib/credits.ts's creditsForDuration -- can't import
@@ -413,7 +414,19 @@ export function GenerationForm({
         artist or infringe on copyright.
       </label>
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && (
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-red-400">{error}</p>
+          {error.toLowerCase().includes("insufficient credits") && (
+            <Link
+              href="/billing"
+              className="rounded-full bg-[#F5B900] text-black px-4 py-1.5 text-sm font-medium hover:bg-[#ffcc33] transition-colors"
+            >
+              Get more credits
+            </Link>
+          )}
+        </div>
+      )}
 
       <button
         type="submit"
