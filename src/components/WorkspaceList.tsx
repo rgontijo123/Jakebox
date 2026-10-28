@@ -70,6 +70,11 @@ export function WorkspaceList({
   const [page, setPage] = useState(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [generatingVideoId, setGeneratingVideoId] = useState<string | null>(null);
+  const [regeneratingCoverId, setRegeneratingCoverId] = useState<string | null>(null);
+  // Cache-busts the thumbnail <img> after a manual regenerate -- the URL is
+  // otherwise identical, so the browser would keep showing the old cached
+  // image even after the server-side file changes.
+  const [coverBust, setCoverBust] = useState<Record<string, number>>({});
   const player = usePlayer();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -118,6 +123,20 @@ export function WorkspaceList({
     if (!confirm("Remove this song from your library?")) return;
     const res = await fetch(`/api/songs/${songId}`, { method: "DELETE" });
     if (res.ok) load();
+  }
+
+  async function handleRegenerateCover(songId: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    setRegeneratingCoverId(songId);
+    try {
+      const res = await fetch(`/api/songs/${songId}/cover`, { method: "POST" });
+      if (res.ok) {
+        setCoverBust((b) => ({ ...b, [songId]: Date.now() }));
+        await load();
+      }
+    } finally {
+      setRegeneratingCoverId(null);
+    }
   }
 
   async function handleMakeVideo(songId: string, e: React.MouseEvent) {
@@ -174,7 +193,9 @@ export function WorkspaceList({
                   // percentage-height trick, since a flex item's height:100%
                   // doesn't reliably resolve against an auto-height row.
                   <img
-                    src={`/api/songs/${row.song.id}/thumbnail`}
+                    src={`/api/songs/${row.song.id}/thumbnail${
+                      coverBust[row.song.id] ? `?v=${coverBust[row.song.id]}` : ""
+                    }`}
                     alt=""
                     className="shrink-0 w-[140px] h-[140px] rounded-xl object-cover"
                   />
@@ -262,6 +283,19 @@ export function WorkspaceList({
                       className="w-7 h-7 flex items-center justify-center rounded-full text-sky-400/80 hover:text-sky-300 hover:bg-zinc-800 text-base leading-none"
                     >
                       ⟳
+                    </button>
+                    <button
+                      onClick={(e) => handleRegenerateCover(row.song!.id, e)}
+                      disabled={regeneratingCoverId === row.song.id}
+                      title={regeneratingCoverId === row.song.id ? "Gerando capa…" : "Gerar nova capa com IA"}
+                      aria-label={regeneratingCoverId === row.song.id ? "Gerando capa…" : "Gerar nova capa com IA"}
+                      className="w-7 h-7 flex items-center justify-center rounded-full text-pink-400/80 hover:text-pink-300 hover:bg-zinc-800 text-base leading-none disabled:opacity-50"
+                    >
+                      {regeneratingCoverId === row.song.id ? (
+                        <span className="inline-block h-3 w-3 rounded-full border-2 border-zinc-700 border-t-[#F5B900] animate-spin" />
+                      ) : (
+                        "🎨"
+                      )}
                     </button>
                     <a
                       href={`/api/songs/${row.song.id}/copyright`}

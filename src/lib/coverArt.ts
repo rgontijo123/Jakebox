@@ -4,11 +4,63 @@ import { unlink, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { PALETTES, LOGO_PATH, pickByHash } from "./video";
+import { fetchWithTimeout } from "./fetchWithTimeout";
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- no types published for this package
 const ffmpegPath: string = require("ffmpeg-static");
 
 const SIZE = 720;
 const LOGO_SIZE = 280;
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
+/** Real AI cover art via OpenAI's image model, using the key already
+ * configured for moderation. "low" quality keeps this to ~$0.01/image --
+ * plenty for a small library-card thumbnail. Returns null on any failure
+ * (missing key, content-policy rejection, timeout, quota) so the caller
+ * falls back to the branded gradient below; never worth failing the
+ * generation itself over. */
+async function generateAiCoverArt(params: { title: string; styleSummary: string }): Promise<Buffer | null> {
+  if (!OPENAI_API_KEY) return null;
+
+  const prompt =
+    `Album cover art for a song titled "${params.title}". Musical style and mood: ${params.styleSummary}. ` +
+    "Square format, vibrant, professional album artwork. No text, letters, or words anywhere in the image.";
+
+  try {
+    const res = await fetchWithTimeout(
+      "https://api.openai.com/v1/images/generations",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-image-1",
+          prompt,
+          size: "1024x1024",
+          quality: "low",
+          output_format: "jpeg",
+          n: 1,
+        }),
+      },
+      45_000,
+    );
+
+    if (!res.ok) {
+      console.error("OpenAI cover art request failed", res.status, await res.text());
+      return null;
+    }
+
+    const data = await res.json();
+    const b64 = data.data?.[0]?.b64_json;
+    if (!b64) return null;
+    return Buffer.from(b64, "base64");
+  } catch (err) {
+    console.error("OpenAI cover art request failed", err);
+    return null;
+  }
+}
 
 function run(args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -23,15 +75,18 @@ function run(args: string[]): Promise<void> {
   });
 }
 
-/** Branded square cover: a gradient background (same palette set and
- * per-song hash pick as the waveform video, so a song's video and cover
- * agree visually) with the Jakebox logo centered. No per-song AI image --
- * Gemini's image model turned out to require Google Cloud billing even on
- * a "free tier" API key (confirmed: 429 RESOURCE_EXHAUSTED, limit 0), which
- * isn't worth it before Jakebox has any paying users. Pure ffmpeg, so this
- * never fails for quota/cost reasons -- only returns null if ffmpeg itself
- * errors, which callers treat as "fall back to the video still-frame". */
+/** Cover art for a generated song: tries a real AI image matching the
+ * song's title/style first (generateAiCoverArt, above), and falls back to
+ * a branded gradient (same palette set and per-song hash pick as the
+ * waveform video, so a song's video and cover agree visually) with the
+ * Jakebox logo centered when the AI call fails for any reason (no key,
+ * quota, content-policy rejection, timeout). The gradient path is pure
+ * ffmpeg, so it only fails if ffmpeg itself errors -- callers treat a null
+ * result here as "fall back to the video still-frame" instead. */
 export async function generateCoverArt(params: { title: string; styleSummary: string }): Promise<Buffer | null> {
+  const aiCover = await generateAiCoverArt(params);
+  if (aiCover) return aiCover;
+
   const tmpDir = os.tmpdir();
   const id = randomUUID();
   const outPath = path.join(tmpDir, `jakebox-cover-${id}.jpg`);
