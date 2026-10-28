@@ -3,8 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 type NavLink = { href: string; label: string };
+
+function LanguageSwitch() {
+  const { locale, setLocale } = useLocale();
+  return (
+    <button
+      onClick={() => setLocale(locale === "en" ? "pt" : "en")}
+      className="text-xs font-medium border border-zinc-700 rounded-full px-2.5 py-1 hover:text-zinc-100 hover:border-zinc-500 transition-colors"
+      aria-label="Switch language"
+    >
+      {locale === "en" ? "PT" : "EN"}
+    </button>
+  );
+}
 
 // Plain Unicode symbols (Character Map style) rather than an icon library --
 // one glyph per link, purely decorative.
@@ -31,15 +45,16 @@ export function NavMenu({
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { t } = useLocale();
 
   const links: NavLink[] = isAuthed
     ? [
-        { href: "/create", label: "Create" },
-        { href: "/video", label: "Video" },
-        { href: "/studio", label: "Studio" },
-        { href: "/library", label: "Library" },
-        { href: "/billing", label: "Billing" },
-        ...(isStaff ? [{ href: "/admin", label: "Admin" }] : []),
+        { href: "/create", label: t("nav_create") },
+        { href: "/video", label: t("nav_video") },
+        { href: "/studio", label: t("nav_studio") },
+        { href: "/library", label: t("nav_library") },
+        { href: "/billing", label: t("nav_billing") },
+        ...(isStaff ? [{ href: "/admin", label: t("nav_admin") }] : []),
       ]
     : [];
 
@@ -70,22 +85,23 @@ export function NavMenu({
             )}
             <button onClick={onLogout} className="flex items-center gap-1.5 hover:text-zinc-100">
               <span aria-hidden="true">{LOGOUT_ICON}</span>
-              Log out
+              {t("nav_logout")}
             </button>
           </>
         ) : (
           <>
             <Link href="/login" className="hover:text-zinc-100">
-              Log in
+              {t("nav_login")}
             </Link>
             <Link
               href="/signup"
               className="rounded-full bg-white text-black px-4 py-1.5 font-medium hover:bg-zinc-200"
             >
-              Sign up
+              {t("nav_signup")}
             </Link>
           </>
         )}
+        <LanguageSwitch />
       </nav>
 
       <button
@@ -133,19 +149,22 @@ export function NavMenu({
                 className="flex items-center gap-1.5 py-2 text-left hover:text-zinc-100"
               >
                 <span aria-hidden="true">{LOGOUT_ICON}</span>
-                Log out
+                {t("nav_logout")}
               </button>
             </>
           ) : (
             <>
               <Link href="/login" onClick={() => setOpen(false)} className="py-2 hover:text-zinc-100">
-                Log in
+                {t("nav_login")}
               </Link>
               <Link href="/signup" onClick={() => setOpen(false)} className="py-2 hover:text-zinc-100">
-                Sign up
+                {t("nav_signup")}
               </Link>
             </>
           )}
+          <div className="py-2">
+            <LanguageSwitch />
+          </div>
         </nav>
       )}
     </>

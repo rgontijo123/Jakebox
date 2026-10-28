@@ -6,9 +6,11 @@ import { signIn } from "next-auth/react";
 import { PASSWORD_REQUIREMENTS_HINT } from "@/lib/passwordPolicy";
 import OAuthButtons from "@/components/OAuthButtons";
 import { PasswordInput } from "@/components/PasswordInput";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [tosAccepted, setTosAccepted] = useState(false);
@@ -28,7 +30,7 @@ export default function SignupPage() {
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error ?? "Something went wrong");
+      setError(data.error ?? t("signup_generic_error"));
       setLoading(false);
       return;
     }
@@ -36,7 +38,7 @@ export default function SignupPage() {
     const signInRes = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (signInRes?.error) {
-      setError("Account created, but sign-in failed. Try logging in.");
+      setError(t("signup_signin_failed"));
       return;
     }
     router.push("/create");
@@ -46,12 +48,12 @@ export default function SignupPage() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-6 py-16">
       <form onSubmit={handleSubmit} className="w-full max-w-sm flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold mb-2">Create your account</h1>
+        <h1 className="text-2xl font-semibold mb-2">{t("signup_title")}</h1>
 
         <OAuthButtons />
 
         <label className="flex flex-col gap-1 text-sm">
-          Email
+          {t("login_email")}
           <input
             type="email"
             required
@@ -62,7 +64,7 @@ export default function SignupPage() {
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          Password
+          {t("login_password")}
           <PasswordInput
             required
             minLength={8}
@@ -82,9 +84,9 @@ export default function SignupPage() {
             onChange={(e) => setTosAccepted(e.target.checked)}
             className="mt-1"
           />
-          I agree to the{" "}
+          {t("signup_tos_agree")}{" "}
           <a href="/terms" className="underline">
-            Terms of Use
+            {t("footer_terms")}
           </a>
           .
         </label>
@@ -96,13 +98,13 @@ export default function SignupPage() {
           disabled={loading}
           className="rounded-full bg-white text-black px-6 py-3 text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
         >
-          {loading ? "Creating account..." : "Sign up"}
+          {loading ? t("signup_submitting") : t("signup_submit")}
         </button>
 
         <p className="text-sm text-zinc-500 text-center">
-          Already have an account?{" "}
+          {t("signup_have_account")}{" "}
           <a href="/login" className="underline">
-            Log in
+            {t("nav_login")}
           </a>
         </p>
       </form>

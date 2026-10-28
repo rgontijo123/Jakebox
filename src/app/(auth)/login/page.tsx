@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import OAuthButtons from "@/components/OAuthButtons";
 import { PasswordInput } from "@/components/PasswordInput";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -34,9 +36,9 @@ export default function LoginPage() {
 
       if (status?.locked) {
         const until = new Date(status.lockedUntil).toLocaleTimeString();
-        setError(`Too many failed attempts. Try again after ${until}, or reset your password below.`);
+        setError(t("login_locked").replace("{time}", until));
       } else {
-        setError("Invalid email or password");
+        setError(t("login_invalid"));
       }
       return;
     }
@@ -48,12 +50,12 @@ export default function LoginPage() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-6 py-16">
       <form onSubmit={handleSubmit} className="w-full max-w-sm flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold mb-2">Log in</h1>
+        <h1 className="text-2xl font-semibold mb-2">{t("login_title")}</h1>
 
         <OAuthButtons />
 
         <label className="flex flex-col gap-1 text-sm">
-          Email
+          {t("login_email")}
           <input
             type="email"
             required
@@ -65,9 +67,9 @@ export default function LoginPage() {
 
         <label className="flex flex-col gap-1 text-sm">
           <div className="flex items-center justify-between">
-            Password
+            {t("login_password")}
             <a href="/forgot-password" className="text-xs text-zinc-500 underline">
-              Forgot password?
+              {t("login_forgot")}
             </a>
           </div>
           <PasswordInput
@@ -85,13 +87,13 @@ export default function LoginPage() {
           disabled={loading}
           className="rounded-full bg-white text-black px-6 py-3 text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
         >
-          {loading ? "Logging in..." : "Log in"}
+          {loading ? t("login_submitting") : t("login_submit")}
         </button>
 
         <p className="text-sm text-zinc-500 text-center">
-          No account yet?{" "}
+          {t("login_no_account")}{" "}
           <a href="/signup" className="underline">
-            Sign up
+            {t("nav_signup")}
           </a>
         </p>
       </form>
