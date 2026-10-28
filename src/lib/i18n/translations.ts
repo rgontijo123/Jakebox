@@ -73,6 +73,54 @@ export const DICTIONARY = {
     pt: "Confirmo que possuo os direitos para gerar este conteúdo e que ele não imita a obra de um artista original nem infringe direitos autorais.",
   },
   create_get_more_credits: { en: "Get more credits", pt: "Obter mais créditos" },
+
+  // Billing
+  billing_title: { en: "Billing", pt: "Cobrança" },
+  billing_price_explainer: {
+    en: "100 credits = one song up to 60s (audio + video clip), +25 credits per extra 30s.",
+    pt: "100 créditos = uma música de até 60 segundos (áudio + videoclipe), +25 créditos por cada 30 segundos adicionais.",
+  },
+  billing_credits_left: { en: "credits left", pt: "créditos à esquerda" },
+  billing_unlimited: { en: "Unlimited", pt: "Ilimitado" },
+  billing_history: { en: "History", pt: "Histórico" },
+  billing_no_activity: { en: "No activity yet.", pt: "Ainda sem atividade." },
+  billing_tx_purchase: { en: "Purchase", pt: "Compra" },
+  billing_tx_signup_bonus: { en: "Signup bonus", pt: "Bônus de cadastro" },
+  billing_tx_generation: { en: "Generation", pt: "Geração" },
+  billing_tx_refund: { en: "Refund", pt: "Reembolso" },
+  billing_tx_adjustment: { en: "Adjustment", pt: "Ajuste" },
+
+  // Credit packs
+  pack_tagline_starter: { en: "Try it out", pt: "Experimente" },
+  pack_tagline_standard: { en: "Most popular", pt: "Mais popular" },
+  pack_tagline_pro: { en: "For power users", pt: "Para usuários avançados" },
+  pack_most_popular_badge: { en: "MOST POPULAR", pt: "MAIS POPULAR" },
+  pack_one_time: { en: "one-time", pt: "pagamento único" },
+  pack_credits: { en: "credits", pt: "créditos" },
+  pack_songs_approx: {
+    en: "songs at 60s (longer songs cost more)",
+    pt: "músicas de 60 segundos (músicas mais longas custam mais)",
+  },
+  pack_feature_1: {
+    en: "Full song generation: audio + an auto-made vertical video clip",
+    pt: "Geração completa da música: áudio + um videoclipe vertical criado automaticamente",
+  },
+  pack_feature_2: {
+    en: "Works with voice cloning and reference-song remixing too",
+    pt: "Funciona também com clonagem de voz e remixagem de músicas de referência",
+  },
+  pack_feature_3: {
+    en: "Failed generations are refunded automatically",
+    pt: "As gerações com falha são reembolsadas automaticamente",
+  },
+  pack_feature_4: { en: "Credits never expire", pt: "Os créditos nunca expiram" },
+  pack_buy: { en: "Buy", pt: "Comprar" },
+  pack_redirecting: { en: "Redirecting...", pt: "Redirecionando..." },
+  pack_checkout_error: { en: "Could not start checkout", pt: "Não foi possível iniciar a compra" },
+  pack_checkout_unexpected: {
+    en: "Something went wrong starting checkout. Please try again.",
+    pt: "Algo deu errado ao iniciar a compra. Tente novamente.",
+  },
 } as const;
 
 export type DictionaryKey = keyof typeof DICTIONARY;

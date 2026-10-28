@@ -2,43 +2,51 @@
 
 import { useState } from "react";
 import { CREDIT_PACKS } from "@/lib/pricing";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import type { DictionaryKey } from "@/lib/i18n/translations";
 
 // Keep in sync with CREDITS_PER_GENERATION in src/lib/credits.ts -- can't
 // import it directly, that module pulls in the server-only Prisma client.
 const CREDITS_PER_GENERATION = 100;
 
-const PACK_TAGLINE: Record<string, string> = {
-  starter: "Try it out",
-  standard: "Most popular",
-  pro: "For power users",
+const PACK_TAGLINE_KEY: Record<string, DictionaryKey> = {
+  starter: "pack_tagline_starter",
+  standard: "pack_tagline_standard",
+  pro: "pack_tagline_pro",
 };
 
-const PACK_FEATURES = [
-  "Full song generation: audio + an auto-made vertical video clip",
-  "Works with voice cloning and reference-song remixing too",
-  "Failed generations are refunded automatically",
-  "Credits never expire",
-];
+const PACK_FEATURE_KEYS: DictionaryKey[] = ["pack_feature_1", "pack_feature_2", "pack_feature_3", "pack_feature_4"];
 
 export function CreditPacks() {
+  const { t } = useLocale();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function buy(packId: string) {
     setError(null);
     setLoadingId(packId);
-    const res = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ packId }),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.url) {
-      setError(data.error ?? "Could not start checkout");
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packId }),
+      });
+      // The server can fail before ever reaching this route (a Render 502,
+      // a proxy timeout) and hand back an HTML error page instead of JSON --
+      // res.json() throws on that. Previously nothing caught it, so
+      // setLoadingId(null) below never ran and the button stayed stuck on
+      // "Redirecting..." forever.
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.url) {
+        setError(data?.error ?? t("pack_checkout_error"));
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      setError(t("pack_checkout_unexpected"));
+    } finally {
       setLoadingId(null);
-      return;
     }
-    window.location.href = data.url;
   }
 
   return (
@@ -60,36 +68,36 @@ export function CreditPacks() {
             >
               {isPopular && (
                 <span className="absolute -top-3 left-5 rounded-full bg-[#F5B900] text-black text-xs font-semibold px-3 py-1">
-                  MOST POPULAR
+                  {t("pack_most_popular_badge")}
                 </span>
               )}
 
               <div>
                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
-                  {PACK_TAGLINE[pack.id] ?? pack.name}
+                  {t(PACK_TAGLINE_KEY[pack.id] ?? "pack_tagline_starter")}
                 </p>
                 <p className="text-lg font-semibold">{pack.name}</p>
               </div>
 
               <div>
                 <span className="text-3xl font-semibold">${(pack.usdCents / 100).toFixed(0)}</span>
-                <span className="text-sm text-zinc-500"> one-time</span>
+                <span className="text-sm text-zinc-500"> {t("pack_one_time")}</span>
               </div>
 
               <div className="rounded-lg bg-zinc-900/60 px-3 py-2">
                 <p className="text-sm text-zinc-100">
-                  <span className="font-medium">{pack.credits.toLocaleString()}</span> credits
+                  <span className="font-medium">{pack.credits.toLocaleString()}</span> {t("pack_credits")}
                 </p>
                 <p className="text-xs text-zinc-500">
-                  ≈ {songs} songs at 60s (longer songs cost more) · ${perSong.toFixed(2)}/song
+                  ≈ {songs} {t("pack_songs_approx")} · ${perSong.toFixed(2)}/song
                 </p>
               </div>
 
               <ul className="flex flex-col gap-1.5 text-xs text-zinc-400">
-                {PACK_FEATURES.map((f) => (
-                  <li key={f} className="flex items-start gap-1.5">
+                {PACK_FEATURE_KEYS.map((key) => (
+                  <li key={key} className="flex items-start gap-1.5">
                     <span className="text-[#F5B900] shrink-0">✓</span>
-                    {f}
+                    {t(key)}
                   </li>
                 ))}
               </ul>
@@ -103,7 +111,7 @@ export function CreditPacks() {
                     : "bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
                 }`}
               >
-                {loadingId === pack.id ? "Redirecting..." : "Buy"}
+                {loadingId === pack.id ? t("pack_redirecting") : t("pack_buy")}
               </button>
             </div>
           );
