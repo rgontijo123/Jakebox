@@ -3,6 +3,8 @@
  * OpenAI Moderation API. Either stage flagging content blocks the
  * generation entirely (no credits charged). */
 
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
+
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 // Owner-editable: tune this list based on real abuse observed. Keep patterns
@@ -38,14 +40,29 @@ async function checkOpenAiModeration(text: string): Promise<ModerationResult> {
     return { flagged: false, stage: "none" };
   }
 
-  const res = await fetch("https://api.openai.com/v1/moderations", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ input: text }),
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(
+      "https://api.openai.com/v1/moderations",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ input: text }),
+      },
+      15_000,
+    );
+  } catch (err) {
+    // This had no timeout and no catch before -- a hung or unreachable
+    // OpenAI endpoint stalled the *entire* generation submission (the
+    // client's "Enviando..." button never resolved), since this runs
+    // before the response is ever sent back. Same fail-open reasoning as
+    // below: don't let an OpenAI outage take the whole product down.
+    console.error("OpenAI moderation request failed", err);
+    return { flagged: false, stage: "none" };
+  }
 
   if (!res.ok) {
     console.error("OpenAI moderation request failed", res.status, await res.text());
