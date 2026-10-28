@@ -12,6 +12,10 @@ export function Footer() {
       <Link href="/privacy" className="hover:text-zinc-300">
         Privacy Policy
       </Link>
+      <span className="text-zinc-700">&middot;</span>
+      <Link href="/contact" className="hover:text-zinc-300">
+        Contact Us
+      </Link>
     </footer>
   );
 }
