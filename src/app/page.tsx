@@ -20,7 +20,7 @@ export default function Home() {
           {t("home_get_started")}
         </a>
         <a
-          href="/billing"
+          href="/pricing"
           className="rounded-full border border-zinc-700 px-6 py-3 text-sm font-medium hover:border-zinc-500 transition-colors"
         >
           {t("home_pricing")}

@@ -121,6 +121,14 @@ export const DICTIONARY = {
     en: "Something went wrong starting checkout. Please try again.",
     pt: "Algo deu errado ao iniciar a compra. Tente novamente.",
   },
+
+  // Public pricing page
+  pricing_page_title: { en: "Simple, pay-as-you-go pricing", pt: "Preço simples, pague conforme usar" },
+  pricing_page_subtitle: {
+    en: "Buy a credit pack and generate songs. No subscription, credits never expire.",
+    pt: "Compre um pacote de créditos e gere músicas. Sem assinatura, os créditos nunca expiram.",
+  },
+  pricing_page_cta: { en: "Sign up to buy", pt: "Cadastre-se para comprar" },
 } as const;
 
 export type DictionaryKey = keyof typeof DICTIONARY;
