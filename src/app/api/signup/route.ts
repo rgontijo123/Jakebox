@@ -23,30 +23,39 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "You must accept the Acceptable Use Policy" }, { status: 400 });
   }
 
-  const existing = await db.user.findUnique({ where: { email } });
-  if (existing) {
-    return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+  try {
+    const existing = await db.user.findUnique({ where: { email } });
+    if (existing) {
+      return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    // The one designated owner email (set via OWNER_EMAIL) gets the "owner"
+    // role straight from signup -- otherwise a brand-new database has no
+    // owner account and no way to grant one, since the admin panel itself
+    // requires an existing owner/admin session to use.
+    const isOwner = !!process.env.OWNER_EMAIL && email === process.env.OWNER_EMAIL.trim().toLowerCase();
+
+    const user = await db.user.create({
+      data: {
+        email,
+        passwordHash,
+        role: isOwner ? "owner" : "user",
+        tosAcceptedAt: new Date(),
+        tosVersion: TOS_VERSION,
+      },
+    });
+
+    await grantSignupBonus(user.id, SIGNUP_BONUS);
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("Signup failed", err);
+    // TEMP DEBUG: surfacing the real error to diagnose a prod-only 500.
+    // Must be removed before this ships for real.
+    const message = err instanceof Error ? err.message : String(err);
+    const code = (err as { code?: string })?.code;
+    return NextResponse.json({ error: "Signup failed", debugMessage: message, debugCode: code }, { status: 500 });
   }
-
-  const passwordHash = await bcrypt.hash(password, 12);
-
-  // The one designated owner email (set via OWNER_EMAIL) gets the "owner"
-  // role straight from signup -- otherwise a brand-new database has no
-  // owner account and no way to grant one, since the admin panel itself
-  // requires an existing owner/admin session to use.
-  const isOwner = !!process.env.OWNER_EMAIL && email === process.env.OWNER_EMAIL.trim().toLowerCase();
-
-  const user = await db.user.create({
-    data: {
-      email,
-      passwordHash,
-      role: isOwner ? "owner" : "user",
-      tosAcceptedAt: new Date(),
-      tosVersion: TOS_VERSION,
-    },
-  });
-
-  await grantSignupBonus(user.id, SIGNUP_BONUS);
-
-  return NextResponse.json({ ok: true });
 }
