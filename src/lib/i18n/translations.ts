@@ -898,6 +898,20 @@ export const DICTIONARY = {
     en: "Pick a genre and a ready-made style (or write your own below)",
     pt: "Escolha um gênero e um estilo pronto (ou escreva o seu abaixo)",
   },
+
+  // Voice cloning status
+  voice_preparing: {
+    en: "{name} (preparing…)",
+    pt: "{name} (preparando…)",
+  },
+  voice_preparing_note: {
+    en: "Your new voice is being prepared — this takes 1 to 3 minutes. It will show up here when ready.",
+    pt: "Sua nova voz está sendo preparada — leva de 1 a 3 minutos. Ela aparece aqui quando ficar pronta.",
+  },
+  voice_failed_note: {
+    en: "Couldn't create the voice \"{name}\": {reason}",
+    pt: "Não foi possível criar a voz \"{name}\": {reason}",
+  },
 } as const;
 
 export type DictionaryKey = keyof typeof DICTIONARY;

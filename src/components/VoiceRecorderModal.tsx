@@ -107,13 +107,18 @@ export function VoiceRecorderModal({
     form.set("audio", blob, "recording.webm");
     form.set("name", name.trim());
 
-    const res = await fetch("/api/voice-personas", { method: "POST", body: form });
-    const data = await res.json().catch(() => null);
-    setSaving(false);
-
-    if (!res.ok) {
-      setError(data?.error ?? t("voice_err_failed"));
+    try {
+      const res = await fetch("/api/voice-personas", { method: "POST", body: form });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(data?.error ?? t("voice_err_failed"));
+        return;
+      }
+    } catch {
+      setError(t("voice_err_failed"));
       return;
+    } finally {
+      setSaving(false);
     }
     onCreated();
     onClose();

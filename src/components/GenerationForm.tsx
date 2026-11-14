@@ -63,10 +63,21 @@ export function GenerationForm({
   const [referenceSongId, setReferenceSongId] = useState("");
   const [voicePersonaId, setVoicePersonaId] = useState("");
   const [recentSongs, setRecentSongs] = useState<{ id: string; title: string }[]>([]);
-  const [voices, setVoices] = useState<{ id: string; name: string; status: string }[]>([]);
+  const [voices, setVoices] = useState<{ id: string; name: string; status: string; errorMessage?: string | null }[]>([]);
   const [showRecorder, setShowRecorder] = useState(false);
   const [credits, setCredits] = useState<{ creditBalance: number; unlimited: boolean; songQuota: number } | null>(null);
   const usingSpecialMode = Boolean(referenceSongId || voicePersonaId);
+  // the most recent voice, if its cloning failed -- surfaced so it doesn't just vanish
+  const failedVoice = voices[0]?.status === "failed" ? voices[0] : null;
+  const hasPendingVoice = voices.some((v) => v.status === "pending");
+
+  // A new voice clones in the background for 1-3 minutes -- keep checking
+  // until it's ready (or failed) so it appears without a page reload.
+  useEffect(() => {
+    if (!hasPendingVoice) return;
+    const timer = setInterval(loadVoices, 10_000);
+    return () => clearInterval(timer);
+  }, [hasPendingVoice]);
 
   async function loadCredits() {
     const res = await fetch("/api/me/credits");
@@ -302,14 +313,22 @@ export function GenerationForm({
           >
             <option value="">{t("gen_default_voice")}</option>
             {voices
-              .filter((v) => v.status === "ready")
+              .filter((v) => v.status !== "failed")
               .map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
+                <option key={v.id} value={v.id} disabled={v.status !== "ready"}>
+                  {v.status === "ready" ? v.name : t("voice_preparing", { name: v.name })}
                 </option>
               ))}
           </select>
         </label>
+        <p className={`text-xs text-zinc-500 ${voices.some((v) => v.status === "pending") ? "" : "hidden"}`}>
+          {t("voice_preparing_note")}
+        </p>
+        {failedVoice && (
+          <p className="text-xs text-red-400">
+            {t("voice_failed_note", { name: failedVoice.name, reason: failedVoice.errorMessage ?? "" })}
+          </p>
+        )}
         <button
           type="button"
           onClick={() => setShowRecorder(true)}

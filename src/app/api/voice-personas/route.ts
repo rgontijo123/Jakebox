@@ -66,19 +66,26 @@ export async function POST(req: Request) {
     data: { userId: session.user.id, name, status: "pending" },
   });
 
+  // Cloning takes 1-3 minutes on MusicAPI's side -- answer now and finish in
+  // the background (same pattern as song generation), so the recorder can
+  // close instead of hanging on one long request. The client polls GET.
+  void finishVoicePersona(persona.id, mp3Buffer);
+  return NextResponse.json({ persona: { id: persona.id, name, status: "pending" } }, { status: 202 });
+}
+
+async function finishVoicePersona(voicePersonaId: string, mp3Buffer: Buffer) {
   let objectKey: string | undefined;
   try {
     // MusicAPI's create-voice needs a >10s, single-speaker MP3/WAV at a
     // PUBLIC url -- it fetches the audio itself, it doesn't take a direct
     // upload. Host it temporarily on the same R2 bucket the Musicas
     // project already uses for this exact problem (see publicHost.ts).
-    const { publicUrl, objectKey: key } = await publishTempPublicUrl(mp3Buffer, `${persona.id}.mp3`, "audio/mpeg");
+    const { publicUrl, objectKey: key } = await publishTempPublicUrl(mp3Buffer, `${voicePersonaId}.mp3`, "audio/mpeg");
     objectKey = key;
 
     const { personaId } = await createVoicePersona(publicUrl);
 
-    await db.voicePersona.update({ where: { id: persona.id }, data: { status: "ready", personaId } });
-    return NextResponse.json({ persona: { id: persona.id, name, status: "ready" } });
+    await db.voicePersona.update({ where: { id: voicePersonaId }, data: { status: "ready", personaId } });
   } catch (err) {
     // createVoicePersona (musicapi.ts) was never confirmed against a real
     // response before this -- logging the raw error here (not just the
@@ -91,8 +98,7 @@ export async function POST(req: Request) {
         : err instanceof Error
           ? `Voice creation failed: ${err.message}`
           : "Voice creation failed";
-    await db.voicePersona.update({ where: { id: persona.id }, data: { status: "failed", errorMessage: message } });
-    return NextResponse.json({ error: message }, { status: 502 });
+    await db.voicePersona.update({ where: { id: voicePersonaId }, data: { status: "failed", errorMessage: message } });
   } finally {
     if (objectKey) await cleanupTempPublicUrl(objectKey);
   }
