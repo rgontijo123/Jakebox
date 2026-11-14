@@ -912,6 +912,108 @@ export const DICTIONARY = {
     en: "Couldn't create the voice \"{name}\": {reason}",
     pt: "Não foi possível criar a voz \"{name}\": {reason}",
   },
+
+  // Admin user list
+  admin_users_total: {
+    en: "{n} users",
+    pt: "{n} usuários",
+  },
+  admin_search: {
+    en: "Search by email or name...",
+    pt: "Buscar por e-mail ou nome...",
+  },
+  admin_no_users: {
+    en: "No users found.",
+    pt: "Nenhum usuário encontrado.",
+  },
+  admin_songs_n: {
+    en: "{n} songs",
+    pt: "{n} músicas",
+  },
+  admin_credits_n: {
+    en: "{n} credits",
+    pt: "{n} créditos",
+  },
+  admin_quota_n: {
+    en: "{n} included songs",
+    pt: "{n} músicas incluídas",
+  },
+  admin_plan: {
+    en: "plan {plan}",
+    pt: "plano {plan}",
+  },
+  admin_banned: {
+    en: "banned",
+    pt: "banido",
+  },
+  admin_edit: {
+    en: "Edit",
+    pt: "Editar",
+  },
+  admin_send_reset: {
+    en: "Send new password",
+    pt: "Enviar nova senha",
+  },
+  admin_reset_sent: {
+    en: "Reset link sent to the user's email.",
+    pt: "Link de nova senha enviado para o e-mail do usuário.",
+  },
+  admin_ban: {
+    en: "Ban",
+    pt: "Banir",
+  },
+  admin_unban: {
+    en: "Unban",
+    pt: "Desbanir",
+  },
+  admin_banned_done: {
+    en: "User banned.",
+    pt: "Usuário banido.",
+  },
+  admin_unbanned: {
+    en: "User unbanned.",
+    pt: "Usuário desbanido.",
+  },
+  admin_delete: {
+    en: "Delete",
+    pt: "Excluir",
+  },
+  admin_quota_label: {
+    en: "Included songs",
+    pt: "Músicas incluídas",
+  },
+  admin_credit_delta_label: {
+    en: "Add/remove credits",
+    pt: "Adicionar/remover créditos",
+  },
+  admin_save: {
+    en: "Save",
+    pt: "Salvar",
+  },
+  admin_cancel: {
+    en: "Cancel",
+    pt: "Cancelar",
+  },
+  admin_saved: {
+    en: "Saved.",
+    pt: "Salvo.",
+  },
+  admin_delete_confirm: {
+    en: "Permanently delete {email} ({songs} songs, {credits} credits)? This can't be undone.",
+    pt: "Excluir {email} definitivamente ({songs} músicas, {credits} créditos)? Não dá para desfazer.",
+  },
+  admin_delete_has_plan: {
+    en: "This user has an active monthly plan. Cancel it in Stripe first so they aren't charged again.",
+    pt: "Este usuário tem um plano mensal ativo. Cancele no Stripe primeiro para ele não ser cobrado de novo.",
+  },
+  admin_delete_yes: {
+    en: "Yes, delete",
+    pt: "Sim, excluir",
+  },
+  admin_deleted: {
+    en: "User deleted.",
+    pt: "Usuário excluído.",
+  },
 } as const;
 
 export type DictionaryKey = keyof typeof DICTIONARY;
