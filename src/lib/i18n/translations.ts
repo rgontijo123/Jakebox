@@ -892,6 +892,12 @@ export const DICTIONARY = {
     en: "We couldn't send your message. Please email us at contact@jakeboxmusic.com.",
     pt: "Não conseguimos enviar sua mensagem. Escreva para contact@jakeboxmusic.com.",
   },
+
+  // Genre picker
+  genre_pick: {
+    en: "Pick a genre and a ready-made style (or write your own below)",
+    pt: "Escolha um gênero e um estilo pronto (ou escreva o seu abaixo)",
+  },
 } as const;
 
 export type DictionaryKey = keyof typeof DICTIONARY;

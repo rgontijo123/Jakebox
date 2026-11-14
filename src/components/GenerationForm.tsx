@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { VoiceRecorderModal } from "@/components/VoiceRecorderModal";
+import { GenrePicker } from "@/components/GenrePicker";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { DictionaryKey } from "@/lib/i18n/translations";
 
@@ -226,6 +227,14 @@ export function GenerationForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+      <GenrePicker
+        currentPrompt={stylePrompt}
+        onPick={(style) => {
+          setStylePrompt(style.prompt);
+          if (style.language) setLanguage(style.language);
+        }}
+      />
+
       <label className="flex flex-col gap-1 text-sm">
         {t("gen_style_label")}
         <textarea
