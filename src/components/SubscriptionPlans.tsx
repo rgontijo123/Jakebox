@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SUBSCRIPTION_PLANS } from "@/lib/pricing";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { useCardSelection } from "@/components/useCardSelection";
 
 export type CurrentPlan = {
   planId: string | null;
@@ -24,6 +25,7 @@ function formatBrl(cents: number) {
 export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
   const { t, locale } = useLocale();
   const router = useRouter();
+  const cards = useCardSelection(POPULAR_PLAN_ID);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -108,17 +110,19 @@ export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
         <div className="grid sm:grid-cols-3 gap-4">
           {SUBSCRIPTION_PLANS.map((plan) => {
             const isPopular = plan.id === POPULAR_PLAN_ID;
+            const active = cards.isActive(plan.id);
             const buttonClass = `mt-auto text-center rounded-full px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
-              isPopular ? "bg-[#F5B900] text-black hover:bg-[#ffcc33]" : "bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
+              active ? "bg-[#F5B900] text-black hover:bg-[#ffcc33]" : "bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
             }`;
 
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-2xl border p-5 flex flex-col gap-4 ${
-                  isPopular
-                    ? "border-[#F5B900] bg-gradient-to-b from-[#F5B900]/10 to-transparent"
-                    : "border-zinc-800"
+                {...cards.cardProps(plan.id)}
+                className={`relative rounded-2xl border p-5 flex flex-col gap-4 transition-colors ${
+                  active
+                    ? "cursor-pointer border-[#F5B900] bg-gradient-to-b from-[#F5B900]/10 to-transparent"
+                    : "cursor-pointer border-zinc-800 hover:border-zinc-600"
                 }`}
               >
                 {isPopular && (

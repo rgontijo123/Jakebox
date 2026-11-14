@@ -3,6 +3,7 @@
 import { CREDIT_PACKS } from "@/lib/pricing";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { SubscriptionPlans } from "@/components/SubscriptionPlans";
+import { useCardSelection } from "@/components/useCardSelection";
 import type { DictionaryKey } from "@/lib/i18n/translations";
 
 const CREDITS_PER_GENERATION = 100;
@@ -17,6 +18,7 @@ const PACK_FEATURE_KEYS: DictionaryKey[] = ["pack_feature_1", "pack_feature_2", 
 
 export function PublicPricing() {
   const { t, locale } = useLocale();
+  const cards = useCardSelection("standard");
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-16">
@@ -29,20 +31,22 @@ export function PublicPricing() {
 
         <SubscriptionPlans />
 
-        <h2 className="text-lg font-semibold -mb-6">{t("plan_or_packs")}</h2>
+        <h2 className="text-lg font-semibold -mb-4">{t("plan_or_packs")}</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           {CREDIT_PACKS.map((pack) => {
             const songs = Math.floor(pack.credits / CREDITS_PER_GENERATION);
             const perSong = pack.usdCents / 100 / songs;
             const isPopular = pack.id === "standard";
+            const active = cards.isActive(pack.id);
 
             return (
               <div
                 key={pack.id}
-                className={`relative rounded-2xl border p-5 flex flex-col gap-4 ${
-                  isPopular
-                    ? "border-[#F5B900] bg-gradient-to-b from-[#F5B900]/10 to-transparent"
-                    : "border-zinc-800"
+                {...cards.cardProps(pack.id)}
+                className={`relative rounded-2xl border p-5 flex flex-col gap-4 transition-colors ${
+                  active
+                    ? "cursor-pointer border-[#F5B900] bg-gradient-to-b from-[#F5B900]/10 to-transparent"
+                    : "cursor-pointer border-zinc-800 hover:border-zinc-600"
                 }`}
               >
                 {isPopular && (
@@ -84,7 +88,7 @@ export function PublicPricing() {
                 <a
                   href="/signup"
                   className={`mt-auto text-center rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                    isPopular
+                    active
                       ? "bg-[#F5B900] text-black hover:bg-[#ffcc33]"
                       : "bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
                   }`}
