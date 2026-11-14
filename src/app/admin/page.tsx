@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { AdminGenerationRow } from "@/components/AdminGenerationRow";
 import { AdminCreditLookup } from "@/components/AdminCreditLookup";
+import { AdminDeleteUser } from "@/components/AdminDeleteUser";
 
 export default async function AdminPage({
   searchParams,
@@ -49,6 +50,7 @@ export default async function AdminPage({
       </div>
 
       <AdminCreditLookup />
+      {session?.user?.role === "owner" && <AdminDeleteUser />}
 
       <div className="w-full max-w-4xl flex flex-col divide-y divide-zinc-800 border border-zinc-800 rounded-md">
         {generations.length === 0 && <p className="p-4 text-sm text-zinc-500">No generations found.</p>}
