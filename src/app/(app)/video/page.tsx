@@ -3,12 +3,14 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { VideoStudioPanel } from "@/components/VideoStudioPanel";
 import { ClipVideoPanel } from "@/components/ClipVideoPanel";
+import { getT } from "@/lib/i18n/server";
 
 export default async function VideoPage() {
   const session = await auth();
   const role = (session?.user as { role?: string } | undefined)?.role;
   if (!session?.user?.id) redirect("/login");
   const isStaff = role === "owner" || role === "admin";
+  const { t } = await getT();
 
   const songs = await db.song.findMany({
     where: { userId: session.user.id, deletedAt: null },
@@ -21,9 +23,9 @@ export default async function VideoPage() {
     <main className="flex flex-1 flex-col items-center px-6 py-16 gap-12">
       <div className="w-full max-w-3xl flex flex-col gap-8">
         <div>
-          <h1 className="text-2xl font-semibold mb-1">Your clips, your song</h1>
+          <h1 className="text-2xl font-semibold mb-1">{t("video_title")}</h1>
           <p className="text-sm text-zinc-500">
-            Upload your own footage and we&apos;ll stitch it into a video for one of your songs.
+            {t("video_subtitle")}
           </p>
         </div>
         <ClipVideoPanel songs={songs} />

@@ -2,11 +2,12 @@
 
 import { SessionProvider } from "next-auth/react";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
+import type { Locale } from "@/lib/i18n/translations";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ locale, children }: { locale: Locale; children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <LocaleProvider>{children}</LocaleProvider>
+      <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
     </SessionProvider>
   );
 }

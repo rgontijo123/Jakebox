@@ -5,6 +5,8 @@ import Image from "next/image";
 import { RadioPlayer } from "@/components/RadioPlayer";
 import { usePlayer } from "@/contexts/PlayerContext";
 import type { WordTimestamp } from "@/lib/lyrics";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import type { DictionaryKey } from "@/lib/i18n/translations";
 
 type GenerationRow = {
   id: string;
@@ -38,20 +40,20 @@ function formatDate(iso: string): string {
   return `${datePart} ${timePart}`;
 }
 
-const LANGUAGE_LABEL: Record<string, string> = {
-  en: "English",
-  "pt-BR": "Portuguese (Brazil)",
-  "pt-PT": "Portuguese (Portugal)",
-  es: "Spanish",
-  de: "German",
-  ja: "Japanese",
+const LANGUAGE_LABEL: Record<string, DictionaryKey> = {
+  en: "lang_en",
+  "pt-BR": "lang_pt_br",
+  "pt-PT": "lang_pt_pt",
+  es: "lang_es",
+  de: "lang_de",
+  ja: "lang_ja",
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Queued...",
-  processing: "Generating...",
-  failed: "Failed",
-  rejected_moderation: "Rejected",
+const STATUS_LABEL: Record<string, DictionaryKey> = {
+  pending: "status_pending",
+  processing: "status_processing",
+  failed: "status_failed",
+  rejected_moderation: "status_rejected",
 };
 
 const PAGE_SIZE = 10;
@@ -65,6 +67,7 @@ export function WorkspaceList({
   searchQuery?: string;
   onRemix?: (stylePrompt: string, lyricsText: string) => void;
 }) {
+  const { t } = useLocale();
   const [rows, setRows] = useState<GenerationRow[] | null>(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -120,7 +123,7 @@ export function WorkspaceList({
 
   async function handleDelete(songId: string, e: React.MouseEvent) {
     e.stopPropagation();
-    if (!confirm("Remove this song from your library?")) return;
+    if (!confirm(t("list_confirm_delete"))) return;
     const res = await fetch(`/api/songs/${songId}`, { method: "DELETE" });
     if (res.ok) load();
   }
@@ -151,13 +154,13 @@ export function WorkspaceList({
   }
 
   if (!rows) {
-    return <p className="text-sm text-zinc-500">Loading...</p>;
+    return <p className="text-sm text-zinc-500">{t("list_loading")}</p>;
   }
 
   if (rows.length === 0) {
     return (
       <p className="text-sm text-zinc-500">
-        {searchQuery ? "No songs match your search." : "No songs yet — create your first one."}
+        {searchQuery ? t("list_no_match") : t("list_empty")}
       </p>
     );
   }
@@ -208,10 +211,10 @@ export function WorkspaceList({
                 <div className="min-w-0 flex-1 flex flex-col gap-3">
                   <div className="min-w-0">
                     <p className="text-base font-semibold line-clamp-2">
-                      {row.song?.title ?? (isWorking ? "Generating…" : row.stylePrompt.slice(0, 40))}
+                      {row.song?.title ?? (isWorking ? t("list_generating") : row.stylePrompt.slice(0, 40))}
                     </p>
                     <p className="text-sm text-zinc-400 line-clamp-3 mt-1">
-                      <span className="text-zinc-300">{LANGUAGE_LABEL[row.language] ?? row.language}</span>
+                      <span className="text-zinc-300">{LANGUAGE_LABEL[row.language] ? t(LANGUAGE_LABEL[row.language]) : row.language}</span>
                       {" · "}
                       {row.stylePrompt}
                     </p>
@@ -220,12 +223,12 @@ export function WorkspaceList({
                       {isWorking && (
                         <span className="flex items-center gap-1.5 text-zinc-500">
                           <span className="inline-block h-3 w-3 rounded-full border-2 border-zinc-700 border-t-[#F5B900] animate-spin" />
-                          {STATUS_LABEL[row.status]}
+                          {t(STATUS_LABEL[row.status])}
                         </span>
                       )}
                       {(row.status === "failed" || row.status === "rejected_moderation") && (
                         <span className="text-red-400">
-                          {STATUS_LABEL[row.status]}
+                          {t(STATUS_LABEL[row.status])}
                           {row.errorMessage ? `: ${row.errorMessage}` : ""}
                         </span>
                       )}
@@ -251,7 +254,7 @@ export function WorkspaceList({
                       className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
                         isPlayingThis ? "bg-[#F5B900] text-black" : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
                       }`}
-                      aria-label="Play"
+                      aria-label={t("list_play")}
                     >
                       {isPlayingThis ? (
                         <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
@@ -267,8 +270,8 @@ export function WorkspaceList({
                     <a
                       href={`/api/songs/${row.song.id}/audio?download=1`}
                       onClick={(e) => e.stopPropagation()}
-                      title="Download"
-                      aria-label="Download"
+                      title={t("list_download")}
+                      aria-label={t("list_download")}
                       className="w-7 h-7 flex items-center justify-center rounded-full text-emerald-400/80 hover:text-emerald-300 hover:bg-zinc-800 text-base leading-none"
                     >
                       ⬇
@@ -278,8 +281,8 @@ export function WorkspaceList({
                         e.stopPropagation();
                         onRemix?.(row.stylePrompt, row.lyricsText);
                       }}
-                      title="Remix"
-                      aria-label="Remix"
+                      title={t("list_remix")}
+                      aria-label={t("list_remix")}
                       className="w-7 h-7 flex items-center justify-center rounded-full text-sky-400/80 hover:text-sky-300 hover:bg-zinc-800 text-base leading-none"
                     >
                       ⟳
@@ -287,8 +290,8 @@ export function WorkspaceList({
                     <button
                       onClick={(e) => handleRegenerateCover(row.song!.id, e)}
                       disabled={regeneratingCoverId === row.song.id}
-                      title={regeneratingCoverId === row.song.id ? "Gerando capa…" : "Gerar nova capa com IA"}
-                      aria-label={regeneratingCoverId === row.song.id ? "Gerando capa…" : "Gerar nova capa com IA"}
+                      title={regeneratingCoverId === row.song.id ? t("list_regen_cover_busy") : t("list_regen_cover")}
+                      aria-label={regeneratingCoverId === row.song.id ? t("list_regen_cover_busy") : t("list_regen_cover")}
                       className="w-7 h-7 flex items-center justify-center rounded-full text-pink-400/80 hover:text-pink-300 hover:bg-zinc-800 text-base leading-none disabled:opacity-50"
                     >
                       {regeneratingCoverId === row.song.id ? (
@@ -300,8 +303,8 @@ export function WorkspaceList({
                     <a
                       href={`/api/songs/${row.song.id}/copyright`}
                       onClick={(e) => e.stopPropagation()}
-                      title="Authorship & copyright record"
-                      aria-label="Authorship & copyright record"
+                      title={t("list_copyright")}
+                      aria-label={t("list_copyright")}
                       className="w-7 h-7 flex items-center justify-center rounded-full text-violet-400/80 hover:text-violet-300 hover:bg-zinc-800 text-base leading-none"
                     >
                       ©
@@ -310,8 +313,8 @@ export function WorkspaceList({
                       <a
                         href={`/api/songs/${row.song.id}/video?download=1`}
                         onClick={(e) => e.stopPropagation()}
-                        title="Baixar vídeo clipe"
-                        aria-label="Baixar vídeo clipe"
+                        title={t("list_download_video")}
+                        aria-label={t("list_download_video")}
                         className="w-7 h-7 flex items-center justify-center rounded-full text-amber-400/80 hover:text-amber-300 hover:bg-zinc-800 text-base leading-none"
                       >
                         🎬
@@ -320,8 +323,8 @@ export function WorkspaceList({
                       <button
                         onClick={(e) => handleMakeVideo(row.song!.id, e)}
                         disabled={generatingVideoId === row.song.id}
-                        title={generatingVideoId === row.song.id ? "Gerando vídeo…" : "Fazer vídeo clipe"}
-                        aria-label={generatingVideoId === row.song.id ? "Gerando vídeo…" : "Fazer vídeo clipe"}
+                        title={generatingVideoId === row.song.id ? t("list_make_video_busy") : t("list_make_video")}
+                        aria-label={generatingVideoId === row.song.id ? t("list_make_video_busy") : t("list_make_video")}
                         className="w-7 h-7 flex items-center justify-center rounded-full text-amber-400/80 hover:text-amber-300 hover:bg-zinc-800 text-base leading-none disabled:opacity-50"
                       >
                         {generatingVideoId === row.song.id ? (
@@ -333,8 +336,8 @@ export function WorkspaceList({
                     )}
                     <button
                       onClick={(e) => handleDelete(row.song!.id, e)}
-                      title="Remove"
-                      aria-label="Remove"
+                      title={t("list_remove")}
+                      aria-label={t("list_remove")}
                       className="w-7 h-7 flex items-center justify-center rounded-full text-zinc-600 hover:text-red-400 hover:bg-zinc-800 text-base leading-none"
                     >
                       🗑️
@@ -368,18 +371,16 @@ export function WorkspaceList({
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page <= 1}
           className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-30 disabled:hover:bg-transparent"
-          aria-label="Previous page"
+          aria-label={t("list_prev_page")}
         >
           ‹
         </button>
-        <span>
-          Page {page} of {totalPages}
-        </span>
+        <span>{t("list_page_of", { page, total: totalPages })}</span>
         <button
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           disabled={page >= totalPages}
           className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-30 disabled:hover:bg-transparent"
-          aria-label="Next page"
+          aria-label={t("list_next_page")}
         >
           ›
         </button>

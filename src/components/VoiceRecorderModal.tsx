@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const MIN_SECONDS = 10; // MusicAPI's create-voice requires >10s of audio
 
@@ -12,6 +13,7 @@ export function VoiceRecorderModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const { t } = useLocale();
   const [name, setName] = useState("");
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -29,7 +31,7 @@ export function VoiceRecorderModal({
     setBlob(null);
 
     if (!navigator.mediaDevices?.getUserMedia) {
-      setError("This browser doesn't support microphone recording (or the page isn't on https/localhost).");
+      setError(t("voice_err_unsupported"));
       return;
     }
 
@@ -40,12 +42,12 @@ export function VoiceRecorderModal({
       const name = err instanceof DOMException ? err.name : "";
       const reason =
         name === "NotAllowedError"
-          ? "Microphone access was blocked -- allow it for this site in the browser's address-bar permissions and try again."
+          ? t("voice_err_blocked")
           : name === "NotFoundError"
-            ? "No microphone was found on this device."
+            ? t("voice_err_no_mic")
             : name === "NotReadableError"
-              ? "Another app is already using the microphone."
-              : `Couldn't access the microphone${name ? ` (${name})` : ""}.`;
+              ? t("voice_err_busy")
+              : t("voice_err_access", { detail: name ? ` (${name})` : "" });
       setError(reason);
       return;
     }
@@ -75,7 +77,7 @@ export function VoiceRecorderModal({
       timerRef.current = setInterval(() => setSeconds(Math.floor((Date.now() - startedAt) / 1000)), 500);
     } catch (err) {
       stream.getTracks().forEach((t) => t.stop());
-      setError(`Couldn't start recording: ${err instanceof Error ? err.message : String(err)}`);
+      setError(t("voice_err_start", { detail: err instanceof Error ? err.message : String(err) }));
     }
   }
 
@@ -91,11 +93,11 @@ export function VoiceRecorderModal({
   async function handleSave() {
     if (!blob) return;
     if (!name.trim()) {
-      setError("Give this voice a name");
+      setError(t("voice_err_name"));
       return;
     }
     if (seconds < MIN_SECONDS) {
-      setError(`Recording needs to be at least ${MIN_SECONDS}s long`);
+      setError(t("voice_err_short", { s: MIN_SECONDS }));
       return;
     }
 
@@ -110,7 +112,7 @@ export function VoiceRecorderModal({
     setSaving(false);
 
     if (!res.ok) {
-      setError(data?.error ?? "Voice creation failed");
+      setError(data?.error ?? t("voice_err_failed"));
       return;
     }
     onCreated();
@@ -130,23 +132,22 @@ export function VoiceRecorderModal({
         className="w-full max-w-md flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">Record a voice</h3>
-          <button type="button" onClick={handleClose} className="text-zinc-500 hover:text-zinc-100" aria-label="Close">
+          <h3 className="text-sm font-medium">{t("voice_title")}</h3>
+          <button type="button" onClick={handleClose} className="text-zinc-500 hover:text-zinc-100" aria-label={t("common_close")}>
             ✕
           </button>
         </div>
 
         <p className="text-xs text-zinc-500">
-          Read something out loud for at least {MIN_SECONDS} seconds, alone and clearly -- this becomes the singer
-          voice for future generations.
+          {t("voice_intro", { s: MIN_SECONDS })}
         </p>
 
         <label className="flex flex-col gap-1 text-sm">
-          Voice name
+          {t("voice_name")}
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. My voice"
+            placeholder={t("voice_name_placeholder")}
             className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm"
           />
         </label>
@@ -155,7 +156,7 @@ export function VoiceRecorderModal({
           {recording && (
             <div className="flex items-center gap-2 text-xs font-medium text-red-400">
               <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-              Recording…
+              {t("voice_recording")}
             </div>
           )}
           <div className={`text-2xl font-mono ${recording ? "text-red-400" : "text-zinc-300"}`}>
@@ -169,7 +170,7 @@ export function VoiceRecorderModal({
               className="flex items-center gap-2 rounded-full bg-red-500 text-white px-5 py-2 text-sm font-medium hover:bg-red-400 transition-colors"
             >
               <span className="h-2.5 w-2.5 rounded-full bg-white" />
-              {blob ? "Record again" : "Start recording"}
+              {blob ? t("voice_record_again") : t("voice_start")}
             </button>
           ) : (
             <button
@@ -178,7 +179,7 @@ export function VoiceRecorderModal({
               className="flex items-center gap-2 rounded-full bg-zinc-100 text-black px-5 py-2 text-sm font-medium hover:bg-white transition-colors"
             >
               <span className="h-2.5 w-2.5 bg-red-500" />
-              Stop
+              {t("voice_stop")}
             </button>
           )}
 
@@ -193,7 +194,7 @@ export function VoiceRecorderModal({
           disabled={!blob || saving}
           className="self-start rounded-full bg-[#F5B900] text-black px-6 py-2.5 text-sm font-medium hover:bg-[#ffcc33] transition-colors disabled:opacity-50"
         >
-          {saving ? "Creating voice..." : "Save voice"}
+          {saving ? t("voice_creating") : t("voice_save")}
         </button>
       </div>
     </div>,

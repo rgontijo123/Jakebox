@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { UploadModal } from "@/components/UploadModal";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 type StylePreset = { id: string; name: string; prompt: string };
 
@@ -25,6 +26,7 @@ export function CreateSidebar({
   onApplyStylePreset: (prompt: string) => void;
   onUploaded: () => void;
 }) {
+  const { t } = useLocale();
   const [presets, setPresets] = useState<StylePreset[] | null>(null);
   const [showUpload, setShowUpload] = useState(false);
 
@@ -44,10 +46,10 @@ export function CreateSidebar({
   async function handleSaveCurrentStyle() {
     const currentStyle = localStorage.getItem(STYLE_STORAGE_KEY)?.trim();
     if (!currentStyle) {
-      alert("Write a style prompt in the form first");
+      alert(t("side_write_style_first"));
       return;
     }
-    const name = prompt("Name this style preset:");
+    const name = prompt(t("side_name_style"));
     if (!name?.trim()) return;
 
     const res = await fetch("/api/style-presets", {
@@ -70,12 +72,12 @@ export function CreateSidebar({
         <div className="flex flex-col gap-1.5">
           <span className="flex items-center gap-1.5 text-xs font-medium text-sky-400 uppercase tracking-wide">
             <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
-            Find
+            {t("side_find")}
           </span>
           <input
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search your songs..."
+            placeholder={t("side_search")}
             className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm focus:border-sky-500 focus:outline-none"
           />
         </div>
@@ -83,21 +85,21 @@ export function CreateSidebar({
         <div className="flex flex-col gap-1.5">
           <span className="flex items-center gap-1.5 text-xs font-medium text-pink-400 uppercase tracking-wide">
             <span className="h-1.5 w-1.5 rounded-full bg-pink-400" />
-            Write
+            {t("side_write")}
           </span>
           <button
             type="button"
             onClick={() => scrollToField("lyrics-textarea")}
             className="text-left text-zinc-300 hover:text-pink-300"
           >
-            <span className="text-pink-400">✎</span> Lyrics
+            <span className="text-pink-400">✎</span> {t("gen_lyrics")}
           </button>
           <button
             type="button"
             onClick={() => scrollToField("style-textarea")}
             className="text-left text-zinc-300 hover:text-amber-300"
           >
-            <span className="text-amber-400">🎨</span> Style
+            <span className="text-amber-400">🎨</span> {t("side_style")}
           </button>
         </div>
 
@@ -105,22 +107,22 @@ export function CreateSidebar({
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-xs font-medium text-violet-400 uppercase tracking-wide">
               <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
-              Saved styles
+              {t("side_saved_styles")}
             </span>
             <button
               type="button"
               onClick={handleSaveCurrentStyle}
-              title="Save current style as a preset"
-              aria-label="Save current style as a preset"
+              title={t("side_save_style")}
+              aria-label={t("side_save_style")}
               className="text-violet-400 hover:text-violet-200"
             >
               +
             </button>
           </div>
           {presets === null ? (
-            <p className="text-xs text-zinc-600">Loading...</p>
+            <p className="text-xs text-zinc-600">{t("list_loading")}</p>
           ) : presets.length === 0 ? (
-            <p className="text-xs text-zinc-600">No saved styles yet.</p>
+            <p className="text-xs text-zinc-600">{t("side_no_styles")}</p>
           ) : (
             <ul className="flex flex-col gap-1">
               {presets.map((p) => (
@@ -136,7 +138,7 @@ export function CreateSidebar({
                   <button
                     type="button"
                     onClick={(e) => handleDeletePreset(p.id, e)}
-                    aria-label={`Delete ${p.name}`}
+                    aria-label={t("side_delete_named", { name: p.name })}
                     className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400"
                   >
                     ✕
@@ -150,21 +152,21 @@ export function CreateSidebar({
         <div className="flex flex-col gap-1.5">
           <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-400 uppercase tracking-wide">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            Library
+            {t("side_library")}
           </span>
           <button
             type="button"
             onClick={() => scrollToField("songs-list")}
             className="text-left text-zinc-300 hover:text-emerald-300"
           >
-            <span className="text-emerald-400">⬇</span> Download songs
+            <span className="text-emerald-400">⬇</span> {t("side_download_songs")}
           </button>
           <button
             type="button"
             onClick={() => setShowUpload(true)}
             className="text-left text-zinc-300 hover:text-cyan-300"
           >
-            <span className="text-cyan-400">⬆</span> Upload audio
+            <span className="text-cyan-400">⬆</span> {t("side_upload_audio")}
           </button>
         </div>
       </nav>

@@ -2,6 +2,7 @@
 
 import { alignLyrics, activeWordIndex, type WordTimestamp } from "@/lib/lyrics";
 import { usePlayer } from "@/contexts/PlayerContext";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 export function RadioPlayer({
   songId,
@@ -19,6 +20,7 @@ export function RadioPlayer({
   hasVideo?: boolean;
 }) {
   const player = usePlayer();
+  const { t } = useLocale();
   const isActive = player.current?.songId === songId;
   const currentMs = isActive ? player.currentTime * 1000 : -1;
 
@@ -44,7 +46,7 @@ export function RadioPlayer({
             <path d="M4 2 L14 8 L4 14 Z" />
           </svg>
         )}
-        {isActive && player.isPlaying ? "Playing" : "Play"}
+        {isActive && player.isPlaying ? t("player_playing") : t("player_play")}
       </button>
 
       {hasVideo && (

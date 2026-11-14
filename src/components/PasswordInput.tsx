@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, type InputHTMLAttributes } from "react";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 /** A password <input> with a show/hide toggle (eye icon) -- shared across
  * login/signup/reset-password so people can check what they typed instead
  * of submitting a typo blind. */
 export function PasswordInput(props: InputHTMLAttributes<HTMLInputElement>) {
   const [visible, setVisible] = useState(false);
+  const { t } = useLocale();
 
   return (
     <div className="relative">
@@ -19,7 +21,7 @@ export function PasswordInput(props: InputHTMLAttributes<HTMLInputElement>) {
         type="button"
         onClick={() => setVisible((v) => !v)}
         tabIndex={-1}
-        aria-label={visible ? "Hide password" : "Show password"}
+        aria-label={visible ? t("pw_hide") : t("pw_show")}
         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200"
       >
         {visible ? (

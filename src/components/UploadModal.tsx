@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded: () => void }) {
+  const { t } = useLocale();
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [language, setLanguage] = useState("en");
@@ -16,11 +18,11 @@ export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUp
     setError(null);
 
     if (!file) {
-      setError("Choose an audio file");
+      setError(t("upload_err_file"));
       return;
     }
     if (!title.trim()) {
-      setError("Give it a title");
+      setError(t("upload_err_title"));
       return;
     }
 
@@ -36,7 +38,7 @@ export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUp
     setLoading(false);
 
     if (!res.ok) {
-      setError(data?.error ?? "Upload failed");
+      setError(data?.error ?? t("upload_failed"));
       return;
     }
 
@@ -52,14 +54,14 @@ export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUp
         className="w-full max-w-md flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-5"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">Upload audio</h3>
-          <button type="button" onClick={onClose} className="text-zinc-500 hover:text-zinc-100" aria-label="Close">
+          <h3 className="text-sm font-medium">{t("upload_title")}</h3>
+          <button type="button" onClick={onClose} className="text-zinc-500 hover:text-zinc-100" aria-label={t("common_close")}>
             ✕
           </button>
         </div>
 
         <label className="flex flex-col gap-1 text-sm">
-          Audio file
+          {t("upload_file")}
           <input
             type="file"
             accept="audio/*"
@@ -69,38 +71,38 @@ export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUp
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          Title
+          {t("upload_song_title")}
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Song title"
+            placeholder={t("upload_title_placeholder")}
             className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm"
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          Language
+          {t("gen_language")}
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
             className="rounded-md border border-zinc-700 bg-zinc-900 px-2 py-2"
           >
-            <option value="en">English</option>
-            <option value="pt-BR">Portuguese (Brazil)</option>
-            <option value="pt-PT">Portuguese (Portugal)</option>
-            <option value="es">Spanish</option>
-            <option value="de">German</option>
-            <option value="ja">Japanese</option>
+            <option value="en">{t("lang_en")}</option>
+            <option value="pt-BR">{t("lang_pt_br")}</option>
+            <option value="pt-PT">{t("lang_pt_pt")}</option>
+            <option value="es">{t("lang_es")}</option>
+            <option value="de">{t("lang_de")}</option>
+            <option value="ja">{t("lang_ja")}</option>
           </select>
         </label>
 
         <label className="flex flex-col gap-1 text-sm">
-          Lyrics (optional)
+          {t("upload_lyrics")}
           <textarea
             value={lyricsText}
             onChange={(e) => setLyricsText(e.target.value)}
             rows={4}
-            placeholder="Paste the lyrics if you have them -- powers the synced lyrics player"
+            placeholder={t("upload_lyrics_placeholder")}
             className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm font-mono resize-y"
           />
         </label>
@@ -112,7 +114,7 @@ export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUp
           disabled={loading}
           className="self-start rounded-full bg-[#F5B900] text-black px-6 py-2.5 text-sm font-medium hover:bg-[#ffcc33] transition-colors disabled:opacity-50"
         >
-          {loading ? "Uploading..." : "Upload"}
+          {loading ? t("upload_uploading") : t("upload_submit")}
         </button>
       </form>
     </div>,

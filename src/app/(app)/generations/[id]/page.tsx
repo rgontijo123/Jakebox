@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { RadioPlayer } from "@/components/RadioPlayer";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { WordTimestamp } from "@/lib/lyrics";
 
 type GenerationEntry = {
@@ -26,8 +27,9 @@ type BatchResponse = {
 
 export default function BatchResultPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: batchId } = use(params);
+  const { t } = useLocale();
   const [data, setData] = useState<BatchResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -36,7 +38,7 @@ export default function BatchResultPage({ params }: { params: Promise<{ id: stri
     async function poll() {
       const res = await fetch(`/api/generations/batch/${batchId}`);
       if (!res.ok) {
-        if (!cancelled) setError("Could not load this generation");
+        if (!cancelled) setLoadFailed(true);
         return;
       }
       const json: BatchResponse = await res.json();
@@ -58,11 +60,11 @@ export default function BatchResultPage({ params }: { params: Promise<{ id: stri
     <main className="flex flex-1 flex-col items-center px-6 py-16 gap-6">
       <div className={`w-full ${data && data.generations.length > 1 ? "max-w-4xl" : "max-w-2xl"} flex flex-col gap-6`}>
         <h1 className="text-2xl font-semibold">
-          {data && data.generations.length > 1 ? "Your versions" : "Your song"}
+          {data && data.generations.length > 1 ? t("result_versions") : t("result_song")}
         </h1>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
-        {!data && !error && <p className="text-sm text-zinc-400">Loading...</p>}
+        {loadFailed && <p className="text-sm text-red-400">{t("result_load_error")}</p>}
+        {!data && !loadFailed && <p className="text-sm text-zinc-400">{t("list_loading")}</p>}
 
         <div className={data && data.generations.length > 1 ? "grid sm:grid-cols-2 gap-6" : ""}>
           {data?.generations.map((g) => (
@@ -70,19 +72,19 @@ export default function BatchResultPage({ params }: { params: Promise<{ id: stri
               {(g.status === "pending" || g.status === "processing") && (
                 <div className="flex items-center gap-3 text-zinc-400 rounded-2xl border border-zinc-800 p-6">
                   <span className="inline-block h-4 w-4 rounded-full border-2 border-zinc-600 border-t-[#F5B900] animate-spin" />
-                  Generating — usually 1-3 minutes...
+                  {t("result_generating")}
                 </div>
               )}
 
               {g.status === "failed" && (
                 <p className="text-sm text-red-400 rounded-2xl border border-zinc-800 p-6">
-                  Generation failed: {g.errorMessage ?? "unknown error"}. Your credits have been refunded.
+                  {t("result_failed", { reason: g.errorMessage ?? t("result_unknown_error") })}
                 </p>
               )}
 
               {g.status === "rejected_moderation" && (
                 <p className="text-sm text-red-400 rounded-2xl border border-zinc-800 p-6">
-                  This request was rejected by our content policy. No credits were charged.
+                  {t("result_rejected")}
                 </p>
               )}
 

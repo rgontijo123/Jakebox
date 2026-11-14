@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 type Song = { id: string; title: string; durationSeconds: number };
 
@@ -19,6 +20,7 @@ const MIN_CLIPS = 2;
 const MAX_CLIPS = 6;
 
 export function ClipVideoPanel({ songs }: { songs: Song[] }) {
+  const { t } = useLocale();
   const [selectedSongId, setSelectedSongId] = useState(songs[0]?.id ?? "");
   const [files, setFiles] = useState<File[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -79,7 +81,7 @@ export function ClipVideoPanel({ songs }: { songs: Song[] }) {
     const data = await res.json().catch(() => null);
     setSubmitting(false);
     if (!res.ok) {
-      setError(data?.error ?? "Failed to start video render");
+      setError(data?.error ?? t("clip_failed_start"));
       return;
     }
     setFiles([]);
@@ -91,18 +93,17 @@ export function ClipVideoPanel({ songs }: { songs: Song[] }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-zinc-500">
-        Upload {MIN_CLIPS}-{MAX_CLIPS} of your own clips (DJ footage, you singing, anything) -- they&apos;re
-        stitched together with crossfades and topped with one of your songs.
+        {t("clip_intro", { min: MIN_CLIPS, max: MAX_CLIPS })}
       </p>
 
       <label className="flex flex-col gap-1 text-sm">
-        Song
+        {t("clip_song")}
         <select
           value={selectedSongId}
           onChange={(e) => setSelectedSongId(e.target.value)}
           className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2"
         >
-          {songs.length === 0 && <option value="">No songs yet</option>}
+          {songs.length === 0 && <option value="">{t("clip_no_songs")}</option>}
           {songs.map((s) => (
             <option key={s.id} value={s.id}>
               {s.title}
@@ -112,7 +113,7 @@ export function ClipVideoPanel({ songs }: { songs: Song[] }) {
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
-        Clips ({MIN_CLIPS}-{MAX_CLIPS} videos)
+        {t("clip_clips", { min: MIN_CLIPS, max: MAX_CLIPS })}
         <input
           type="file"
           accept="video/*"
@@ -122,8 +123,8 @@ export function ClipVideoPanel({ songs }: { songs: Song[] }) {
         />
         {files.length > 0 && (
           <span className="text-xs text-zinc-500">
-            {files.length} clip{files.length === 1 ? "" : "s"} selected
-            {files.length < MIN_CLIPS && ` -- need at least ${MIN_CLIPS}`}
+            {t("clip_selected", { n: files.length })}
+            {files.length < MIN_CLIPS && t("clip_need_more", { min: MIN_CLIPS })}
           </span>
         )}
       </label>
@@ -133,18 +134,18 @@ export function ClipVideoPanel({ songs }: { songs: Song[] }) {
         disabled={submitting || !canSubmit}
         className="self-start rounded-full bg-[#F5B900] text-black px-5 py-2 text-sm font-medium hover:bg-[#ffcc33] disabled:opacity-50"
       >
-        {submitting ? "Starting..." : "Generate video"}
+        {submitting ? t("clip_starting") : t("clip_generate")}
       </button>
 
       {error && <p className="text-sm text-red-400">{error}</p>}
 
       <div className="flex flex-col divide-y divide-zinc-800 border border-zinc-800 rounded-2xl overflow-hidden">
-        {jobs.length === 0 && <p className="p-4 text-sm text-zinc-500">No clip videos yet.</p>}
+        {jobs.length === 0 && <p className="p-4 text-sm text-zinc-500">{t("clip_none")}</p>}
         {jobs.map((job) => (
           <div key={job.id} className="flex flex-col gap-2 px-4 py-3 text-sm">
             <div className="flex items-center justify-between gap-3">
               <span className="font-medium">
-                {job.songTitle} ({job.clipCount} clips)
+                {t("clip_job", { title: job.songTitle, n: job.clipCount })}
               </span>
               <span
                 className={
@@ -155,7 +156,7 @@ export function ClipVideoPanel({ songs }: { songs: Song[] }) {
                       : "text-green-400"
                 }
               >
-                {job.status === "processing" ? "Processing…" : job.status === "error" ? "Failed" : "Ready"}
+                {job.status === "processing" ? t("clip_processing") : job.status === "error" ? t("clip_failed") : t("clip_ready")}
               </span>
             </div>
             {job.status === "error" && job.errorMessage && (

@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { CreateSidebar } from "@/components/CreateSidebar";
 import { GenerationForm, type RemixSeed, type StyleSeed } from "@/components/GenerationForm";
 import { WorkspaceList } from "@/components/WorkspaceList";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 export function CreateWorkspace() {
+  const { t } = useLocale();
   const [refreshKey, setRefreshKey] = useState(0);
   const [remixSeed, setRemixSeed] = useState<RemixSeed | null>(null);
   const [styleSeed, setStyleSeed] = useState<StyleSeed | null>(null);
@@ -14,8 +16,8 @@ export function CreateWorkspace() {
 
   // Debounce so typing a search term doesn't fire a request per keystroke.
   useEffect(() => {
-    const t = setTimeout(() => setSearchQuery(searchInput), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setSearchQuery(searchInput), 300);
+    return () => clearTimeout(timer);
   }, [searchInput]);
 
   return (
@@ -36,7 +38,7 @@ export function CreateWorkspace() {
         />
       </div>
       <div className="min-w-0" id="songs-list">
-        <h2 className="text-sm font-medium text-zinc-400 mb-3">Your songs</h2>
+        <h2 className="text-sm font-medium text-zinc-400 mb-3">{t("create_your_songs")}</h2>
         <WorkspaceList
           refreshKey={refreshKey}
           searchQuery={searchQuery}

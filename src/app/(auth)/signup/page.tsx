@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { PASSWORD_REQUIREMENTS_HINT } from "@/lib/passwordPolicy";
 import OAuthButtons from "@/components/OAuthButtons";
 import { PasswordInput } from "@/components/PasswordInput";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -69,12 +68,12 @@ export default function SignupPage() {
             required
             minLength={8}
             pattern="(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}"
-            title={PASSWORD_REQUIREMENTS_HINT}
+            title={t("pw_hint")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm"
           />
-          <span className="text-xs text-zinc-500">{PASSWORD_REQUIREMENTS_HINT}</span>
+          <span className="text-xs text-zinc-500">{t("pw_hint")}</span>
         </label>
 
         <label className="flex items-start gap-2 text-sm text-zinc-400">

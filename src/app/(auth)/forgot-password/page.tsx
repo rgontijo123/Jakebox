@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 export default function ForgotPasswordPage() {
+  const { t } = useLocale();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -22,17 +24,16 @@ export default function ForgotPasswordPage() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold mb-2">Reset your password</h1>
+        <h1 className="text-2xl font-semibold mb-2">{t("forgot_title")}</h1>
 
         {sent ? (
           <p className="text-sm text-zinc-400">
-            If an account exists for <span className="text-zinc-200">{email}</span>, we&apos;ve sent a link to reset
-            your password. Check your inbox (and spam folder).
+            {t("forgot_sent", { email })}
           </p>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1 text-sm">
-              Email
+              {t("login_email")}
               <input
                 type="email"
                 required
@@ -47,14 +48,14 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="rounded-full bg-white text-black px-6 py-3 text-sm font-medium hover:bg-zinc-200 transition-colors disabled:opacity-50"
             >
-              {loading ? "Sending..." : "Send reset link"}
+              {loading ? t("forgot_sending") : t("forgot_send")}
             </button>
           </form>
         )}
 
         <p className="text-sm text-zinc-500 text-center">
           <a href="/login" className="underline">
-            Back to log in
+            {t("forgot_back")}
           </a>
         </p>
       </div>

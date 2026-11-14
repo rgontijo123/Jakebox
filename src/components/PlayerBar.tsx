@@ -1,6 +1,7 @@
 "use client";
 
 import { usePlayer } from "@/contexts/PlayerContext";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds)) return "0:00";
@@ -11,6 +12,7 @@ function formatTime(seconds: number): string {
 
 export function PlayerBar() {
   const { current, isPlaying, currentTime, duration, toggle, seek } = usePlayer();
+  const { t } = useLocale();
 
   if (!current) return null;
 
@@ -24,7 +26,7 @@ export function PlayerBar() {
       <button
         onClick={toggle}
         className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full bg-[#F5B900] text-black hover:bg-[#ffcc33] transition-colors"
-        aria-label={isPlaying ? "Pause" : "Play"}
+        aria-label={isPlaying ? t("player_pause") : t("player_play")}
       >
         {isPlaying ? (
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
