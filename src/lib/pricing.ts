@@ -31,9 +31,9 @@ export type SubscriptionPlan = {
 // provider cost (~US$0.30 per generation incl. cover art) plus Stripe fees.
 // Unused songs don't roll over -- each paid invoice resets the quota.
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
-  { id: "basico", name: "Básico", brlCents: 1990, songsPerMonth: 6 },
-  { id: "criador", name: "Criador", brlCents: 3990, songsPerMonth: 15 },
-  { id: "pro", name: "Pro", brlCents: 7990, songsPerMonth: 30 },
+  { id: "basico", name: "Básico", brlCents: 3990, songsPerMonth: 15 },
+  { id: "criador", name: "Criador", brlCents: 6990, songsPerMonth: 30 },
+  { id: "pro", name: "Pro", brlCents: 12990, songsPerMonth: 60 },
 ];
 
 export function getPlan(id: string | null | undefined): SubscriptionPlan | undefined {
