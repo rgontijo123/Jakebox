@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { AdminUserList } from "@/components/AdminUserList";
+import { AdminSearch } from "@/components/AdminSearch";
 import { getT } from "@/lib/i18n/server";
 
 const PAGE_SIZE = 100;
@@ -16,7 +17,7 @@ export default async function AdminPage({
     redirect("/");
   }
   const { t } = await getT();
-  const { q } = await searchParams;
+  const q = (await searchParams).q?.trim();
 
   const where = q
     ? {
@@ -53,17 +54,9 @@ export default async function AdminPage({
       <div className="w-full max-w-4xl flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Admin</h1>
-          <p className="text-sm text-zinc-500">{t("admin_users_total", { n: total })}</p>
+          <p className="text-sm text-zinc-500">{total === 1 ? t("admin_users_one") : t("admin_users_total", { n: total })}</p>
         </div>
-        <form className="flex gap-2">
-          <input
-            type="text"
-            name="q"
-            defaultValue={q}
-            placeholder={t("admin_search")}
-            className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-sm w-64"
-          />
-        </form>
+        <AdminSearch initial={q?.trim() ?? ""} />
       </div>
 
       <AdminUserList

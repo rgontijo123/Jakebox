@@ -1014,6 +1014,12 @@ export const DICTIONARY = {
     en: "User deleted.",
     pt: "Usuário excluído.",
   },
+
+  // Admin user count (singular)
+  admin_users_one: {
+    en: "1 user",
+    pt: "1 usuário",
+  },
 } as const;
 
 export type DictionaryKey = keyof typeof DICTIONARY;
