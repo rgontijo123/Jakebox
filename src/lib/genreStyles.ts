@@ -83,6 +83,27 @@ export const GENRES: Genre[] = [
           "Psytrance, 142 BPM, rolling triplet bassline, acid squelches, psychedelic synth layers, driving kick, hypnotic and energetic, short chanted vocal phrases",
       },
       {
+        name: { en: "Romantic techno (English duet)", pt: "Techno romântico (dueto em inglês)" },
+        prompt:
+          "Melodic techno, romantic yet energetic, 124 BPM, warm rolling bassline, lush emotional synth pads, female and male duet vocals in English, both processed with light reverb, euphoric drop",
+        language: "en",
+      },
+      {
+        name: { en: "Peak-time techno", pt: "Techno eletrônico (pista)" },
+        prompt:
+          "Peak-time techno, 132 BPM, pounding kick, driving rumbling bass, hypnotic stabs, industrial percussion, dark warehouse energy, short repeated vocal phrases",
+      },
+      {
+        name: { en: "Uplifting trance", pt: "Trance" },
+        prompt:
+          "Uplifting trance, 138 BPM, soaring supersaw leads, rolling offbeat bass, long emotional breakdown with piano, big euphoric drop, ethereal vocal",
+      },
+      {
+        name: { en: "Drum and bass", pt: "Drum and bass" },
+        prompt:
+          "Liquid drum and bass, 174 BPM, fast breakbeats, deep rolling sub bass, atmospheric pads, smooth soulful vocal",
+      },
+      {
         name: { en: "Deep house", pt: "Deep house" },
         prompt:
           "Deep house, 120 BPM, warm groovy bassline, soft chords, crisp hi-hats, smooth soulful vocal, relaxed late-night club vibe",
