@@ -1,8 +1,9 @@
+import { getT } from "@/lib/i18n/server";
+import { ContactForm } from "@/components/ContactForm";
+
 export const metadata = {
   title: "Contact Us — Jakebox",
 };
-
-import { getT } from "@/lib/i18n/server";
 
 export default async function ContactPage() {
   const { t } = await getT();
@@ -16,12 +17,7 @@ export default async function ContactPage() {
           </p>
         </div>
 
-        <a
-          href="mailto:contact@jakeboxmusic.com"
-          className="self-start rounded-full bg-[#F5B900] text-black px-6 py-2.5 text-sm font-medium hover:bg-[#ffcc33] transition-colors"
-        >
-          contact@jakeboxmusic.com
-        </a>
+        <ContactForm />
       </div>
     </main>
   );

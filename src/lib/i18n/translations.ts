@@ -842,6 +842,56 @@ export const DICTIONARY = {
     en: "Monthly plan",
     pt: "Plano mensal",
   },
+
+  // Contact form
+  contact_name: {
+    en: "Name",
+    pt: "Nome",
+  },
+  contact_phone: {
+    en: "Phone",
+    pt: "Telefone",
+  },
+  contact_city: {
+    en: "City",
+    pt: "Cidade",
+  },
+  contact_country: {
+    en: "Country",
+    pt: "País",
+  },
+  contact_message: {
+    en: "How can we help?",
+    pt: "Como podemos ajudar?",
+  },
+  contact_message_placeholder: {
+    en: "Tell us your question, the problem you found, or what you need.",
+    pt: "Conte sua dúvida, o problema que encontrou ou o que você precisa.",
+  },
+  contact_required_note: {
+    en: "* required",
+    pt: "* obrigatório",
+  },
+  contact_send: {
+    en: "Send message",
+    pt: "Enviar mensagem",
+  },
+  contact_sent: {
+    en: "Message sent! We'll get back to you by email as soon as we can.",
+    pt: "Mensagem enviada! Responderemos por e-mail o quanto antes.",
+  },
+  contact_err_missing: {
+    en: "Please fill in your name, a valid email, phone and the message.",
+    pt: "Preencha nome, um e-mail válido, telefone e a mensagem.",
+  },
+  contact_err_too_many: {
+    en: "Too many messages in a short time. Please try again later.",
+    pt: "Muitas mensagens em pouco tempo. Tente de novo mais tarde.",
+  },
+  contact_err_send: {
+    en: "We couldn't send your message. Please email us at contact@jakeboxmusic.com.",
+    pt: "Não conseguimos enviar sua mensagem. Escreva para contact@jakeboxmusic.com.",
+  },
 } as const;
 
 export type DictionaryKey = keyof typeof DICTIONARY;

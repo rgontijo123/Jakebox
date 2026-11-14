@@ -22,3 +22,56 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
     `,
   });
 }
+
+// Where the /contact form lands -- override with CONTACT_EMAIL on Render.
+const CONTACT_TO = process.env.CONTACT_EMAIL ?? "contact@jakeboxmusic.com";
+
+export type ContactMessage = {
+  name: string;
+  email: string;
+  phone: string;
+  city?: string;
+  country?: string;
+  message: string;
+};
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
+/** Returns false when email isn't configured, so the caller can tell the
+ * visitor to use the address directly instead of silently dropping it. */
+export async function sendContactEmail(msg: ContactMessage): Promise<boolean> {
+  if (!resend) {
+    console.warn("RESEND_API_KEY not set -- contact message not sent", msg);
+    return false;
+  }
+  const rows: [string, string | undefined][] = [
+    ["Nome", msg.name],
+    ["E-mail", msg.email],
+    ["Telefone", msg.phone],
+    ["Cidade", msg.city],
+    ["País", msg.country],
+  ];
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: CONTACT_TO,
+    // answering the email goes straight to the visitor
+    replyTo: msg.email,
+    subject: `Contato pelo site: ${msg.name}`,
+    html: `
+      <table cellpadding="4">
+        ${rows
+          .filter(([, v]) => v)
+          .map(([k, v]) => `<tr><td><b>${k}</b></td><td>${escapeHtml(v!)}</td></tr>`)
+          .join("")}
+      </table>
+      <p style="white-space:pre-wrap">${escapeHtml(msg.message)}</p>
+    `,
+  });
+  if (error) {
+    console.error("Contact email failed", error);
+    return false;
+  }
+  return true;
+}
