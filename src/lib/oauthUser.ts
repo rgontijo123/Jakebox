@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 import { FREE_TRIAL_SONGS } from "@/lib/pricing";
+import { sendWelcomeEmail } from "@/lib/email";
+import { getLocale } from "@/lib/i18n/server";
 
 const TOS_VERSION = "2026-07-13";
 
@@ -20,7 +22,7 @@ export async function upsertOAuthUser(email: string, name: string | null | undef
 
   const isOwner = !!process.env.OWNER_EMAIL && normalizedEmail === process.env.OWNER_EMAIL.trim().toLowerCase();
 
-  return db.user.create({
+  const user = await db.user.create({
     data: {
       email: normalizedEmail,
       passwordHash: null,
@@ -33,4 +35,12 @@ export async function upsertOAuthUser(email: string, name: string | null | undef
       songQuota: FREE_TRIAL_SONGS,
     },
   });
+
+  // getLocale reads request cookies, which may be unavailable in some auth
+  // callback contexts -- fall back to English rather than skip the email.
+  const locale = await getLocale().catch(() => "en" as const);
+  await sendWelcomeEmail(user.email, FREE_TRIAL_SONGS, locale).catch((err) =>
+    console.error("welcome email failed", err),
+  );
+  return user;
 }

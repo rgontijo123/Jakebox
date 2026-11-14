@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { FREE_TRIAL_SONGS } from "@/lib/pricing";
+import { sendWelcomeEmail } from "@/lib/email";
+import { getLocale } from "@/lib/i18n/server";
 import { isPasswordValid, PASSWORD_REQUIREMENTS_HINT } from "@/lib/passwordPolicy";
 
 const TOS_VERSION = "2026-07-13";
@@ -46,6 +48,11 @@ export async function POST(req: Request) {
         songQuota: FREE_TRIAL_SONGS,
       },
     });
+
+    // never let a mail hiccup fail an account that was already created
+    await sendWelcomeEmail(email, FREE_TRIAL_SONGS, await getLocale()).catch((err) =>
+      console.error("welcome email failed", err),
+    );
 
     return NextResponse.json({ ok: true });
   } catch (err) {

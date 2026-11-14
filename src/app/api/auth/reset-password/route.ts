@@ -3,6 +3,8 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { isPasswordValid, PASSWORD_REQUIREMENTS_HINT } from "@/lib/passwordPolicy";
+import { sendPasswordChangedEmail } from "@/lib/email";
+import { getLocale } from "@/lib/i18n/server";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -25,7 +27,7 @@ export async function POST(req: Request) {
 
   const passwordHash = await bcrypt.hash(password, 12);
 
-  await db.$transaction([
+  const [user] = await db.$transaction([
     db.user.update({
       where: { id: resetToken.userId },
       data: {
@@ -42,6 +44,11 @@ export async function POST(req: Request) {
       data: { usedAt: new Date() },
     }),
   ]);
+
+  // Heads-up in case someone else reset it; never blocks the reset itself.
+  await sendPasswordChangedEmail(user.email, await getLocale()).catch((err) =>
+    console.error("password changed email failed", err),
+  );
 
   return NextResponse.json({ ok: true });
 }

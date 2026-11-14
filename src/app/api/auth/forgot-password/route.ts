@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { getLocale } from "@/lib/i18n/server";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
 
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
   const origin = req.headers.get("origin") ?? new URL(req.url).origin;
   const resetUrl = `${origin}/reset-password/${rawToken}`;
 
-  await sendPasswordResetEmail(user.email, resetUrl);
+  await sendPasswordResetEmail(user.email, resetUrl, await getLocale());
 
   return genericResponse;
 }
