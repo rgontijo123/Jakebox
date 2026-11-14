@@ -18,7 +18,7 @@ const PACK_TAGLINE_KEY: Record<string, DictionaryKey> = {
 const PACK_FEATURE_KEYS: DictionaryKey[] = ["pack_feature_1", "pack_feature_2", "pack_feature_3", "pack_feature_4"];
 
 export function CreditPacks({ showHeading = false }: { showHeading?: boolean }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,10 +87,10 @@ export function CreditPacks({ showHeading = false }: { showHeading?: boolean }) 
 
               <div className="rounded-lg bg-zinc-900/60 px-3 py-2">
                 <p className="text-sm text-zinc-100">
-                  <span className="font-medium">{pack.credits.toLocaleString()}</span> {t("pack_credits")}
+                  <span className="font-medium">{pack.credits.toLocaleString(locale === "pt" ? "pt-BR" : "en-US")}</span> {t("pack_credits")}
                 </p>
                 <p className="text-xs text-zinc-500">
-                  ≈ {songs} {t("pack_songs_approx")} · ${perSong.toFixed(2)}/song
+                  ≈ {songs} {t("pack_songs_approx")} · ${perSong.toFixed(2)}/{locale === "pt" ? "música" : "song"}
                 </p>
               </div>
 

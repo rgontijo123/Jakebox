@@ -80,7 +80,7 @@ export const DICTIONARY = {
     en: "100 credits = one song up to 60s (audio + video clip), +25 credits per extra 30s.",
     pt: "100 créditos = uma música de até 60 segundos (áudio + videoclipe), +25 créditos por cada 30 segundos adicionais.",
   },
-  billing_credits_left: { en: "credits left", pt: "créditos à esquerda" },
+  billing_credits_left: { en: "credits left", pt: "créditos restantes" },
   billing_unlimited: { en: "Unlimited", pt: "Ilimitado" },
   billing_history: { en: "History", pt: "Histórico" },
   billing_no_activity: { en: "No activity yet.", pt: "Ainda sem atividade." },
