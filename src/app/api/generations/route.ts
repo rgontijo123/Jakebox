@@ -198,31 +198,32 @@ export async function POST(req: Request) {
     );
   }
 
-  // charge for all versions up front; refund per-generation on shortfall/failure.
-  // Owner/admin accounts skip this entirely -- Jakebox's credit balance is our
-  // own internal bookkeeping toward eventually billing end users via Stripe,
-  // not something that should ever block the people running the product.
-  // Real cost still lands on the underlying provider account regardless of this.
+  // charge for all versions up front (trial/plan songs first, then credits);
+  // refund per-generation on shortfall/failure. Owner/admin accounts skip
+  // this entirely -- real provider cost still lands on the provider account.
   if (!isStaff) {
+    const charged: string[] = [];
     try {
       for (const generationId of generationIds) {
         await chargeForGeneration(userId, generationId, creditsPerVersion);
+        charged.push(generationId);
       }
     } catch {
-      // roll back any generations we did manage to charge, and fail the rest
-      for (const generationId of generationIds) {
-        await db.generation.update({
-          where: { id: generationId },
-          data: { status: "failed", errorMessage: "Insufficient credits" },
-        });
+      // give back what the earlier versions in this batch already took, and fail them all
+      for (const generationId of charged) {
+        await refundForGeneration(userId, generationId);
       }
+      await db.generation.updateMany({
+        where: { id: { in: generationIds } },
+        data: { status: "failed", errorMessage: "Insufficient credits" },
+      });
       return NextResponse.json({ error: "Insufficient credits" }, { status: 402 });
     }
   }
 
   await db.generation.updateMany({
     where: { id: { in: generationIds } },
-    data: { status: "processing", creditsCharged: isStaff ? 0 : creditsPerVersion },
+    data: { status: "processing" },
   });
 
   // Chained, not fired in parallel: each runGenerationJob call also does
@@ -380,11 +381,10 @@ async function runGenerationJob(
         : err instanceof Error
           ? `Generation failed: ${err.message}`
           : "Generation failed";
-    const generation = await db.generation.findUniqueOrThrow({ where: { id: generationId } });
-    await refundForGeneration(userId, generationId, generation.creditsCharged);
+    await refundForGeneration(userId, generationId);
     await db.generation.update({
       where: { id: generationId },
-      data: { status: "failed", errorMessage: message, creditsRefunded: generation.creditsCharged },
+      data: { status: "failed", errorMessage: message },
     });
   }
 }

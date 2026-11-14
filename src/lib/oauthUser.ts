@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
-import { grantSignupBonus } from "@/lib/credits";
+import { FREE_TRIAL_SONGS } from "@/lib/pricing";
 
-const SIGNUP_BONUS = Number(process.env.SIGNUP_BONUS_CREDITS ?? 50);
 const TOS_VERSION = "2026-07-13";
 
 /** Find-or-create for Google/Facebook sign-in. No Account/Session tables --
@@ -21,7 +20,7 @@ export async function upsertOAuthUser(email: string, name: string | null | undef
 
   const isOwner = !!process.env.OWNER_EMAIL && normalizedEmail === process.env.OWNER_EMAIL.trim().toLowerCase();
 
-  const user = await db.user.create({
+  return db.user.create({
     data: {
       email: normalizedEmail,
       passwordHash: null,
@@ -31,9 +30,7 @@ export async function upsertOAuthUser(email: string, name: string | null | undef
       // this point (provider consent screen already shown) as acceptance.
       tosAcceptedAt: new Date(),
       tosVersion: TOS_VERSION,
+      songQuota: FREE_TRIAL_SONGS,
     },
   });
-
-  await grantSignupBonus(user.id, SIGNUP_BONUS);
-  return user;
 }

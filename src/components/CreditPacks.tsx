@@ -17,7 +17,7 @@ const PACK_TAGLINE_KEY: Record<string, DictionaryKey> = {
 
 const PACK_FEATURE_KEYS: DictionaryKey[] = ["pack_feature_1", "pack_feature_2", "pack_feature_3", "pack_feature_4"];
 
-export function CreditPacks() {
+export function CreditPacks({ showHeading = false }: { showHeading?: boolean }) {
   const { t } = useLocale();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +51,7 @@ export function CreditPacks() {
 
   return (
     <div className="w-full flex flex-col gap-3">
+      {showHeading && <h2 className="text-lg font-semibold">{t("plan_or_packs")}</h2>}
       <div className="grid sm:grid-cols-3 gap-4">
         {CREDIT_PACKS.map((pack) => {
           const songs = Math.floor(pack.credits / CREDITS_PER_GENERATION);

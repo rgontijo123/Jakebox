@@ -33,6 +33,21 @@ model User {
   status        UserStatus @default(active)
   creditBalance Int      @default(0)
 
+  // Songs available from the free trial or the monthly plan, spent before
+  // creditBalance. One unit = one generation (any duration up to the cap),
+  // since providers bill a flat price per generation -- counting songs, not
+  // credits, is what keeps a plan from ever costing more than it brings in.
+  songQuota Int @default(0)
+
+  // Monthly subscription (Stripe Billing). planId matches SUBSCRIPTION_PLANS
+  // in src/lib/pricing.ts; planStatus mirrors Stripe's subscription status.
+  planId                String?
+  planStatus            String?
+  planCurrentPeriodEnd  DateTime?
+  planCancelAtPeriodEnd Boolean   @default(false)
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?   @unique
+
   tosAcceptedAt DateTime?
   tosVersion    String?
 
@@ -111,8 +126,14 @@ model Payment {
   user                    User          @relation(fields: [userId], references: [id])
   stripeCheckoutSessionId String?       @unique
   stripePaymentIntentId   String?       @unique
+  // set for subscription renewals (one row per paid invoice) instead of a
+  // checkout session id
+  stripeInvoiceId         String?       @unique
+  // amount in the smallest unit of `currency` -- the name predates BRL plans
   amountUsdCents          Int
+  currency                String        @default("usd")
   creditsPurchased        Int
+  songsGranted            Int           @default(0)
   status                  PaymentStatus @default(pending)
 
   createdAt DateTime @default(now())
@@ -150,6 +171,8 @@ model Generation {
 
   creditsCharged  Int @default(0)
   creditsRefunded Int @default(0)
+  // 1 when this generation was paid from User.songQuota instead of credits
+  songQuotaUsed   Int @default(0)
 
   elevenLabsRequestId String?
   errorMessage         String?

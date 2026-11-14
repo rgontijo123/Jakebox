@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { grantSignupBonus } from "@/lib/credits";
+import { FREE_TRIAL_SONGS } from "@/lib/pricing";
 import { isPasswordValid, PASSWORD_REQUIREMENTS_HINT } from "@/lib/passwordPolicy";
 
 const TOS_VERSION = "2026-07-13";
-const SIGNUP_BONUS = Number(process.env.SIGNUP_BONUS_CREDITS ?? 50);
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -37,25 +36,20 @@ export async function POST(req: Request) {
     // requires an existing owner/admin session to use.
     const isOwner = !!process.env.OWNER_EMAIL && email === process.env.OWNER_EMAIL.trim().toLowerCase();
 
-    const user = await db.user.create({
+    await db.user.create({
       data: {
         email,
         passwordHash,
         role: isOwner ? "owner" : "user",
         tosAcceptedAt: new Date(),
         tosVersion: TOS_VERSION,
+        songQuota: FREE_TRIAL_SONGS,
       },
     });
-
-    await grantSignupBonus(user.id, SIGNUP_BONUS);
 
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Signup failed", err);
-    // TEMP DEBUG: surfacing the real error to diagnose a prod-only 500.
-    // Must be removed before this ships for real.
-    const message = err instanceof Error ? err.message : String(err);
-    const code = (err as { code?: string })?.code;
-    return NextResponse.json({ error: "Signup failed", debugMessage: message, debugCode: code }, { status: 500 });
+    return NextResponse.json({ error: "Signup failed" }, { status: 500 });
   }
 }

@@ -122,11 +122,56 @@ export const DICTIONARY = {
     pt: "Algo deu errado ao iniciar a compra. Tente novamente.",
   },
 
+  // Monthly plans
+  plan_section_title: { en: "Monthly plans", pt: "Planos mensais" },
+  plan_section_subtitle: {
+    en: "A set number of songs every month, any length up to 5 minutes. Cancel anytime.",
+    pt: "Um número fixo de músicas por mês, de qualquer duração até 5 minutos. Cancele quando quiser.",
+  },
+  plan_free_trial: {
+    en: "Every new account gets 2 free songs to try Jakebox.",
+    pt: "Toda conta nova ganha 2 músicas grátis para experimentar o Jakebox.",
+  },
+  plan_per_month: { en: "/month", pt: "/mês" },
+  plan_songs_per_month: { en: "songs per month", pt: "músicas por mês" },
+  plan_feature_1: {
+    en: "Audio + an auto-made vertical video clip for every song",
+    pt: "Áudio + um videoclipe vertical criado automaticamente em cada música",
+  },
+  plan_feature_2: {
+    en: "Songs refill every month (unused songs don't carry over)",
+    pt: "As músicas renovam todo mês (as não usadas não acumulam)",
+  },
+  plan_feature_3: {
+    en: "Failed generations give the song back automatically",
+    pt: "Se uma geração falhar, a música volta automaticamente",
+  },
+  plan_subscribe: { en: "Subscribe", pt: "Assinar" },
+  plan_current: { en: "Your plan", pt: "Seu plano" },
+  plan_status_active: { en: "Active — renews on", pt: "Ativo — renova em" },
+  plan_status_canceling: { en: "Cancelled — ends on", pt: "Cancelado — termina em" },
+  plan_status_past_due: {
+    en: "Payment failed — please update your card",
+    pt: "O pagamento falhou — atualize seu cartão",
+  },
+  plan_songs_left: { en: "songs left this month", pt: "músicas restantes este mês" },
+  plan_cancel: { en: "Cancel plan", pt: "Cancelar plano" },
+  plan_resume: { en: "Keep my plan", pt: "Manter meu plano" },
+  plan_cancel_done: {
+    en: "Your plan will end at the end of the current month. You keep your songs until then.",
+    pt: "Seu plano termina no fim do mês atual. Você mantém suas músicas até lá.",
+  },
+  plan_or_packs: {
+    en: "Or buy a one-time credit pack",
+    pt: "Ou compre um pacote de créditos avulso",
+  },
+  plan_signup_cta: { en: "Start with 2 free songs", pt: "Comece com 2 músicas grátis" },
+
   // Public pricing page
-  pricing_page_title: { en: "Simple, pay-as-you-go pricing", pt: "Preço simples, pague conforme usar" },
+  pricing_page_title: { en: "Simple pricing", pt: "Preços simples" },
   pricing_page_subtitle: {
-    en: "Buy a credit pack and generate songs. No subscription, credits never expire.",
-    pt: "Compre um pacote de créditos e gere músicas. Sem assinatura, os créditos nunca expiram.",
+    en: "Try 2 songs free, then pick a monthly plan or a one-time credit pack.",
+    pt: "Experimente 2 músicas grátis, depois escolha um plano mensal ou um pacote de créditos avulso.",
   },
   pricing_page_cta: { en: "Sign up to buy", pt: "Cadastre-se para comprar" },
 } as const;

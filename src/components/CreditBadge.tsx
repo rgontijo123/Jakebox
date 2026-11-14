@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 
 export async function CreditBadge({ userId }: { userId: string }) {
-  const user = await db.user.findUnique({ where: { id: userId }, select: { creditBalance: true, role: true } });
+  const user = await db.user.findUnique({ where: { id: userId }, select: { creditBalance: true, role: true, songQuota: true } });
   const isUnlimited = user?.role === "owner" || user?.role === "admin";
 
   // owner/admin generations still debit creditBalance for cost-tracking
@@ -14,6 +14,11 @@ export async function CreditBadge({ userId }: { userId: string }) {
 
   return (
     <span className="text-sm text-zinc-400">
+      {(user?.songQuota ?? 0) > 0 && (
+        <>
+          <span className="text-zinc-100 font-medium">{user?.songQuota}</span> songs ·{" "}
+        </>
+      )}
       <span className="text-zinc-100 font-medium">{user?.creditBalance ?? 0}</span> credits
     </span>
   );

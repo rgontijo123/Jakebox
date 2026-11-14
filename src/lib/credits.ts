@@ -74,34 +74,51 @@ export async function grantAdminAdjustment(userId: string, credits: number) {
   return db.$transaction((tx) => applyLedgerEntry(tx, { userId, type: "admin_adjustment", amount: credits }));
 }
 
-/** Throws if the user can't cover the charge -- caller should catch and
- * surface "insufficient credits" to the user. owner/admin accounts skip the
- * balance check (their usage still costs real provider money and stays
- * tracked in the ledger below, but it should never block them mid-test). */
+/** Pays for one generation: from the trial/plan songQuota when the user has
+ * any left, otherwise from creditBalance. Records which one on the
+ * Generation row so refundForGeneration can give back the same thing.
+ * Throws "INSUFFICIENT_CREDITS" if neither covers it -- caller should catch
+ * and surface that to the user. owner/admin never go through this (see the
+ * generations route). */
 export async function chargeForGeneration(userId: string, generationId: string, credits: number) {
   return db.$transaction(async (tx) => {
     const user = await tx.user.findUniqueOrThrow({ where: { id: userId } });
-    const isUnlimited = user.role === "owner" || user.role === "admin";
-    if (!isUnlimited && user.creditBalance < credits) {
+    if (user.songQuota >= 1) {
+      await tx.user.update({ where: { id: userId }, data: { songQuota: { decrement: 1 } } });
+      await tx.generation.update({ where: { id: generationId }, data: { songQuotaUsed: 1, creditsCharged: 0 } });
+      return;
+    }
+    if (user.creditBalance < credits) {
       throw new Error("INSUFFICIENT_CREDITS");
     }
-    return applyLedgerEntry(tx, {
+    await applyLedgerEntry(tx, {
       userId,
       type: "generation_charge",
       amount: -credits,
       relatedGenerationId: generationId,
     });
+    await tx.generation.update({ where: { id: generationId }, data: { creditsCharged: credits } });
   });
 }
 
-export async function refundForGeneration(userId: string, generationId: string, credits: number) {
-  if (credits <= 0) return;
-  return db.$transaction((tx) =>
-    applyLedgerEntry(tx, {
-      userId,
-      type: "generation_refund",
-      amount: credits,
-      relatedGenerationId: generationId,
-    }),
-  );
+/** Gives back whatever chargeForGeneration took for this generation (a
+ * quota song or credits), at most once. */
+export async function refundForGeneration(userId: string, generationId: string) {
+  return db.$transaction(async (tx) => {
+    const generation = await tx.generation.findUniqueOrThrow({ where: { id: generationId } });
+    if (generation.songQuotaUsed > 0) {
+      await tx.user.update({ where: { id: userId }, data: { songQuota: { increment: generation.songQuotaUsed } } });
+      await tx.generation.update({ where: { id: generationId }, data: { songQuotaUsed: 0 } });
+    }
+    const credits = generation.creditsCharged - generation.creditsRefunded;
+    if (credits > 0) {
+      await applyLedgerEntry(tx, {
+        userId,
+        type: "generation_refund",
+        amount: credits,
+        relatedGenerationId: generationId,
+      });
+      await tx.generation.update({ where: { id: generationId }, data: { creditsRefunded: generation.creditsCharged } });
+    }
+  });
 }

@@ -13,12 +13,14 @@ export async function GET() {
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { creditBalance: true, role: true },
+    select: { creditBalance: true, role: true, songQuota: true, planId: true },
   });
 
   const unlimited = user?.role === "owner" || user?.role === "admin";
   return NextResponse.json({
     creditBalance: Math.max(0, user?.creditBalance ?? 0),
     unlimited,
+    songQuota: user?.songQuota ?? 0,
+    planId: user?.planId ?? null,
   });
 }

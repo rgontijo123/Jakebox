@@ -2,6 +2,7 @@
 
 import { CREDIT_PACKS } from "@/lib/pricing";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { SubscriptionPlans } from "@/components/SubscriptionPlans";
 import type { DictionaryKey } from "@/lib/i18n/translations";
 
 const CREDITS_PER_GENERATION = 100;
@@ -23,8 +24,12 @@ export function PublicPricing() {
         <div className="text-center">
           <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2">{t("pricing_page_title")}</h1>
           <p className="text-zinc-400">{t("pricing_page_subtitle")}</p>
+          <p className="text-sm text-green-400 mt-2">{t("plan_free_trial")}</p>
         </div>
 
+        <SubscriptionPlans />
+
+        <h2 className="text-lg font-semibold -mb-6">{t("plan_or_packs")}</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           {CREDIT_PACKS.map((pack) => {
             const songs = Math.floor(pack.credits / CREDITS_PER_GENERATION);

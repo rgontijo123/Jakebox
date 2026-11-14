@@ -16,3 +16,26 @@ export const CREDIT_PACKS: CreditPack[] = [
 export function getPack(id: string): CreditPack | undefined {
   return CREDIT_PACKS.find((p) => p.id === id);
 }
+
+/** Songs every new account gets to try Jakebox before paying. */
+export const FREE_TRIAL_SONGS = 2;
+
+export type SubscriptionPlan = {
+  id: "basico" | "criador" | "pro";
+  name: string;
+  brlCents: number;
+  songsPerMonth: number;
+};
+
+// Priced so that even a subscriber who uses every song still covers the
+// provider cost (~US$0.30 per generation incl. cover art) plus Stripe fees.
+// Unused songs don't roll over -- each paid invoice resets the quota.
+export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
+  { id: "basico", name: "Básico", brlCents: 1990, songsPerMonth: 6 },
+  { id: "criador", name: "Criador", brlCents: 3990, songsPerMonth: 15 },
+  { id: "pro", name: "Pro", brlCents: 7990, songsPerMonth: 30 },
+];
+
+export function getPlan(id: string | null | undefined): SubscriptionPlan | undefined {
+  return SUBSCRIPTION_PLANS.find((p) => p.id === id);
+}

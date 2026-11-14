@@ -61,7 +61,7 @@ export function GenerationForm({
   const [recentSongs, setRecentSongs] = useState<{ id: string; title: string }[]>([]);
   const [voices, setVoices] = useState<{ id: string; name: string; status: string }[]>([]);
   const [showRecorder, setShowRecorder] = useState(false);
-  const [credits, setCredits] = useState<{ creditBalance: number; unlimited: boolean } | null>(null);
+  const [credits, setCredits] = useState<{ creditBalance: number; unlimited: boolean; songQuota: number } | null>(null);
   const usingSpecialMode = Boolean(referenceSongId || voicePersonaId);
 
   async function loadCredits() {
@@ -148,6 +148,9 @@ export function GenerationForm({
   }, [styleSeed?.nonce]);
 
   const estimatedCredits = creditsForDuration(duration) * versions;
+  // trial/plan songs are spent first, one per version, before any credits
+  const songsFromQuota = Math.min(credits?.songQuota ?? 0, versions);
+  const creditsNeeded = creditsForDuration(duration) * (versions - songsFromQuota);
 
   // Rough guide for comfortable, unhurried pacing: ~2.3 sung words/second,
   // plus ~15s slack for intro/instrumental breaks. If the chosen duration
@@ -393,11 +396,17 @@ export function GenerationForm({
           <span className={versions === 2 ? "" : "hidden"}>(2 versions) </span>
           (refunded automatically if a version fails)
         </p>
-        {credits && !credits.unlimited && (
-          <p className={credits.creditBalance < estimatedCredits ? "text-red-400" : ""}>
+        {credits && !credits.unlimited && songsFromQuota > 0 && (
+          <p className="text-green-400">
+            Uses {songsFromQuota} of your {credits.songQuota} included song{credits.songQuota === 1 ? "" : "s"}
+            {creditsNeeded > 0 ? ` + ${creditsNeeded} credits` : " — no credits needed"}
+          </p>
+        )}
+        {credits && !credits.unlimited && creditsNeeded > 0 && (
+          <p className={credits.creditBalance < creditsNeeded ? "text-red-400" : ""}>
             You have {credits.creditBalance} credits — after this you&apos;ll have{" "}
-            {Math.max(0, credits.creditBalance - estimatedCredits)}
-            {credits.creditBalance < estimatedCredits && " (not enough credits for this)"}
+            {Math.max(0, credits.creditBalance - creditsNeeded)}
+            {credits.creditBalance < creditsNeeded && " (not enough credits for this)"}
           </p>
         )}
         {credits?.unlimited && <p>You have unlimited credits (owner/admin)</p>}
@@ -422,7 +431,7 @@ export function GenerationForm({
               href="/billing"
               className="rounded-full bg-[#F5B900] text-black px-4 py-1.5 text-sm font-medium hover:bg-[#ffcc33] transition-colors"
             >
-              Get more credits
+              See plans
             </Link>
           )}
         </div>
