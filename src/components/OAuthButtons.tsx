@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 // Auth.js serves /api/auth/providers automatically, listing only the
 // providers actually registered in src/auth.ts -- Google/Facebook only
 // show up there once their client id/secret env vars are set, so the
 // buttons stay hidden instead of rendering broken until that's done.
 export default function OAuthButtons() {
+  const { t } = useLocale();
   const [providers, setProviders] = useState<string[]>([]);
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export default function OAuthButtons() {
           onClick={() => signIn("google", { callbackUrl: "/create" })}
           className="rounded-full border border-zinc-700 px-6 py-3 text-sm font-medium hover:bg-zinc-900 transition-colors"
         >
-          Continue with Google
+          {t("oauth_google")}
         </button>
       )}
       {hasFacebook && (
@@ -38,12 +40,12 @@ export default function OAuthButtons() {
           onClick={() => signIn("facebook", { callbackUrl: "/create" })}
           className="rounded-full border border-zinc-700 px-6 py-3 text-sm font-medium hover:bg-zinc-900 transition-colors"
         >
-          Continue with Facebook
+          {t("oauth_facebook")}
         </button>
       )}
       <div className="flex items-center gap-3 text-xs text-zinc-600 my-1">
         <div className="h-px flex-1 bg-zinc-800" />
-        or
+        {t("oauth_or")}
         <div className="h-px flex-1 bg-zinc-800" />
       </div>
     </div>

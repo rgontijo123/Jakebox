@@ -1020,6 +1020,20 @@ export const DICTIONARY = {
     en: "1 user",
     pt: "1 usuário",
   },
+
+  // OAuth buttons
+  oauth_google: {
+    en: "Continue with Google",
+    pt: "Continuar com Google",
+  },
+  oauth_facebook: {
+    en: "Continue with Facebook",
+    pt: "Continuar com Facebook",
+  },
+  oauth_or: {
+    en: "or",
+    pt: "ou",
+  },
 } as const;
 
 export type DictionaryKey = keyof typeof DICTIONARY;
