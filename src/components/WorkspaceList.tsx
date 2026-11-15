@@ -181,11 +181,11 @@ export function WorkspaceList({
               onClick={() => row.status === "completed" && setExpandedId(isExpanded ? null : row.id)}
               role={row.status === "completed" ? "button" : undefined}
               tabIndex={row.status === "completed" ? 0 : undefined}
-              className={`flex flex-col gap-3 px-6 py-6 ${
+              className={`flex flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6 ${
                 row.status === "completed" ? "cursor-pointer hover:bg-zinc-900" : ""
               }`}
             >
-              <div className="flex items-stretch gap-5">
+              <div className="flex items-stretch gap-4 sm:gap-5">
                 {row.song?.hasThumbnail ? (
                   // eslint-disable-next-line @next/next/no-img-element -- served
                   // through an authenticated API route, not a static/optimizable asset
@@ -200,10 +200,10 @@ export function WorkspaceList({
                       coverBust[row.song.id] ? `?v=${coverBust[row.song.id]}` : ""
                     }`}
                     alt=""
-                    className="shrink-0 w-[140px] h-[140px] rounded-xl object-cover"
+                    className="shrink-0 w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] rounded-xl object-cover"
                   />
                 ) : (
-                  <div className="shrink-0 w-[140px] h-[140px] rounded-xl bg-[#F5B900]/10 flex items-center justify-center">
+                  <div className="shrink-0 w-[110px] h-[110px] sm:w-[140px] sm:h-[140px] rounded-xl bg-[#F5B900]/10 flex items-center justify-center">
                     <Image src="/branding/jake-logo.svg" alt="" width={44} height={44} />
                   </div>
                 )}
@@ -237,8 +237,10 @@ export function WorkspaceList({
                     </div>
                   </div>
 
+                </div>
+              </div>
                   {row.song && (
-                    <div className="flex items-center justify-center gap-3 text-xs">
+                    <div className="flex flex-wrap items-center justify-between gap-y-2 px-1 text-xs">
                       <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -344,8 +346,6 @@ export function WorkspaceList({
                     </button>
                     </div>
                   )}
-                </div>
-              </div>
             </div>
 
             {isExpanded && row.song && (
