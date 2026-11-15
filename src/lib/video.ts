@@ -285,7 +285,17 @@ function run(args: string[]): Promise<void> {
  * works identically for any genre or user), and, when word timestamps are
  * available, sentence-level lyric captions burned in and synced to the
  * vocals (see buildLyricsAss above). */
-export async function generateSongVideo(params: {
+// One render at a time per instance: two concurrent ffmpeg encodes don't fit
+// in 512MB. Later callers wait their turn instead of failing.
+let renderQueue: Promise<unknown> = Promise.resolve();
+
+export function generateSongVideo(params: Parameters<typeof renderSongVideo>[0]): ReturnType<typeof renderSongVideo> {
+  const job = renderQueue.then(() => renderSongVideo(params));
+  renderQueue = job.catch(() => {});
+  return job;
+}
+
+async function renderSongVideo(params: {
   audio: Buffer;
   title: string;
   styleSummary: string;
@@ -390,8 +400,22 @@ export async function generateSongVideo(params: {
     "[v]",
     "-map",
     "1:a",
+    // ffmpeg sizes its thread pool from the host's CPU count, which inside a
+    // container is far more than the 512MB instance can feed: one render
+    // peaked at ~440MB with default threading vs ~160MB capped like this,
+    // and the default blew the instance's memory limit in production.
+    "-threads",
+    "2",
+    "-filter_complex_threads",
+    "1",
     "-c:v",
     "libx264",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "23",
+    "-x264-params",
+    "rc-lookahead=10",
     "-pix_fmt",
     "yuv420p",
     "-c:a",
@@ -407,7 +431,7 @@ export async function generateSongVideo(params: {
   // a separate image-generation step Jakebox doesn't have.
   const thumbnailPath = path.join(tmpDir, `jakebox-video-thumb-${id}.jpg`);
   const thumbnailAt = Math.min(2, Math.max(0, durationSeconds - 0.1));
-  await run(["-y", "-ss", thumbnailAt.toFixed(2), "-i", videoPath, "-frames:v", "1", "-update", "1", thumbnailPath]);
+  await run(["-y", "-threads", "1", "-ss", thumbnailAt.toFixed(2), "-i", videoPath, "-frames:v", "1", "-update", "1", thumbnailPath]);
   const thumbnail = await readFile(thumbnailPath);
 
   await unlink(audioPath).catch(() => {});

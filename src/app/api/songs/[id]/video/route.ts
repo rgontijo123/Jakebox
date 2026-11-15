@@ -35,6 +35,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
  * some songs are left without one). Reuses the exact same renderer the
  * automatic path uses, just triggered manually and synchronously instead of
  * fire-and-forget after generation. */
+// Songs whose on-demand video is already being rendered on this instance --
+// repeated clicks (seen in production: 9 in 30s) used to start one encode
+// each, all in parallel.
+const rendering = new Set<string>();
+
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -48,6 +53,10 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  if (rendering.has(song.id)) {
+    return NextResponse.json({ error: "Video already being generated" }, { status: 409 });
+  }
+  rendering.add(song.id);
   try {
     const audio = await readSongAudio(song.audioUrl);
     const { video, thumbnail } = await generateSongVideo({
@@ -72,5 +81,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   } catch (err) {
     console.error("On-demand video generation failed", err);
     return NextResponse.json({ error: "Video generation failed" }, { status: 500 });
+  } finally {
+    rendering.delete(song.id);
   }
 }
