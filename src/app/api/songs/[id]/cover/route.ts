@@ -20,7 +20,14 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const cover = await generateCoverArt({ title: song.title, styleSummary: song.generation.stylePrompt });
+  // Only replace the current cover with a better one (a new AI image) --
+  // with the AI unavailable this used to swap a song's real cover for a
+  // generic one.
+  const cover = await generateCoverArt({
+    title: song.title,
+    styleSummary: song.generation.stylePrompt,
+    allowTitleCover: !song.thumbnailUrl,
+  });
   if (!cover) {
     return NextResponse.json({ error: "Cover generation failed" }, { status: 500 });
   }
