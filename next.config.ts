@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   // ffprobe-static/ffmpeg-static resolve their bundled binary paths relative
   // to their own package directory at require-time -- bundling them would
   // break that path.
-  serverExternalPackages: ["ffprobe-static", "ffmpeg-static"],
+  serverExternalPackages: ["ffprobe-static", "ffmpeg-static", "@resvg/resvg-js"],
 };
 
 export default nextConfig;

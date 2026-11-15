@@ -328,6 +328,9 @@ async function runGenerationJob(
     }
     // No AI cover (no OpenAI credits, error...) -- use the cover the music
     // provider drew for this song, so it still gets an image that matches it.
+    if (!coverThumbnailKey && !result.coverImageUrl) {
+      console.warn("No AI cover and the provider returned no cover image", result.provider);
+    }
     if (!coverThumbnailKey && result.coverImageUrl) {
       try {
         const res = await fetchWithTimeout(result.coverImageUrl, {}, 30_000);
@@ -335,6 +338,8 @@ async function runGenerationJob(
           coverThumbnailKey = newThumbnailStorageKey(generationId);
           await saveSongThumbnail(coverThumbnailKey, Buffer.from(await res.arrayBuffer()));
           await db.song.update({ where: { id: song.id }, data: { thumbnailUrl: coverThumbnailKey } });
+        } else {
+          console.error("Provider cover download unusable", res.status, res.headers.get("content-type"), result.coverImageUrl);
         }
       } catch (err) {
         coverThumbnailKey = null;

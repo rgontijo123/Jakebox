@@ -7,6 +7,7 @@ import { alignLyrics, type WordTimestamp } from "./lyrics";
 import { getAudioDurationSeconds } from "./audio";
 import { forceAlignLyrics, type AlignedLine } from "./forceAlign";
 import { existsSync } from "node:fs";
+import { Resvg } from "@resvg/resvg-js";
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- no types published for this package
 const ffmpegPath: string = require("ffmpeg-static");
 
@@ -25,14 +26,8 @@ const LOGO_SIZE = 150;
 const LOGO_Y = 50;
 const BRAND_TEXT_Y = LOGO_Y + LOGO_SIZE + 12;
 const TITLE_Y = BRAND_TEXT_Y + 44;
-// Bundled in the repo (public/fonts/, OFL-licensed) rather than referencing
-// a system font path -- C:\Windows\Fonts\arial.ttf doesn't exist on Render's
-// Linux runtime, which made every drawtext call (and therefore the whole
-// video render) fail in production while still looking fine in local dev.
-// toFilterPath below still runs it through the same colon-escaping a
-// Windows absolute path needs; on Linux the path has no colon to escape.
-const FONT_BOLD = toFilterPath(path.join(process.cwd(), "public", "fonts", "Lato-Bold.ttf"));
-const FONT_REGULAR = toFilterPath(path.join(process.cwd(), "public", "fonts", "Lato-Regular.ttf"));
+// Fonts are bundled in public/fonts/ (OFL-licensed) -- there are no system
+// fonts to rely on in Render's Linux runtime.
 
 // Real drone footage (seamless boomerang loops built for the Musicas
 // megamix project -- copied locally under backgrounds/drone/, gitignored:
@@ -98,13 +93,48 @@ function pickDroneClipByKeywords(text: string): string | null {
   return best;
 }
 
-/** Escapes text for safe use inside a single-quoted ffmpeg drawtext filter
- * argument (text='...'). Everything inside single quotes is literal to
- * ffmpeg's filtergraph parser except the quote character itself, which
- * can't be escaped within the quotes at all -- swap it for a visually close
- * character instead of trying to reconstruct the quote-break-quote trick. */
-function escapeDrawtext(text: string): string {
-  return text.replace(/'/g, "\u2019");
+const FONT_FILE_BOLD = path.join(process.cwd(), "public", "fonts", "Lato-Bold.ttf");
+const FONT_FILE_REGULAR = path.join(process.cwd(), "public", "fonts", "Lato-Regular.ttf");
+
+function escapeXml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/** The video's text block (brand line, title, style, author) as a
+ * transparent full-frame PNG, overlaid by ffmpeg. Rendered here rather than
+ * with ffmpeg's drawtext because the Linux ffmpeg-static build used in
+ * production has no drawtext filter ("Filter not found"), which made every
+ * video -- and with it the fallback thumbnail -- fail on the server. */
+function renderTextOverlay(
+  items: { text: string; y: number; size: number; color: string; bold: boolean }[],
+): Buffer {
+  const texts = items
+    .map(
+      (it) =>
+        `<text x="${WIDTH / 2}" y="${(it.y + it.size * 0.82).toFixed(1)}" font-family="Lato" font-weight="${it.bold ? 700 : 400}" ` +
+        `font-size="${it.size}" fill="${it.color}" text-anchor="middle">${escapeXml(it.text)}</text>`,
+    )
+    .join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}">${texts}</svg>`;
+  return new Resvg(svg, {
+    font: { fontFiles: [FONT_FILE_BOLD, FONT_FILE_REGULAR], loadSystemFonts: false, defaultFontFamily: "Lato" },
+  })
+    .render()
+    .asPng();
+}
+
+let subtitlesFilterAvailable: Promise<boolean> | null = null;
+/** libass (the subtitles filter) isn't in every ffmpeg build either; skip
+ * burned-in captions instead of failing the whole video when it's missing. */
+function hasSubtitlesFilter(): Promise<boolean> {
+  subtitlesFilterAvailable ??= new Promise((resolve) => {
+    const proc = spawn(ffmpegPath, ["-hide_banner", "-filters"]);
+    let out = "";
+    proc.stdout.on("data", (c) => (out += c));
+    proc.on("error", () => resolve(false));
+    proc.on("close", () => resolve(/subtitles/.test(out)));
+  });
+  return subtitlesFilterAvailable;
 }
 
 function truncate(text: string, max: number): string {
@@ -123,7 +153,7 @@ function fitFontSize(text: string, maxWidthPx: number, avgCharWidthRatio: number
   return Math.max(minSize, Math.min(maxSize, fitted));
 }
 
-// Same colon-escaping issue as FONT_BOLD/FONT_REGULAR above -- any absolute
+// Any absolute
 // Windows path handed to a ffmpeg filter option needs its drive-letter colon
 // escaped and backslashes normalized to forward slashes, or libass's option
 // parser mis-splits it.
@@ -272,12 +302,13 @@ export async function generateSongVideo(params: {
   const audioPath = path.join(tmpDir, `jakebox-video-audio-${id}.mp3`);
   const videoPath = path.join(tmpDir, `jakebox-video-out-${id}.mp4`);
   const assPath = path.join(tmpDir, `jakebox-video-lyrics-${id}.ass`);
+  const textPath = path.join(tmpDir, `jakebox-video-text-${id}.png`);
 
   await writeFile(audioPath, params.audio);
 
-  const title = escapeDrawtext(truncate(params.title, 40));
-  const subtitle = escapeDrawtext(truncate(params.styleSummary, 46));
-  const authorText = escapeDrawtext(`by ${params.authorName}`);
+  const title = truncate(params.title, 40);
+  const subtitle = truncate(params.styleSummary, 46);
+  const authorText = `by ${params.authorName}`;
   const titleMargin = 40;
   const titleFontSize = fitFontSize(title, WIDTH - titleMargin, 0.62, 52, 26);
   const subtitleFontSize = fitFontSize(subtitle, WIDTH - titleMargin, 0.55, 32, 18);
@@ -295,6 +326,10 @@ export async function generateSongVideo(params: {
     const lines = await forceAlignLyrics(params.audio, params.lyricsText, params.language ?? "en");
     assContent = buildLyricsAssFromLines(lines);
   }
+  if (assContent && !(await hasSubtitlesFilter())) {
+    console.warn("ffmpeg has no subtitles filter -- rendering the video without burned-in captions");
+    assContent = null;
+  }
   if (assContent) await writeFile(assPath, assContent, "utf-8");
 
   const matchText = `${params.lyricsText ?? ""} ${params.styleSummary}`;
@@ -310,6 +345,15 @@ export async function generateSongVideo(params: {
 
   const subtitleY = TITLE_Y + 70;
   const authorY = subtitleY + subtitleFontSize + 10;
+  await writeFile(
+    textPath,
+    renderTextOverlay([
+      { text: "Made with Jakebox", y: BRAND_TEXT_Y, size: 30, color: "#FFFFFF", bold: true },
+      { text: title, y: TITLE_Y, size: titleFontSize, color: "#FFFFFF", bold: true },
+      { text: subtitle, y: subtitleY, size: subtitleFontSize, color: "#F5B900", bold: false },
+      { text: authorText, y: authorY, size: authorFontSize, color: "#CCCCCC", bold: false },
+    ]),
+  );
 
   const filterComplex = [
     backgroundFilter,
@@ -319,10 +363,7 @@ export async function generateSongVideo(params: {
     // seconds) per explicit request for stronger, persistent branding.
     `[2:v]scale=${LOGO_SIZE}:${LOGO_SIZE}[logo]`,
     `[bgraw][logo]overlay=x=(W-w)/2:y=${LOGO_Y}[vlogo]`,
-    `[vlogo]drawtext=fontfile='${FONT_BOLD}':text='Made with Jakebox':fontcolor=white:fontsize=30:x=(w-text_w)/2:y=${BRAND_TEXT_Y},` +
-      `drawtext=fontfile='${FONT_BOLD}':text='${title}':fontcolor=white:fontsize=${titleFontSize}:x=(w-text_w)/2:y=${TITLE_Y},` +
-      `drawtext=fontfile='${FONT_REGULAR}':text='${subtitle}':fontcolor=0xF5B900:fontsize=${subtitleFontSize}:x=(w-text_w)/2:y=${subtitleY},` +
-      `drawtext=fontfile='${FONT_REGULAR}':text='${authorText}':fontcolor=0xCCCCCC:fontsize=${authorFontSize}:x=(w-text_w)/2:y=${authorY}[vbase]`,
+    `[vlogo][3:v]overlay=0:0[vbase]`,
     // Subtitles are always applied to the fully-composited [vbase] rather
     // than mixed in earlier, otherwise the title/author overlay above
     // would paint over the captions instead of under them.
@@ -341,6 +382,8 @@ export async function generateSongVideo(params: {
     audioPath,
     "-i",
     LOGO_PATH,
+    "-i",
+    textPath,
     "-filter_complex",
     filterComplex,
     "-map",
@@ -371,6 +414,7 @@ export async function generateSongVideo(params: {
   await unlink(videoPath).catch(() => {});
   await unlink(thumbnailPath).catch(() => {});
   if (assContent) await unlink(assPath).catch(() => {});
+  await unlink(textPath).catch(() => {});
 
   return { video, thumbnail };
 }

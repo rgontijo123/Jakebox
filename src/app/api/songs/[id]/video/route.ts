@@ -60,10 +60,14 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
       wordTimestamps: (song.wordTimestamps as unknown as WordTimestamp[] | null) ?? undefined,
     });
     const videoKey = newVideoStorageKey(song.generationId);
-    const thumbnailKey = newThumbnailStorageKey(song.generationId);
     await saveSongVideo(videoKey, video);
-    await saveSongThumbnail(thumbnailKey, thumbnail);
-    await db.song.update({ where: { id: song.id }, data: { videoUrl: videoKey, thumbnailUrl: thumbnailKey } });
+    // keep an existing cover; the video frame only fills in when there's none
+    let thumbnailUrl = song.thumbnailUrl;
+    if (!thumbnailUrl) {
+      thumbnailUrl = newThumbnailStorageKey(song.generationId);
+      await saveSongThumbnail(thumbnailUrl, thumbnail);
+    }
+    await db.song.update({ where: { id: song.id }, data: { videoUrl: videoKey, thumbnailUrl } });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("On-demand video generation failed", err);
