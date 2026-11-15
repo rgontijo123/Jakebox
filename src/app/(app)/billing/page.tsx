@@ -19,7 +19,7 @@ export default async function BillingPage() {
   if (!session?.user?.id) redirect("/login");
   const { t, locale } = await getT();
 
-  const [user, transactions] = await Promise.all([
+  const [user, transactions, lastPlanPayment] = await Promise.all([
     db.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -36,6 +36,11 @@ export default async function BillingPage() {
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
       take: 50,
+    }),
+    db.payment.findFirst({
+      where: { userId: session.user.id, stripeInvoiceId: { not: null } },
+      orderBy: { createdAt: "desc" },
+      select: { currency: true },
     }),
   ]);
 
@@ -75,6 +80,7 @@ export default async function BillingPage() {
             periodEnd: user?.planCurrentPeriodEnd?.toISOString() ?? null,
             cancelAtPeriodEnd: user?.planCancelAtPeriodEnd ?? false,
             songQuota: user?.songQuota ?? 0,
+            currency: lastPlanPayment?.currency === "brl" ? "brl" : lastPlanPayment ? "usd" : null,
           }}
         />
         <CreditPacks showHeading />

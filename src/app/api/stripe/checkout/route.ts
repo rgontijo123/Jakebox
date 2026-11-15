@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { stripe } from "@/lib/stripe";
-import { getPack } from "@/lib/pricing";
+import { currencyForLocale, getPack, priceCents } from "@/lib/pricing";
+import { getLocale } from "@/lib/i18n/server";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -15,6 +16,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unknown credit pack" }, { status: 400 });
   }
 
+  // same currency the pricing card showed (it follows the site language)
+  const currency = currencyForLocale(await getLocale());
   const origin = req.headers.get("origin") ?? new URL(req.url).origin;
 
   const checkoutSession = await stripe.checkout.sessions.create({
@@ -24,8 +27,8 @@ export async function POST(req: Request) {
       {
         quantity: 1,
         price_data: {
-          currency: "usd",
-          unit_amount: pack.usdCents,
+          currency,
+          unit_amount: priceCents(pack, currency),
           product_data: {
             name: `Jakebox ${pack.name} pack — ${pack.credits} credits`,
           },

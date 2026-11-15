@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { SUBSCRIPTION_PLANS } from "@/lib/pricing";
+import { SUBSCRIPTION_PLANS, currencyForLocale, formatMoney, priceCents, type Currency } from "@/lib/pricing";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useCardSelection } from "@/components/useCardSelection";
 
@@ -12,13 +12,11 @@ export type CurrentPlan = {
   periodEnd: string | null; // ISO date
   cancelAtPeriodEnd: boolean;
   songQuota: number;
+  /** currency the active subscription is actually billed in */
+  currency: Currency | null;
 };
 
 const POPULAR_PLAN_ID = "criador";
-
-function formatBrl(cents: number) {
-  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
 
 /** Monthly plan cards. `current` undefined = public pricing page (CTA goes to
  * signup); otherwise the signed-in billing page (subscribe / cancel). */
@@ -26,6 +24,7 @@ export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
   const { t, locale } = useLocale();
   const router = useRouter();
   const cards = useCardSelection(POPULAR_PLAN_ID);
+  const currency = currencyForLocale(locale);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -84,7 +83,7 @@ export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
           <div>
             <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{t("plan_current")}</p>
             <p className="text-lg font-semibold">
-              {activePlan.name} · {formatBrl(activePlan.brlCents)}
+              {activePlan.name} · {formatMoney(priceCents(activePlan, current.currency ?? currency), current.currency ?? currency)}
               {t("plan_per_month")}
             </p>
             <p className="text-sm text-zinc-400">
@@ -134,7 +133,7 @@ export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
                 <p className="text-lg font-semibold">{plan.name}</p>
 
                 <div>
-                  <span className="text-3xl font-semibold">{formatBrl(plan.brlCents)}</span>
+                  <span className="text-3xl font-semibold">{formatMoney(priceCents(plan, currency), currency)}</span>
                   <span className="text-sm text-zinc-500">{t("plan_per_month")}</span>
                 </div>
 
@@ -143,7 +142,7 @@ export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
                     <span className="font-medium">{plan.songsPerMonth}</span> {t("plan_songs_per_month")}
                   </p>
                   <p className="text-xs text-zinc-500">
-                    {formatBrl(Math.round(plan.brlCents / plan.songsPerMonth))}/{locale === "pt" ? "música" : "song"}
+                    {formatMoney(Math.round(priceCents(plan, currency) / plan.songsPerMonth), currency)}/{locale === "pt" ? "música" : "song"}
                   </p>
                 </div>
 

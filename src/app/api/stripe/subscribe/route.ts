@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
-import { getPlan } from "@/lib/pricing";
+import { currencyForLocale, getPlan, priceCents } from "@/lib/pricing";
+import { getLocale } from "@/lib/i18n/server";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -21,16 +22,35 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "You already have an active plan" }, { status: 409 });
   }
 
+  // same currency the plan card showed (it follows the site language)
+  const currency = currencyForLocale(await getLocale());
+  const origin = req.headers.get("origin") ?? new URL(req.url).origin;
+
+  async function newCustomer() {
+    const customer = await stripe.customers.create({ email: user.email, metadata: { userId: user.id } });
+    await db.user.update({ where: { id: user.id }, data: { stripeCustomerId: customer.id } });
+    return customer.id;
+  }
+
   // One Stripe customer per user, reused across subscriptions, so their
   // invoices and saved card stay together.
   let customerId = user.stripeCustomerId;
   if (!customerId) {
-    const customer = await stripe.customers.create({ email: user.email, metadata: { userId: user.id } });
-    customerId = customer.id;
-    await db.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
+    customerId = await newCustomer();
+  } else {
+    // Stripe locks a customer to the currency of its earlier subscriptions;
+    // someone who subscribed in reais and now subscribes in dollars (or the
+    // other way round) needs a fresh customer or Checkout refuses.
+    const existing = await stripe.customers.retrieve(customerId);
+    if (existing.deleted || (existing.currency && existing.currency !== currency)) {
+      customerId = await newCustomer();
+    }
   }
 
-  const origin = req.headers.get("origin") ?? new URL(req.url).origin;
+  const productName =
+    currency === "brl"
+      ? `Jakebox ${plan.name} — ${plan.songsPerMonth} músicas/mês`
+      : `Jakebox ${plan.name} — ${plan.songsPerMonth} songs/month`;
 
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "subscription",
@@ -40,10 +60,10 @@ export async function POST(req: Request) {
       {
         quantity: 1,
         price_data: {
-          currency: "brl",
-          unit_amount: plan.brlCents,
+          currency,
+          unit_amount: priceCents(plan, currency),
           recurring: { interval: "month" },
-          product_data: { name: `Jakebox ${plan.name} — ${plan.songsPerMonth} músicas/mês` },
+          product_data: { name: productName },
         },
       },
     ],

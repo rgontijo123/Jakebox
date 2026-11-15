@@ -1,6 +1,6 @@
 "use client";
 
-import { CREDIT_PACKS } from "@/lib/pricing";
+import { CREDIT_PACKS, currencyForLocale, formatMoney, priceCents } from "@/lib/pricing";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { SubscriptionPlans } from "@/components/SubscriptionPlans";
 import { useCardSelection } from "@/components/useCardSelection";
@@ -19,6 +19,7 @@ const PACK_FEATURE_KEYS: DictionaryKey[] = ["pack_feature_1", "pack_feature_2", 
 export function PublicPricing() {
   const { t, locale } = useLocale();
   const cards = useCardSelection("standard");
+  const currency = currencyForLocale(locale);
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-16">
@@ -35,7 +36,7 @@ export function PublicPricing() {
         <div className="grid sm:grid-cols-3 gap-4">
           {CREDIT_PACKS.map((pack) => {
             const songs = Math.floor(pack.credits / CREDITS_PER_GENERATION);
-            const perSong = pack.usdCents / 100 / songs;
+            const price = priceCents(pack, currency);
             const isPopular = pack.id === "standard";
             const active = cards.isActive(pack.id);
 
@@ -63,7 +64,7 @@ export function PublicPricing() {
                 </div>
 
                 <div>
-                  <span className="text-3xl font-semibold">${(pack.usdCents / 100).toFixed(0)}</span>
+                  <span className="text-3xl font-semibold">{formatMoney(price, currency)}</span>
                   <span className="text-sm text-zinc-500"> {t("pack_one_time")}</span>
                 </div>
 
@@ -72,7 +73,7 @@ export function PublicPricing() {
                     <span className="font-medium">{pack.credits.toLocaleString(locale === "pt" ? "pt-BR" : "en-US")}</span> {t("pack_credits")}
                   </p>
                   <p className="text-xs text-zinc-500">
-                    ≈ {songs} {t("pack_songs_approx")} · ${perSong.toFixed(2)}/{locale === "pt" ? "música" : "song"}
+                    ≈ {songs} {t("pack_songs_approx")} · {formatMoney(Math.round(price / songs), currency)}/{locale === "pt" ? "música" : "song"}
                   </p>
                 </div>
 

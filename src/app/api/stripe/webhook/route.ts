@@ -57,6 +57,7 @@ export async function POST(req: Request) {
         stripePaymentIntentId:
           typeof checkoutSession.payment_intent === "string" ? checkoutSession.payment_intent : null,
         amountUsdCents: checkoutSession.amount_total ?? pack.usdCents,
+        currency: checkoutSession.currency ?? "usd",
         creditsPurchased: pack.credits,
         status: "completed",
       },
