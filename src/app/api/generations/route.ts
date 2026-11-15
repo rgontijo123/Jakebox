@@ -19,6 +19,7 @@ import {
 import { normalizeLyricsTags, normalizeLyricsPunctuation, deriveFallbackTitle } from "@/lib/lyrics";
 import { generateSongVideo } from "@/lib/video";
 import { generateCoverArt } from "@/lib/coverArt";
+import { fetchWithTimeout } from "@/lib/fetchWithTimeout";
 import { publishTempPublicUrl, cleanupTempPublicUrl } from "@/lib/publicHost";
 
 const DAILY_GENERATION_LIMIT = 10;
@@ -324,6 +325,21 @@ async function runGenerationJob(
       }
     } catch (err) {
       console.error("Cover art generation failed (song itself still succeeded)", err);
+    }
+    // No AI cover (no OpenAI credits, error...) -- use the cover the music
+    // provider drew for this song, so it still gets an image that matches it.
+    if (!coverThumbnailKey && result.coverImageUrl) {
+      try {
+        const res = await fetchWithTimeout(result.coverImageUrl, {}, 30_000);
+        if (res.ok && res.headers.get("content-type")?.startsWith("image/")) {
+          coverThumbnailKey = newThumbnailStorageKey(generationId);
+          await saveSongThumbnail(coverThumbnailKey, Buffer.from(await res.arrayBuffer()));
+          await db.song.update({ where: { id: song.id }, data: { thumbnailUrl: coverThumbnailKey } });
+        }
+      } catch (err) {
+        coverThumbnailKey = null;
+        console.error("Provider cover download failed", err);
+      }
     }
 
     // Best-effort: an automatic vertical video (waveform + title/style,

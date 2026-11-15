@@ -17,6 +17,10 @@ export type GenerateMusicResult = {
   format: "mp3" | "wav" | "ogg";
   title: string | null;
   wordTimestamps: WordTimestamp[];
+  // Cover art the provider made for this song, if it returns one (MusicAPI
+  // Sonic does: a small JPEG matching the song). Used when our own AI cover
+  // isn't available.
+  coverImageUrl?: string | null;
   // Which backend actually produced this (set by musicProvider.ts, not by
   // the individual provider modules themselves) -- recorded on the Song row
   // so generations can be compared across providers later.

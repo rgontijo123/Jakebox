@@ -84,13 +84,13 @@ function stripStageDirections(lyricsText: string): string {
     .join("\n");
 }
 
-type SonicSong = { audio_url?: string; title?: string; state?: string; duration?: string };
+type SonicSong = { audio_url?: string; title?: string; state?: string; duration?: string; image_url?: string };
 type SonicTask = { data?: SonicSong[]; error?: string; type?: string };
 
 const TERMINAL_FAILURE = /fail|error|reject|cancel/i;
 
 async function pollUntilDone(taskId: string, headers: Record<string, string>): Promise<SonicSong> {
-  const maxAttempts = 60; // ~5 min at 5s intervals
+  const maxAttempts = 144; // ~12 min at 5s intervals -- MusicAPI has had 5+ min queues
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     let res: Response;
     try {
@@ -184,6 +184,7 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     title: song.title ?? title,
     // No confirmed word-level timestamp support -- see file-level comment.
     wordTimestamps: [],
+    coverImageUrl: song.image_url ?? null,
   };
 }
 
@@ -281,7 +282,7 @@ export async function generateWithPersona(
   const sourceFormat = audioUrl.endsWith(".wav") ? "wav" : audioUrl.endsWith(".ogg") ? "ogg" : "mp3";
   const audio = sourceFormat === "mp3" ? downloaded : await transcodeToMp3(downloaded);
 
-  return { audio, format: "mp3", title: song.title ?? title, wordTimestamps: [] };
+  return { audio, format: "mp3", title: song.title ?? title, wordTimestamps: [], coverImageUrl: song.image_url ?? null };
 }
 
 /** Generates a new song using an existing (publicly-reachable) track as a
@@ -336,5 +337,5 @@ export async function generateWithReference(
   const sourceFormat = audioUrl.endsWith(".wav") ? "wav" : audioUrl.endsWith(".ogg") ? "ogg" : "mp3";
   const audio = sourceFormat === "mp3" ? downloaded : await transcodeToMp3(downloaded);
 
-  return { audio, format: "mp3", title: song.title ?? title, wordTimestamps: [] };
+  return { audio, format: "mp3", title: song.title ?? title, wordTimestamps: [], coverImageUrl: song.image_url ?? null };
 }
