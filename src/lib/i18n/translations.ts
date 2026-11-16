@@ -41,6 +41,50 @@ export const DICTIONARY = {
   },
   home_get_started: { en: "Get started", pt: "Começar" },
   home_pricing: { en: "Pricing", pt: "Preços" },
+  home_h1: { en: "Turn your lyrics into a song with AI", pt: "Transforme sua letra em música com inteligência artificial" },
+  home_free_note: { en: "2 free songs when you sign up · no card needed", pt: "2 músicas grátis no cadastro · sem cartão" },
+  home_how_title: { en: "How it works", pt: "Como funciona" },
+  home_step1_title: { en: "Write or paste your lyrics", pt: "Escreva ou cole sua letra" },
+  home_step1_body: {
+    en: "A love song, a birthday tribute, a joke for your friends — any lyrics work. Mark verses and chorus if you like.",
+    pt: "Uma declaração de amor, um parabéns, uma zoeira com os amigos — qualquer letra serve. Marque verso e refrão se quiser.",
+  },
+  home_step2_title: { en: "Pick a genre and style", pt: "Escolha o gênero e o estilo" },
+  home_step2_body: {
+    en: "Reggae, rock, pop, funk, sertanejo, MPB, gospel, hip hop, lo-fi… or describe the sound in your own words.",
+    pt: "Sertanejo, funk, pagode, MPB, gospel, forró, rock, reggae, pop, lo-fi… ou descreva o som do seu jeito.",
+  },
+  home_step3_title: { en: "Get your song and music video", pt: "Receba a música e o videoclipe" },
+  home_step3_body: {
+    en: "In a few minutes you get an original, sung song plus a vertical music video ready for Reels, TikTok and Shorts.",
+    pt: "Em poucos minutos chega uma música original cantada, com videoclipe vertical pronto para Reels, TikTok e Shorts.",
+  },
+  home_faq_title: { en: "Frequently asked questions", pt: "Perguntas frequentes" },
+  home_faq1_q: { en: "Is Jakebox free?", pt: "O Jakebox é grátis?" },
+  home_faq1_a: {
+    en: "Every new account gets 2 free songs, no credit card needed. After that, choose a monthly plan or a one-time credit pack.",
+    pt: "Toda conta nova ganha 2 músicas grátis, sem cartão de crédito. Depois você escolhe um plano mensal ou um pacote de créditos avulso.",
+  },
+  home_faq2_q: { en: "Do I need to know music?", pt: "Preciso saber música?" },
+  home_faq2_a: {
+    en: "No. Just write the lyrics and choose a style — the AI composes the melody, the arrangement and sings it.",
+    pt: "Não. É só escrever a letra e escolher o estilo — a inteligência artificial compõe a melodia, o arranjo e canta.",
+  },
+  home_faq3_q: { en: "Which languages can the song be in?", pt: "Em quais idiomas a música pode ser?" },
+  home_faq3_a: {
+    en: "English, Portuguese (Brazil or Portugal), Spanish, German and Japanese.",
+    pt: "Português (Brasil ou Portugal), inglês, espanhol, alemão e japonês.",
+  },
+  home_faq4_q: { en: "Does every song come with a video?", pt: "Toda música vem com videoclipe?" },
+  home_faq4_a: {
+    en: "Yes. Each song gets a vertical music video with its cover art, ready to post on social media.",
+    pt: "Sim. Cada música ganha um videoclipe vertical com a capa, pronto para postar nas redes sociais.",
+  },
+  home_faq5_q: { en: "How long does it take?", pt: "Quanto tempo demora?" },
+  home_faq5_a: {
+    en: "Usually just a few minutes for the song. The video is created right after.",
+    pt: "Normalmente poucos minutos para a música. O videoclipe é criado logo em seguida.",
+  },
 
   // Auth
   login_title: { en: "Log in", pt: "Entrar" },
@@ -98,7 +142,7 @@ export const DICTIONARY = {
 
   // Credit packs
   pack_tagline_starter: { en: "Try it out", pt: "Experimente" },
-  pack_tagline_standard: { en: "Most popular", pt: "Mais popular" },
+  pack_tagline_standard: { en: "For regular creators", pt: "Para quem cria sempre" },
   pack_tagline_pro: { en: "For power users", pt: "Para usuários avançados" },
   pack_most_popular_badge: { en: "MOST POPULAR", pt: "MAIS POPULAR" },
   pack_one_time: { en: "one-time", pt: "pagamento único" },

@@ -1,6 +1,8 @@
-export const metadata = {
-  title: "Terms of Use — Jakebox",
-};
+import { pageMetadata } from "@/lib/seo";
+import { getLocale } from "@/lib/i18n/server";
+export async function generateMetadata() {
+  return pageMetadata("terms", "/terms", await getLocale());
+}
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

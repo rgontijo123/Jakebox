@@ -7,6 +7,7 @@ import { Providers } from "@/components/Providers";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { Analytics } from "@/components/Analytics";
 import { getLocale } from "@/lib/i18n/server";
+import { pageMetadata, SITE_URL } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,9 +19,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Jakebox — Make music with AI",
-  description: "Generate original songs from your lyrics and a style prompt.",
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  // Site-wide defaults only; canonical/hreflang are set per page, so pages
+  // without their own metadata never claim to be the home page.
+  const home = await pageMetadata("home", "/", locale);
+  return {
+    ...home,
+    alternates: undefined,
+    openGraph: { ...home.openGraph, url: undefined },
+    metadataBase: new URL(SITE_URL),
+    title: { default: (home.title as { absolute: string }).absolute, template: "%s | Jakebox" },
+    applicationName: "Jakebox",
+    category: "music",
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
+    ...STATIC_METADATA,
+  };
+}
+
+const STATIC_METADATA: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

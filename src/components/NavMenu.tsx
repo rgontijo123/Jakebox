@@ -63,9 +63,14 @@ export function NavMenu({
   // use, so keep those two out of the menu for anyone but staff.
   const visibleLinks = isStaff ? links : links.filter((l) => l.href !== "/video" && l.href !== "/studio");
 
+  // Logged-in menus are wide (up to 6 links + account), so they collapse
+  // into the burger until lg; the logged-out menu fits from sm.
+  const desktop = isAuthed ? "hidden lg:flex" : "hidden sm:flex";
+  const mobile = isAuthed ? "lg:hidden" : "sm:hidden";
+
   return (
     <>
-      <nav className="hidden sm:flex items-center gap-5 text-sm text-zinc-400">
+      <nav className={`${desktop} items-center gap-5 text-sm text-zinc-400`}>
         {isAuthed ? (
           <>
             {visibleLinks.map((link) => (
@@ -106,7 +111,7 @@ export function NavMenu({
 
       <button
         onClick={() => setOpen((v) => !v)}
-        className="sm:hidden text-zinc-400 hover:text-zinc-100 p-1"
+        className={`${mobile} text-zinc-400 hover:text-zinc-100 p-1`}
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
       >
@@ -122,7 +127,7 @@ export function NavMenu({
       </button>
 
       {open && (
-        <nav className="sm:hidden absolute top-full left-0 right-0 flex flex-col gap-1 bg-black border-b border-zinc-800 px-6 py-4 text-sm text-zinc-400">
+        <nav className={`${mobile} absolute top-full left-0 right-0 flex flex-col gap-1 bg-black border-b border-zinc-800 px-6 py-4 text-sm text-zinc-400`}>
           {isAuthed ? (
             <>
               {visibleLinks.map((link) => (

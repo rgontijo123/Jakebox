@@ -21,7 +21,7 @@ export function CreateWorkspace() {
   }, [searchInput]);
 
   return (
-    <div className="w-full max-w-7xl grid lg:grid-cols-[200px_580px_1fr] gap-8 items-start">
+    <div className="w-full max-w-7xl grid lg:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,580px)_minmax(0,1fr)] gap-8 items-start">
       <div className="lg:sticky lg:top-6">
         <CreateSidebar
           searchQuery={searchInput}
@@ -30,14 +30,14 @@ export function CreateWorkspace() {
           onUploaded={() => setRefreshKey((k) => k + 1)}
         />
       </div>
-      <div className="lg:sticky lg:top-6">
+      <div className="min-w-0 xl:sticky xl:top-6">
         <GenerationForm
           onCreated={() => setRefreshKey((k) => k + 1)}
           remixSeed={remixSeed}
           styleSeed={styleSeed}
         />
       </div>
-      <div className="min-w-0" id="songs-list">
+      <div className="min-w-0 lg:col-start-2 xl:col-start-3" id="songs-list">
         <h2 className="text-sm font-medium text-zinc-400 mb-3">{t("create_your_songs")}</h2>
         <WorkspaceList
           refreshKey={refreshKey}

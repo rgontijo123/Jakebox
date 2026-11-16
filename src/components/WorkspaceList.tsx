@@ -240,7 +240,7 @@ export function WorkspaceList({
                 </div>
               </div>
                   {row.song && (
-                    <div className="flex flex-wrap items-center justify-between gap-y-2 px-1 text-xs">
+                    <div className="flex flex-wrap items-center justify-between sm:justify-start sm:gap-x-6 gap-y-2 px-1 text-xs">
                       <button
                       onClick={(e) => {
                         e.stopPropagation();

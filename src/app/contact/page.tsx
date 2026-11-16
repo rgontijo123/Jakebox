@@ -1,9 +1,10 @@
-import { getT } from "@/lib/i18n/server";
+import { pageMetadata } from "@/lib/seo";
+import { getLocale, getT } from "@/lib/i18n/server";
 import { ContactForm } from "@/components/ContactForm";
 
-export const metadata = {
-  title: "Contact Us — Jakebox",
-};
+export async function generateMetadata() {
+  return pageMetadata("contact", "/contact", await getLocale());
+}
 
 export default async function ContactPage() {
   const { t } = await getT();
