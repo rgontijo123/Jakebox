@@ -1,6 +1,9 @@
 /** Google Analytics 4 measurement ID. Not a secret (it ships in every page);
  * empty disables analytics entirely, e.g. in local dev. */
-export const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? "";
+// GA4 property "jakeboxmusic.com" (account Jakebox). Not a secret: it ships in every page.
+// NEXT_PUBLIC_GA_ID overrides it; set it to "off" to disable analytics.
+const GA_ENV = process.env.NEXT_PUBLIC_GA_ID;
+export const GA_ID = GA_ENV === "off" ? "" : GA_ENV || "G-63GSR076FY";
 
 export const CONSENT_KEY = "jakebox-analytics-consent";
 
