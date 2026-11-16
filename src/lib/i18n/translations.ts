@@ -485,6 +485,11 @@ export const DICTIONARY = {
     en: "Something went wrong",
     pt: "Algo deu errado",
   },
+  err_failure_no_credits: { en: "not enough credits", pt: "créditos insuficientes" },
+  err_failure_provider: {
+    en: "the music service couldn't create this track",
+    pt: "o serviço de música não conseguiu criar esta faixa",
+  },
   err_insufficient_credits: {
     en: "You've used your free songs. Pick a plan or buy credits to keep creating.",
     pt: "Suas músicas grátis acabaram. Escolha um plano ou compre créditos para continuar criando.",

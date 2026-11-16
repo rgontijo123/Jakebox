@@ -82,3 +82,13 @@ export function translateApiError(error: unknown, t: T, fallback: DictionaryKey)
   }
   return error;
 }
+
+/** Why a generation failed, as stored on the Generation row: known messages
+ * are translated; anything else is a raw provider/technical message (always
+ * English, often cryptic), so the visitor gets a generic explanation instead. */
+export function translateFailureReason(reason: string | null | undefined, t: T): string {
+  if (!reason) return t("result_unknown_error");
+  if (reason === "Insufficient credits") return t("err_failure_no_credits");
+  const translated = translateApiError(reason, t, "result_unknown_error");
+  return translated === reason ? t("err_failure_provider") : translated;
+}

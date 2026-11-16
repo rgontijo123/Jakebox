@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from "react";
 import { RadioPlayer } from "@/components/RadioPlayer";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateFailureReason } from "@/lib/i18n/apiErrors";
 import type { WordTimestamp } from "@/lib/lyrics";
 
 type GenerationEntry = {
@@ -78,7 +79,7 @@ export default function BatchResultPage({ params }: { params: Promise<{ id: stri
 
               {g.status === "failed" && (
                 <p className="text-sm text-red-400 rounded-2xl border border-zinc-800 p-6">
-                  {t("result_failed", { reason: g.errorMessage ?? t("result_unknown_error") })}
+                  {t("result_failed", { reason: translateFailureReason(g.errorMessage, t) })}
                 </p>
               )}
 

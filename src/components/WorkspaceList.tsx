@@ -6,6 +6,7 @@ import { RadioPlayer } from "@/components/RadioPlayer";
 import { usePlayer } from "@/contexts/PlayerContext";
 import type { WordTimestamp } from "@/lib/lyrics";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateFailureReason } from "@/lib/i18n/apiErrors";
 import type { DictionaryKey } from "@/lib/i18n/translations";
 
 type GenerationRow = {
@@ -253,7 +254,7 @@ export function WorkspaceList({
                       {(row.status === "failed" || row.status === "rejected_moderation") && (
                         <span className="text-red-400">
                           {t(STATUS_LABEL[row.status])}
-                          {row.errorMessage ? `: ${row.errorMessage}` : ""}
+                          {row.errorMessage ? `: ${translateFailureReason(row.errorMessage, t)}` : ""}
                         </span>
                       )}
                       <span className="text-zinc-600">{formatDate(row.createdAt)}</span>
