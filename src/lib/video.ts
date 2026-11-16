@@ -290,7 +290,15 @@ function run(args: string[]): Promise<void> {
 let renderQueue: Promise<unknown> = Promise.resolve();
 
 export function generateSongVideo(params: Parameters<typeof renderSongVideo>[0]): ReturnType<typeof renderSongVideo> {
-  const job = renderQueue.then(() => renderSongVideo(params));
+  const mb = () => Math.round(process.memoryUsage().rss / 1e6);
+  const job = renderQueue.then(async () => {
+    const before = mb();
+    try {
+      return await renderSongVideo(params);
+    } finally {
+      console.log(`Video render for "${params.title}": node rss ${before}MB -> ${mb()}MB`);
+    }
+  });
   renderQueue = job.catch(() => {});
   return job;
 }
@@ -402,20 +410,22 @@ async function renderSongVideo(params: {
     "1:a",
     // ffmpeg sizes its thread pool from the host's CPU count, which inside a
     // container is far more than the 512MB instance can feed: one render
-    // peaked at ~440MB with default threading vs ~160MB capped like this,
-    // and the default blew the instance's memory limit in production.
+    // peaked at ~440MB with default threading,
+    // and the default blew the instance's memory limit in production. One
+    // thread + ultrafast measured ~80MB at the same speed (the gradient
+    // source, not x264, is the bottleneck) and a similar file size.
     "-threads",
-    "2",
+    "1",
     "-filter_complex_threads",
     "1",
     "-c:v",
     "libx264",
     "-preset",
-    "veryfast",
+    "ultrafast",
     "-crf",
-    "23",
+    "26",
     "-x264-params",
-    "rc-lookahead=10",
+    "rc-lookahead=0",
     "-pix_fmt",
     "yuv420p",
     "-c:a",
