@@ -55,8 +55,15 @@ export default function PrivacyPage() {
 
         <Section title="3. Cookies">
           <p>
-            Jakebox uses a single session cookie to keep you signed in. We don&apos;t use advertising or
-            cross-site tracking cookies.
+            Jakebox uses a session cookie to keep you signed in, and remembers your language choice. We
+            don&apos;t use advertising or cross-site tracking cookies.
+          </p>
+          <p>
+            If you accept in the cookie banner, we also use Google Analytics cookies to measure how the
+            site is used (pages visited, sign-ups, songs generated, checkouts), so we can improve
+            Jakebox. If you decline, no analytics cookies are set and Google only receives anonymous,
+            cookieless signals. Your choice is stored in your browser; clear the site&apos;s data to
+            change it.
           </p>
         </Section>
 
