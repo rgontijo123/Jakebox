@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SUBSCRIPTION_PLANS, currencyForLocale, formatMoney, priceCents, type Currency } from "@/lib/pricing";
@@ -60,6 +61,7 @@ export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
   }
 
   async function subscribe(planId: string) {
+    track("begin_checkout", { item_id: planId, kind: "plan", currency: currency.toUpperCase() });
     const data = await post("/api/stripe/subscribe", { planId }, planId);
     if (data?.url) window.location.assign(data.url);
   }

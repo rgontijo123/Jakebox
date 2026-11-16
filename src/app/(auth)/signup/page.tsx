@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import OAuthButtons from "@/components/OAuthButtons";
 import { PasswordInput } from "@/components/PasswordInput";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { track } from "@/lib/analytics";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function SignupPage() {
       return;
     }
 
+    track("sign_up", { method: "email" });
     const signInRes = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
     if (signInRes?.error) {

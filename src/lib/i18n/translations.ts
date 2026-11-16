@@ -26,6 +26,12 @@ export const DICTIONARY = {
   // Footer
   footer_terms: { en: "Terms of Use", pt: "Termos de Uso" },
   footer_privacy: { en: "Privacy Policy", pt: "Política de Privacidade" },
+  cookie_text: {
+    en: "We use Google Analytics cookies to understand how Jakebox is used and improve it. You can decline.",
+    pt: "Usamos cookies do Google Analytics para entender como o Jakebox é usado e melhorá-lo. Você pode recusar.",
+  },
+  cookie_accept: { en: "Accept", pt: "Aceitar" },
+  cookie_decline: { en: "Decline", pt: "Recusar" },
   footer_contact: { en: "Contact Us", pt: "Fale Conosco" },
 
   // Home page

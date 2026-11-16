@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -221,6 +222,7 @@ export function GenerationForm({
       return;
     }
 
+    track("generate_song", { versions, instrumental, language });
     // Keep stylePrompt/lyricsText filled in after a successful submit --
     // iterating on the same song (different duration, different rhythm)
     // shouldn't require retyping/repasting them every time.

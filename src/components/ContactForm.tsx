@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import { useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import type { DictionaryKey } from "@/lib/i18n/translations";
@@ -38,6 +39,7 @@ export function ContactForm() {
         setError(t(ERROR_KEYS[data?.error] ?? "contact_err_send"));
         return;
       }
+      track("generate_lead", { form: "contact" });
       setSent(true);
     } catch {
       setError(t("contact_err_send"));

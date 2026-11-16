@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { CreditPacks } from "@/components/CreditPacks";
 import { SubscriptionPlans } from "@/components/SubscriptionPlans";
+import { TrackOnLoad } from "@/components/TrackOnLoad";
 import { getT } from "@/lib/i18n/server";
 import type { DictionaryKey } from "@/lib/i18n/translations";
 
@@ -14,7 +15,12 @@ const TYPE_LABELS: Record<string, DictionaryKey> = {
   admin_adjustment: "billing_tx_adjustment",
 };
 
-export default async function BillingPage() {
+export default async function BillingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ plan?: string; purchase?: string }>;
+}) {
+  const { plan: planResult, purchase: purchaseResult } = await searchParams;
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
   const { t, locale } = await getT();
@@ -54,6 +60,8 @@ export default async function BillingPage() {
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-16 gap-8">
+      {planResult === "success" && <TrackOnLoad event="purchase" params={{ kind: "plan" }} />}
+      {purchaseResult === "success" && <TrackOnLoad event="purchase" params={{ kind: "credit_pack" }} />}
       <div className="w-full max-w-2xl flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{t("billing_title")}</h1>

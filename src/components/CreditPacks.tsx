@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/analytics";
 import { useState } from "react";
 import { CREDIT_PACKS, currencyForLocale, formatMoney, priceCents } from "@/lib/pricing";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -29,6 +30,7 @@ export function CreditPacks({ showHeading = false }: { showHeading?: boolean }) 
     setError(null);
     setLoadingId(packId);
     try {
+      track("begin_checkout", { item_id: packId, kind: "credit_pack", currency: currency.toUpperCase() });
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { Providers } from "@/components/Providers";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { Analytics } from "@/components/Analytics";
 import { getLocale } from "@/lib/i18n/server";
 
 const geistSans = Geist({
@@ -53,6 +54,7 @@ export default async function RootLayout({
           <Header />
           <div className="flex-1 flex flex-col">{children}</div>
           <Footer />
+          <Analytics />
         </Providers>
         <ServiceWorkerRegister />
       </body>
