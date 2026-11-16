@@ -237,6 +237,9 @@ model Song {
   // Exact playback length (decoded, ms) used to time the radio loop --
   // durationSeconds is rounded and can be off by seconds for uploads.
   radioDurationMs Int?
+  // Announcer voice of this song's intro (and the greeting before it):
+  // "male" | "female" | "young" | "cheerful" -- see lib/radioShared VOICES.
+  radioVoice      String?
 
   // The creator chose to show this song on the public /explore page, where
   // anyone can listen and signed-in users can vote. Staff pick radio songs

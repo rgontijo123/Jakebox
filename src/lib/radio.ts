@@ -27,10 +27,7 @@ export {
 const JINGLE_EVERY = 3;
 
 type Jingle = { file: string; durationMs: number };
-type GreetingSet = Record<
-  RadioLang,
-  Record<"morning" | "afternoon" | "evening", Jingle>
->;
+type GreetingSet = Record<RadioLang, Record<string, Record<"morning" | "afternoon" | "evening", Jingle>>>;
 
 export function isNational(language: string | null | undefined): boolean {
   return (language ?? "").toLowerCase().startsWith("pt");
@@ -115,6 +112,7 @@ export async function getRadioProgramme(): Promise<RadioItem[]> {
       thumbnailUrl: true,
       radioIntroKey: true,
       radioIntroMs: true,
+      radioVoice: true,
       generation: { select: { stylePrompt: true, language: true } },
     },
   });
@@ -126,7 +124,7 @@ export async function getRadioProgramme(): Promise<RadioItem[]> {
 
   const items: RadioItem[] = [];
   const pool = jingles as Jingle[];
-  const greet = greetings as GreetingSet;
+  const greet = greetings as unknown as GreetingSet;
   ordered.forEach((s, i) => {
     const lang: RadioLang = isNational(s.generation.language) ? "pt" : "en";
     if (pool.length && i % JINGLE_EVERY === 0) {
@@ -141,13 +139,14 @@ export async function getRadioProgramme(): Promise<RadioItem[]> {
         cover: null,
       });
     }
-    const set = greet[lang];
+    // Same announcer for the greeting and the intro of this song.
+    const set = greet[lang]?.[s.radioVoice ?? "male"] ?? greet[lang]?.male;
     if (set) {
       // The three takes are cut to the same length, so the slot is exact
       // whichever one plays.
       items.push({
         kind: "greeting",
-        id: `greeting-${lang}#${i}`,
+        id: `greeting-${lang}-${s.radioVoice ?? "male"}#${i}`,
         title: lang === "pt" ? "Rádio Jakebox" : "Jakebox Radio",
         style: null,
         durationMs: set.afternoon.durationMs,
@@ -168,7 +167,7 @@ export async function getRadioProgramme(): Promise<RadioItem[]> {
         title: s.title,
         style: null,
         durationMs: s.radioIntroMs,
-        audio: `/api/radio/intro/${s.id}`,
+        audio: `/api/radio/intro/${s.id}?v=${s.radioIntroMs}`,
         cover,
       });
     }

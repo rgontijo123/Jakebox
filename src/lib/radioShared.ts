@@ -3,6 +3,9 @@ export const RADIO_EPOCH = Date.UTC(2026, 0, 1);
 export const STATION_TZ = "America/Sao_Paulo";
 
 export type RadioLang = "pt" | "en";
+/** Announcer voices; each song's intro and the greeting before it share one. */
+export const RADIO_VOICES = ["male", "female", "young", "cheerful"] as const;
+export type RadioVoice = (typeof RADIO_VOICES)[number];
 export type RadioItem = {
   kind: "song" | "intro" | "greeting" | "jingle";
   id: string;

@@ -2,7 +2,7 @@ import { NextResponse, after } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { isStaffRole } from "@/lib/staff";
-import { generateRadioIntro } from "@/lib/radioIntro";
+import { generateRadioIntro, isRadioVoice } from "@/lib/radioIntro";
 import { exactDurationMs } from "@/lib/exactDuration";
 import { readSongAudio } from "@/lib/storage";
 
@@ -16,15 +16,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   }
   const { id } = await params;
-  const on = Boolean((await req.json().catch(() => null))?.on);
+  const body = await req.json().catch(() => null);
+  const on = Boolean(body?.on);
+  // { on: true, newIntro: true, voice?: "female" | ... } re-records the intro
+  // (optionally in another announcer's voice) without moving the song.
+  const newIntro = on && Boolean(body?.newIntro);
+  const voice = isRadioVoice(body?.voice) ? body.voice : undefined;
   const song = await db.song.findUnique({ where: { id }, include: { user: { select: { role: true } } } });
   if (!song || song.deletedAt) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (on && !song.isPublic && !isStaffRole(song.user.role)) {
     return NextResponse.json({ error: "The creator hasn't made this song public" }, { status: 409 });
   }
-  const updated = await db.song.update({ where: { id }, data: on ? { radioAt: song.radioAt ?? new Date() } : { radioAt: null, radioIntroKey: null, radioIntroMs: null },
+  const updated = await db.song.update({
+    where: { id },
+    data: on
+      ? { radioAt: song.radioAt ?? new Date(), ...(newIntro ? { radioIntroKey: null, radioIntroMs: null } : {}) }
+      : { radioAt: null, radioIntroKey: null, radioIntroMs: null, radioVoice: null },
   });
-  if (on && !updated.radioIntroKey) after(() => generateRadioIntro(id));
+  if (on && !updated.radioIntroKey) after(() => generateRadioIntro(id, voice));
   if (on && updated.radioDurationMs == null) {
     after(async () => {
       const ms = await exactDurationMs(await readSongAudio(updated.audioUrl)).catch(() => null);
