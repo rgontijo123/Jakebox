@@ -47,7 +47,11 @@ const STATIC_METADATA: Metadata = {
   // Google Search Console domain ownership check -- needed to move the
   // OAuth consent screen's branding out of "Testing" mode.
   verification: {
-    google: "m1EqUdNX4_QClhrhq8SxH0eBN5PoFbvT63Yxr4ihwOg",
+    google: [
+      "m1EqUdNX4_QClhrhq8SxH0eBN5PoFbvT63Yxr4ihwOg",
+      // Search Console URL-prefix property https://jakeboxmusic.com/ (sitemap)
+      "l-VqQ3bPjTIrOpTHqdHhrnBzpgH-x7LXeynyRiowsNg",
+    ],
   },
 };
 
