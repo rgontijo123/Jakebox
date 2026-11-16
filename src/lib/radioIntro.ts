@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { db } from "@/lib/db";
 import { generateRawSonic } from "@/lib/musicapi";
-import { getAudioDurationSeconds } from "@/lib/audio";
+import { exactDurationMs } from "@/lib/exactDuration";
 import { saveSongAudio } from "@/lib/storage";
 import { isNational } from "@/lib/radio";
 
@@ -11,11 +11,13 @@ const ffmpegPath: string = require("ffmpeg-static");
 const ANNOUNCER = {
   pt: {
     tags: "spoken word radio announcer, male radio DJ voice speaking, talking not singing, warm deep Brazilian Portuguese voice, soft light instrumental music bed underneath, radio station intro, no singing, no melody in the vocals",
-    text: (title: string) => `[Spoken]\nSeguimos com a nossa programação na Rádio Jake Box. Agora: ${title}.`,
+    text: (title: string) =>
+      `[Spoken]\nSeguimos com a nossa programação na Rádio Jake Box. Agora: ${title}.`,
   },
   en: {
     tags: "spoken word radio announcer, male radio DJ voice speaking, talking not singing, warm deep American English voice, soft light instrumental music bed underneath, radio station intro, no singing, no melody in the vocals",
-    text: (title: string) => `[Spoken]\nBack to our program on Jake Box Radio. Up next: ${title}.`,
+    text: (title: string) =>
+      `[Spoken]\nBack to our program on Jake Box Radio. Up next: ${title}.`,
   },
 };
 
@@ -24,14 +26,32 @@ const ANNOUNCER = {
 function finishClip(input: Buffer): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const proc = spawn(ffmpegPath, [
-      "-v", "error", "-threads", "1", "-i", "pipe:0", "-t", "20",
-      "-af", "loudnorm=I=-14:TP=-1.5:LRA=11,areverse,afade=t=in:d=1.2,areverse",
-      "-ar", "44100", "-f", "mp3", "-b:a", "160k", "pipe:1",
+      "-v",
+      "error",
+      "-threads",
+      "1",
+      "-i",
+      "pipe:0",
+      "-t",
+      "20",
+      "-af",
+      "loudnorm=I=-14:TP=-1.5:LRA=11,areverse,afade=t=in:d=1.2,areverse",
+      "-ar",
+      "44100",
+      "-f",
+      "mp3",
+      "-b:a",
+      "160k",
+      "pipe:1",
     ]);
     const out: Buffer[] = [];
     proc.stdout.on("data", (c) => out.push(c));
     proc.on("error", reject);
-    proc.on("close", (code) => (code === 0 ? resolve(Buffer.concat(out)) : reject(new Error(`ffmpeg exited ${code}`))));
+    proc.on("close", (code) =>
+      code === 0
+        ? resolve(Buffer.concat(out))
+        : reject(new Error(`ffmpeg exited ${code}`)),
+    );
     proc.stdin.end(input);
   });
 }
@@ -47,15 +67,28 @@ export async function generateRadioIntro(songId: string): Promise<void> {
   if (inFlight.has(songId)) return;
   inFlight.add(songId);
   try {
-    const song = await db.song.findUnique({ where: { id: songId }, include: { generation: { select: { language: true } } } });
+    const song = await db.song.findUnique({
+      where: { id: songId },
+      include: { generation: { select: { language: true } } },
+    });
     if (!song || !song.radioAt || song.radioIntroKey) return;
-    const a = isNational(song.generation.language) ? ANNOUNCER.pt : ANNOUNCER.en;
-    const raw = await generateRawSonic({ title: `Radio intro ${song.id}`, tags: a.tags, prompt: a.text(song.title) });
+    const a = isNational(song.generation.language)
+      ? ANNOUNCER.pt
+      : ANNOUNCER.en;
+    const raw = await generateRawSonic({
+      title: `Radio intro ${song.id}`,
+      tags: a.tags,
+      prompt: a.text(song.title),
+    });
     const clip = await finishClip(raw);
     const key = `radio-intro-${song.id}.mp3`;
     await saveSongAudio(key, clip);
-    const ms = Math.round((await getAudioDurationSeconds(clip)) * 1000);
-    await db.song.update({ where: { id: song.id }, data: { radioIntroKey: key, radioIntroMs: ms } });
+    const exact = await exactDurationMs(clip);
+    const ms = exact % 1000 === 0 ? exact + 1 : exact; // whole seconds = "unmeasured" (see lib/radio)
+    await db.song.update({
+      where: { id: song.id },
+      data: { radioIntroKey: key, radioIntroMs: ms },
+    });
     console.log(`Radio intro for "${song.title}": ${ms}ms`);
   } catch (err) {
     console.error(`Radio intro for ${songId} failed:`, err);

@@ -43,3 +43,12 @@ body {
 @media (prefers-reduced-motion: reduce) {
   [class*="animate-[marquee"], [class*="animate-[eq"], [class*="animate-[spin"] { animation: none !important; }
 }
+
+/* Rádio Jakebox installed as an app: just the radio, no site chrome */
+@media (display-mode: standalone) {
+  body:has(.radio-app) > * header,
+  body:has(.radio-app) footer,
+  body:has(.radio-app) header {
+    display: none;
+  }
+}

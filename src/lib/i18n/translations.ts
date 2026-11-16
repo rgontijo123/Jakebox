@@ -68,6 +68,7 @@ export const DICTIONARY = {
   explore_on_radio: { en: "On the radio", pt: "Na rádio" },
   explore_more: { en: "Load more", pt: "Carregar mais" },
   explore_share_cta: { en: "Make your own song", pt: "Crie a sua música" },
+  radio_install: { en: "Install the radio app", pt: "Instalar o app da rádio" },
   radio_stop: { en: "Stop", pt: "Parar" },
   radio_mute: { en: "Mute", pt: "Silenciar" },
   radio_unmute: { en: "Unmute", pt: "Ativar som" },

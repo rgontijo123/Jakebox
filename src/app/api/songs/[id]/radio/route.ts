@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { isStaffRole } from "@/lib/staff";
 import { generateRadioIntro } from "@/lib/radioIntro";
+import { exactDurationMs } from "@/lib/exactDuration";
+import { readSongAudio } from "@/lib/storage";
 
 /** Staff-only: put a song on Rádio Jakebox ({ on: true }) or take it off.
  * Customer songs must have been made public by their creator first. Going
@@ -23,5 +25,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const updated = await db.song.update({ where: { id }, data: on ? { radioAt: song.radioAt ?? new Date() } : { radioAt: null, radioIntroKey: null, radioIntroMs: null },
   });
   if (on && !updated.radioIntroKey) after(() => generateRadioIntro(id));
+  if (on && updated.radioDurationMs == null) {
+    after(async () => {
+      const ms = await exactDurationMs(await readSongAudio(updated.audioUrl)).catch(() => null);
+      if (ms) await db.song.update({ where: { id }, data: { radioDurationMs: ms } });
+    });
+  }
   return NextResponse.json({ onRadio: !!updated.radioAt });
 }
