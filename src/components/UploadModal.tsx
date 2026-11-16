@@ -7,6 +7,7 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded: () => void }) {
   const { t } = useLocale();
   const [file, setFile] = useState<File | null>(null);
+  const [cover, setCover] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [language, setLanguage] = useState("en");
   const [lyricsText, setLyricsText] = useState("");
@@ -32,6 +33,7 @@ export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUp
     form.set("title", title.trim());
     form.set("language", language);
     form.set("lyricsText", lyricsText);
+    if (cover) form.set("cover", cover);
 
     const res = await fetch("/api/songs/upload", { method: "POST", body: form });
     const data = await res.json().catch(() => null);
@@ -66,6 +68,16 @@ export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUp
             type="file"
             accept="audio/*"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            className="text-sm text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-zinc-100 file:text-sm hover:file:bg-zinc-700"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm">
+          {t("upload_cover")}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => setCover(e.target.files?.[0] ?? null)}
             className="text-sm text-zinc-400 file:mr-3 file:rounded-full file:border-0 file:bg-zinc-800 file:px-3 file:py-1.5 file:text-zinc-100 file:text-sm hover:file:bg-zinc-700"
           />
         </label>

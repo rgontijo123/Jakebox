@@ -3,8 +3,30 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { moderateGenerationRequest } from "@/lib/moderation";
+import { spawn } from "node:child_process";
 import { getAudioDurationSeconds, transcodeToMp3 } from "@/lib/audio";
-import { saveSongAudio, newStorageKey } from "@/lib/storage";
+import { saveSongAudio, newStorageKey, saveSongThumbnail, newThumbnailStorageKey } from "@/lib/storage";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ffmpegPath: string = require("ffmpeg-static");
+const MAX_COVER_BYTES = 8 * 1024 * 1024;
+
+/** Optional cover image -> 600x600 JPEG (center-cropped), like generated covers. */
+function toCoverJpeg(input: Buffer): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(ffmpegPath, [
+      "-v", "error", "-threads", "1", "-i", "pipe:0",
+      "-vf", "scale=600:600:force_original_aspect_ratio=increase,crop=600:600",
+      "-frames:v", "1", "-q:v", "3", "-f", "image2", "-c:v", "mjpeg", "pipe:1",
+    ]);
+    const out: Buffer[] = [];
+    proc.stdout.on("data", (c) => out.push(c));
+    proc.on("error", reject);
+    proc.on("close", (code) => (code === 0 && out.length ? resolve(Buffer.concat(out)) : reject(new Error(`ffmpeg exited ${code}`))));
+    proc.stdin.on("error", () => {});
+    proc.stdin.end(input);
+  });
+}
 
 const MAX_UPLOAD_BYTES = 30 * 1024 * 1024; // 30MB -- generous for a song-length mp3/wav
 
@@ -53,6 +75,12 @@ export async function POST(req: Request) {
 
   const durationSeconds = await getAudioDurationSeconds(mp3Buffer, "mp3");
 
+  const coverFile = form.get("cover");
+  let coverJpeg: Buffer | null = null;
+  if (coverFile instanceof File && coverFile.size > 0 && coverFile.size <= MAX_COVER_BYTES) {
+    coverJpeg = await toCoverJpeg(Buffer.from(await coverFile.arrayBuffer())).catch(() => null);
+  }
+
   const generation = await db.generation.create({
     data: {
       batchId: randomUUID(),
@@ -83,6 +111,12 @@ export async function POST(req: Request) {
       provider: "upload",
     },
   });
+
+  if (coverJpeg) {
+    const thumbKey = newThumbnailStorageKey(generation.id);
+    await saveSongThumbnail(thumbKey, coverJpeg);
+    await db.song.update({ where: { id: song.id }, data: { thumbnailUrl: thumbKey } });
+  }
 
   return NextResponse.json({ batchId: generation.batchId, songId: song.id });
 }

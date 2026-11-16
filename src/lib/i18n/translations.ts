@@ -41,6 +41,7 @@ export const DICTIONARY = {
   },
   home_get_started: { en: "Get started", pt: "Começar" },
   home_pricing: { en: "Pricing", pt: "Preços" },
+  upload_cover: { en: "Cover image (optional)", pt: "Capa (opcional)" },
   list_public_add: {
     en: "Make public: anyone can listen and vote on the Explore page",
     pt: "Tornar pública: qualquer pessoa ouve e vota na página Explorar",
