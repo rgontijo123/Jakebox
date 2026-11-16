@@ -3,7 +3,7 @@
 import { track } from "@/lib/analytics";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { SUBSCRIPTION_PLANS, currencyForLocale, formatMoney, priceCents, type Currency } from "@/lib/pricing";
+import { SUBSCRIPTION_PLANS, currencyForLocale, formatMoney, planName, priceCents, type Currency } from "@/lib/pricing";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { useCardSelection } from "@/components/useCardSelection";
 
@@ -85,7 +85,7 @@ export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
           <div>
             <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{t("plan_current")}</p>
             <p className="text-lg font-semibold">
-              {activePlan.name} · {formatMoney(priceCents(activePlan, current.currency ?? currency), current.currency ?? currency)}
+              {planName(activePlan, locale)} · {formatMoney(priceCents(activePlan, current.currency ?? currency), current.currency ?? currency)}
               {t("plan_per_month")}
             </p>
             <p className="text-sm text-zinc-400">
@@ -132,7 +132,7 @@ export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
                   </span>
                 )}
 
-                <p className="text-lg font-semibold">{plan.name}</p>
+                <p className="text-lg font-semibold">{planName(plan, locale)}</p>
 
                 <div>
                   <span className="text-3xl font-semibold">{formatMoney(priceCents(plan, currency), currency)}</span>

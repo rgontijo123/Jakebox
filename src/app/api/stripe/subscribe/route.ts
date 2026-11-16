@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
-import { currencyForLocale, getPlan, priceCents } from "@/lib/pricing";
+import { currencyForLocale, getPlan, planName, priceCents } from "@/lib/pricing";
 import { getLocale } from "@/lib/i18n/server";
 
 export async function POST(req: Request) {
@@ -49,8 +49,8 @@ export async function POST(req: Request) {
 
   const productName =
     currency === "brl"
-      ? `Jakebox ${plan.name} — ${plan.songsPerMonth} músicas/mês`
-      : `Jakebox ${plan.name} — ${plan.songsPerMonth} songs/month`;
+      ? `Jakebox ${planName(plan, "pt")} — ${plan.songsPerMonth} músicas/mês`
+      : `Jakebox ${planName(plan, "en")} — ${plan.songsPerMonth} songs/month`;
 
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "subscription",

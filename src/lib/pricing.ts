@@ -41,19 +41,24 @@ export const FREE_TRIAL_SONGS = 2;
 
 export type SubscriptionPlan = {
   id: "basico" | "criador" | "pro";
-  name: string;
+  name: string; // Portuguese
+  nameEn: string;
   usdCents: number;
   brlCents: number;
   songsPerMonth: number;
 };
 
+export function planName(plan: SubscriptionPlan, locale: string): string {
+  return locale === "pt" ? plan.name : plan.nameEn;
+}
+
 // Priced so that even a subscriber who uses every song still covers the
 // provider cost (~US$0.30 per generation incl. cover art) plus Stripe fees.
 // Unused songs don't roll over -- each paid invoice resets the quota.
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
-  { id: "basico", name: "Básico", usdCents: 799, brlCents: 3990, songsPerMonth: 15 },
-  { id: "criador", name: "Criador", usdCents: 1399, brlCents: 6990, songsPerMonth: 30 },
-  { id: "pro", name: "Pro", usdCents: 2499, brlCents: 12990, songsPerMonth: 60 },
+  { id: "basico", name: "Básico", nameEn: "Basic", usdCents: 799, brlCents: 3990, songsPerMonth: 15 },
+  { id: "criador", name: "Criador", nameEn: "Creator", usdCents: 1399, brlCents: 6990, songsPerMonth: 30 },
+  { id: "pro", name: "Pro", nameEn: "Pro", usdCents: 2499, brlCents: 12990, songsPerMonth: 60 },
 ];
 
 export function getPlan(id: string | null | undefined): SubscriptionPlan | undefined {
