@@ -54,7 +54,7 @@ export function RadioPlayer({
           href={`/api/songs/${songId}/video?download=1`}
           className="self-start text-xs text-zinc-500 hover:text-zinc-100 underline -mt-2"
         >
-          Baixar vídeo
+          {t("player_download_video")}
         </a>
       )}
 

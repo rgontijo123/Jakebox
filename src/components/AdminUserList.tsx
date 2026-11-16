@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateApiError } from "@/lib/i18n/apiErrors";
 
 export type AdminUser = {
   id: string;
@@ -54,7 +55,7 @@ function UserRow({ user, isOwner, onDeleted }: { user: AdminUser; isOwner: boole
     const { ok, data } = await action();
     setBusy(false);
     if (!ok) {
-      setMessage({ text: data?.error ?? t("err_generic"), error: true });
+      setMessage({ text: translateApiError(data?.error, t, "err_generic"), error: true });
       return false;
     }
     setMessage({ text: success });

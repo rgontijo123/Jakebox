@@ -174,6 +174,7 @@ export function RadioLive() {
     return () => window.removeEventListener("beforeinstallprompt", onPrompt);
   }, []);
 
+  const radioTitle = t("radio_title");
   const playItem = useCallback(async (p: Programme, i: number, offsetMs: number) => {
     const audio = audioRef.current;
     const item = p.items[i];
@@ -202,13 +203,13 @@ export function RadioLive() {
     }
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: item.kind === "song" ? item.title : "Rádio Jakebox",
-        artist: "Rádio Jakebox",
+        title: item.kind === "song" ? item.title : radioTitle,
+        artist: radioTitle,
         album: "jakeboxmusic.com",
         artwork: [{ src: item.cover ?? "/icons/icon-512.png", sizes: "512x512", type: item.cover ? "image/jpeg" : "image/png" }],
       });
     }
-  }, []);
+  }, [radioTitle]);
 
   /** Jump to exactly where the live loop is now. */
   const syncToLive = useCallback(() => {
@@ -409,7 +410,7 @@ export function RadioLive() {
             </div>
 
             <div className="flex items-end justify-center sm:justify-start gap-4 sm:gap-5">
-              <RadioButton onClick={() => void play()} label="Play" active={playing} disabled={loading || !items.length || playing}>
+              <RadioButton onClick={() => void play()} label={t("radio_play")} active={playing} disabled={loading || !items.length || playing}>
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                   <path d="M4 2 L14 8 L4 14 Z" />
                 </svg>

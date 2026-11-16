@@ -73,7 +73,7 @@ export function PublicPricing() {
                     <span className="font-medium">{pack.credits.toLocaleString(locale === "pt" ? "pt-BR" : "en-US")}</span> {t("pack_credits")}
                   </p>
                   <p className="text-xs text-zinc-500">
-                    ≈ {songs} {t("pack_songs_approx")} · {formatMoney(Math.round(price / songs), currency)}/{locale === "pt" ? "música" : "song"}
+                    ≈ {songs} {t("pack_songs_approx")} · {formatMoney(Math.round(price / songs), currency)}/{t("price_per_song")}
                   </p>
                 </div>
 

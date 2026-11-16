@@ -14,10 +14,7 @@ export function ShareRadio() {
   const [canShare, setCanShare] = useState(false);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- browser capability, unknown during SSR
   useEffect(() => setCanShare("share" in navigator), []);
-  const text =
-    locale === "pt"
-      ? "📻 A Rádio Jakebox está no ar! Músicas criadas com inteligência artificial no Jakebox, tocando ao vivo 24 horas por dia. Ouça agora:"
-      : "📻 Jakebox Radio is on the air! Songs made with AI on Jakebox, playing live 24 hours a day. Listen now:";
+  const text = t("share_text");
   const full = `${text} ${RADIO_URL}`;
   const enc = encodeURIComponent;
 

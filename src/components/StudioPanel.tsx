@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateApiError } from "@/lib/i18n/apiErrors";
 
 type Job = {
   id: string;
@@ -13,6 +15,7 @@ type Job = {
 };
 
 export function StudioPanel() {
+  const { t } = useLocale();
   const [jobs, setJobs] = useState<Job[] | null>(null);
 
   async function load() {
@@ -26,9 +29,9 @@ export function StudioPanel() {
     load();
   }, []);
 
-  if (jobs === null) return <p className="text-sm text-zinc-500">Loading...</p>;
+  if (jobs === null) return <p className="text-sm text-zinc-500">{t("list_loading")}</p>;
   if (jobs.length === 0) {
-    return <p className="text-sm text-zinc-500">No finished videos yet -- generate one in Video first.</p>;
+    return <p className="text-sm text-zinc-500">{t("studio_no_videos")}</p>;
   }
 
   return (
@@ -41,6 +44,7 @@ export function StudioPanel() {
 }
 
 function JobEditor({ job, onChange }: { job: Job; onChange: () => void }) {
+  const { t } = useLocale();
   const [start, setStart] = useState("0");
   const [end, setEnd] = useState(String(job.durationSeconds ?? 30));
   const [spotifyUrl, setSpotifyUrl] = useState("");
@@ -60,7 +64,7 @@ function JobEditor({ job, onChange }: { job: Job; onChange: () => void }) {
     const data = await res.json().catch(() => null);
     setBusy(false);
     if (!res.ok) {
-      setError(data?.error ?? "Failed to cut short clip");
+      setError(translateApiError(data?.error, t, "studio_cut_failed"));
       return;
     }
     onChange();
@@ -77,7 +81,7 @@ function JobEditor({ job, onChange }: { job: Job; onChange: () => void }) {
     setBusy(false);
     if (!res.ok) {
       const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Failed to save links");
+      setError(translateApiError(data?.error, t, "studio_links_failed"));
     }
   }
 
@@ -101,7 +105,7 @@ function JobEditor({ job, onChange }: { job: Job; onChange: () => void }) {
             <div className="mt-2 flex flex-col gap-1">
               <p className="text-xs text-zinc-500 whitespace-pre-wrap line-clamp-4">{job.promoText}</p>
               <button onClick={copyPromo} className="text-xs underline text-zinc-400 hover:text-zinc-100 w-fit">
-                {copied ? "Copied!" : "Copy promo text"}
+                {copied ? t("studio_copied") : t("studio_copy_promo")}
               </button>
             </div>
           )}
@@ -109,12 +113,12 @@ function JobEditor({ job, onChange }: { job: Job; onChange: () => void }) {
       </div>
 
       <div className="flex flex-col gap-2 border-t border-zinc-800 pt-4">
-        <span className="text-xs text-zinc-500">Short clip</span>
+        <span className="text-xs text-zinc-500">{t("studio_short_clip")}</span>
         {job.shortUrl ? (
           // eslint-disable-next-line jsx-a11y/media-has-caption
           <video controls src={job.shortUrl} className="w-24 rounded-lg" />
         ) : (
-          <span className="text-xs text-zinc-600">Not cut yet</span>
+          <span className="text-xs text-zinc-600">{t("studio_not_cut")}</span>
         )}
         <div className="flex items-center gap-2">
           <input
@@ -122,48 +126,48 @@ function JobEditor({ job, onChange }: { job: Job; onChange: () => void }) {
             value={start}
             onChange={(e) => setStart(e.target.value)}
             className="w-20 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm"
-            aria-label="Start seconds"
+            aria-label={t("studio_start_seconds")}
           />
-          <span className="text-xs text-zinc-500">to</span>
+          <span className="text-xs text-zinc-500">{t("studio_to")}</span>
           <input
             type="number"
             value={end}
             onChange={(e) => setEnd(e.target.value)}
             className="w-20 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm"
-            aria-label="End seconds"
+            aria-label={t("studio_end_seconds")}
           />
           <button
             onClick={() => cutShort("manual")}
             disabled={busy}
             className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:text-zinc-100 disabled:opacity-50"
           >
-            Cut
+            {t("studio_cut")}
           </button>
           <button
             onClick={() => cutShort("auto")}
             disabled={busy}
             className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:text-zinc-100 disabled:opacity-50"
           >
-            Auto-detect chorus
+            {t("studio_auto_chorus")}
           </button>
         </div>
       </div>
 
       <div className="flex flex-col gap-2 border-t border-zinc-800 pt-4">
-        <span className="text-xs text-zinc-500">Channel links (shared across all videos)</span>
+        <span className="text-xs text-zinc-500">{t("studio_channel_links")}</span>
         <div className="flex items-center gap-2">
           <input
             type="url"
             value={spotifyUrl}
             onChange={(e) => setSpotifyUrl(e.target.value)}
-            placeholder="Spotify link"
+            placeholder={t("studio_spotify_link")}
             className="flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm"
           />
           <input
             type="url"
             value={youtubeUrl}
             onChange={(e) => setYoutubeUrl(e.target.value)}
-            placeholder="YouTube link"
+            placeholder={t("studio_youtube_link")}
             className="flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm"
           />
           <button
@@ -171,7 +175,7 @@ function JobEditor({ job, onChange }: { job: Job; onChange: () => void }) {
             disabled={busy}
             className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:text-zinc-100 disabled:opacity-50"
           >
-            Save
+            {t("admin_save")}
           </button>
         </div>
       </div>

@@ -56,7 +56,7 @@ export function PlayerBar() {
         href={`/api/songs/${current.songId}/audio?download=1`}
         className="shrink-0 text-xs text-zinc-500 hover:text-zinc-100 underline"
       >
-        Download
+        {t("player_download")}
       </a>
 
       {current.hasVideo && (
@@ -64,7 +64,7 @@ export function PlayerBar() {
           href={`/api/songs/${current.songId}/video?download=1`}
           className="shrink-0 text-xs text-zinc-500 hover:text-zinc-100 underline"
         >
-          Vídeo
+          {t("player_video")}
         </a>
       )}
     </div>

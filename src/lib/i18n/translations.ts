@@ -37,20 +37,20 @@ export const DICTIONARY = {
   // Home page
   home_subtitle: {
     en: "Write your lyrics, describe the sound, and Jakebox turns it into an original song in minutes.",
-    pt: "Escreva sua letra, descreva o som, e o Jakebox transforma isso em uma música original em minutos.",
+    pt: "Escreva sua letra, descreva o som e o Jakebox transforma tudo em uma música original em minutos.",
   },
   home_get_started: { en: "Get started", pt: "Começar" },
   home_pricing: { en: "Pricing", pt: "Preços" },
-  upload_cover: { en: "Cover image (optional)", pt: "Capa (opcional)" },
+  upload_cover: { en: "Cover image (optional)", pt: "Imagem de capa (opcional)" },
   list_public_add: {
     en: "Make public: anyone can listen and vote on the Explore page",
-    pt: "Tornar pública: qualquer pessoa ouve e vota na página Explorar",
+    pt: "Tornar pública: qualquer pessoa pode ouvir e votar na página Explorar",
   },
   list_public_remove: { en: "Public — click to make private", pt: "Pública — clique para deixar privada" },
   nav_explore: { en: "Explore", pt: "Explorar" },
   explore_title: { en: "Community songs", pt: "Músicas da comunidade" },
   explore_subtitle: {
-    en: "Songs made with Jakebox and shared by their creators. Listen, vote for your favourites — the most voted can go on Jakebox Radio.",
+    en: "Songs made with Jakebox and shared by their creators. Listen, vote for your favorites — the most voted can go on Jakebox Radio.",
     pt: "Músicas criadas no Jakebox e compartilhadas pelos autores. Ouça e vote nas suas favoritas — as mais votadas podem tocar na Rádio Jakebox.",
   },
   explore_top: { en: "Most voted", pt: "Mais votadas" },
@@ -59,7 +59,7 @@ export const DICTIONARY = {
   explore_national: { en: "Brazilian", pt: "Nacionais" },
   explore_international: { en: "International", pt: "Internacionais" },
   explore_vote: { en: "Vote", pt: "Votar" },
-  explore_voted: { en: "Voted", pt: "Votado" },
+  explore_voted: { en: "Voted", pt: "Você votou" },
   explore_login_to_vote: { en: "Log in to vote", pt: "Entre para votar" },
   explore_empty: {
     en: "No public songs yet. Make yours public with the 🌐 button in your song list!",
@@ -71,7 +71,7 @@ export const DICTIONARY = {
   share_title: { en: "Share Jakebox Radio", pt: "Divulgue a Rádio Jakebox" },
   share_hint: {
     en: "Text and link are ready — pick a network, or copy and paste wherever you like.",
-    pt: "Texto e link já prontos — escolha a rede, ou copie e cole onde quiser.",
+    pt: "Texto e link já estão prontos — escolha a rede ou copie e cole onde quiser.",
   },
   share_native: { en: "Share", pt: "Compartilhar" },
   share_copy_text: { en: "Copy text + link", pt: "Copiar texto + link" },
@@ -86,7 +86,7 @@ export const DICTIONARY = {
   radio_stop: { en: "Stop", pt: "Parar" },
   radio_mute: { en: "Mute", pt: "Silenciar" },
   radio_unmute: { en: "Unmute", pt: "Ativar som" },
-  radio_intro: { en: "Up next", pt: "Apresentando" },
+  radio_intro: { en: "Coming up", pt: "Vem aí" },
   list_radio_add: { en: "Put on Jakebox Radio", pt: "Colocar na Rádio Jakebox" },
   list_radio_remove: { en: "Take off Jakebox Radio", pt: "Tirar da Rádio Jakebox" },
   nav_radio: { en: "Radio", pt: "Rádio" },
@@ -151,16 +151,16 @@ export const DICTIONARY = {
 
   // Auth
   login_title: { en: "Log in", pt: "Entrar" },
-  login_email: { en: "Email", pt: "Email" },
+  login_email: { en: "Email", pt: "E-mail" },
   login_password: { en: "Password", pt: "Senha" },
   login_submit: { en: "Log in", pt: "Entrar" },
   login_submitting: { en: "Logging in...", pt: "Entrando..." },
   login_forgot: { en: "Forgot password?", pt: "Esqueceu a senha?" },
   login_no_account: { en: "No account yet?", pt: "Ainda não tem conta?" },
-  login_invalid: { en: "Invalid email or password", pt: "Email ou senha inválidos" },
+  login_invalid: { en: "Invalid email or password", pt: "E-mail ou senha inválidos" },
   login_locked: {
     en: "Too many failed attempts. Try again after {time}, or reset your password below.",
-    pt: "Muitas tentativas sem sucesso. Tente novamente depois de {time}, ou redefina sua senha abaixo.",
+    pt: "Muitas tentativas sem sucesso. Tente novamente depois de {time} ou redefina sua senha abaixo.",
   },
   signup_title: { en: "Create your account", pt: "Crie sua conta" },
   signup_submit: { en: "Sign up", pt: "Cadastrar" },
@@ -177,13 +177,13 @@ export const DICTIONARY = {
   create_style_label: { en: "Style / genre", pt: "Estilo / gênero" },
   create_lyrics_label: { en: "Lyrics", pt: "Letra" },
   create_instrumental: { en: "Instrumental (no vocals)", pt: "Instrumental (sem vocais)" },
-  create_duration: { en: "Target duration", pt: "Duração prevista" },
+  create_duration: { en: "Target duration", pt: "Duração desejada" },
   create_versions: { en: "Versions:", pt: "Versões:" },
   create_generate: { en: "Generate song", pt: "Gerar música" },
   create_submitting: { en: "Submitting...", pt: "Enviando..." },
   create_rights_confirm: {
     en: "I confirm I have the rights to generate this content and it doesn't imitate a real artist or infringe on copyright.",
-    pt: "Confirmo que possuo os direitos para gerar este conteúdo e que ele não imita a obra de um artista original nem infringe direitos autorais.",
+    pt: "Confirmo que tenho os direitos para gerar este conteúdo e que ele não imita um artista real nem viola direitos autorais.",
   },
   create_get_more_credits: { en: "Get more credits", pt: "Obter mais créditos" },
 
@@ -253,7 +253,7 @@ export const DICTIONARY = {
   },
   plan_feature_2: {
     en: "Songs refill every month (unused songs don't carry over)",
-    pt: "As músicas renovam todo mês (as não usadas não acumulam)",
+    pt: "As músicas se renovam todo mês (as não usadas não acumulam)",
   },
   plan_feature_3: {
     en: "Failed generations give the song back automatically",
@@ -262,7 +262,7 @@ export const DICTIONARY = {
   plan_subscribe: { en: "Subscribe", pt: "Assinar" },
   plan_current: { en: "Your plan", pt: "Seu plano" },
   plan_status_active: { en: "Active — renews on", pt: "Ativo — renova em" },
-  plan_status_canceling: { en: "Cancelled — ends on", pt: "Cancelado — termina em" },
+  plan_status_canceling: { en: "Canceled — ends on", pt: "Cancelado — termina em" },
   plan_status_past_due: {
     en: "Payment failed — please update your card",
     pt: "O pagamento falhou — atualize seu cartão",
@@ -354,7 +354,7 @@ export const DICTIONARY = {
     pt: "Música de referência",
   },
   gen_reference_hint: {
-    en: "(optional -- inspires the new song's style)",
+    en: "(optional — inspires the new song's style)",
     pt: "(opcional — inspira o estilo da nova música)",
   },
   gen_none: {
@@ -366,7 +366,7 @@ export const DICTIONARY = {
     pt: "Voz",
   },
   gen_voice_hint: {
-    en: "(optional -- sings with a cloned voice instead of the default)",
+    en: "(optional — sings with a cloned voice instead of the default)",
     pt: "(opcional — canta com uma voz clonada em vez da padrão)",
   },
   gen_default_voice: {
@@ -378,8 +378,8 @@ export const DICTIONARY = {
     pt: "+ Gravar uma nova voz",
   },
   gen_single_version_note: {
-    en: "Using a reference song or voice generates a single version, not A/B.",
-    pt: "Usando música de referência ou voz, é gerada uma única versão, sem A/B.",
+    en: "Using a reference song or a cloned voice generates a single version (no A/B).",
+    pt: "Com música de referência ou voz clonada, é gerada uma única versão (sem A/B).",
   },
   gen_lyrics: {
     en: "Lyrics",
@@ -403,7 +403,7 @@ export const DICTIONARY = {
   },
   gen_rushed: {
     en: "Your lyrics ({words} words) need about {rec}s for unhurried pacing — at {dur}s the vocals will likely sound rushed.",
-    pt: "Sua letra ({words} palavras) precisa de uns {rec}s para um ritmo tranquilo — com {dur}s o vocal deve ficar corrido.",
+    pt: "Sua letra ({words} palavras) precisa de uns {rec}s para um ritmo tranquilo — com {dur}s o vocal provavelmente vai soar corrido.",
   },
   gen_bump_to: {
     en: "Bump to {s}s",
@@ -667,7 +667,7 @@ export const DICTIONARY = {
   },
   result_failed: {
     en: "Generation failed: {reason}. Your credits have been refunded.",
-    pt: "A geração falhou: {reason}. O valor foi devolvido para você.",
+    pt: "A geração falhou: {reason}. Seus créditos foram devolvidos.",
   },
   result_unknown_error: {
     en: "unknown error",
@@ -715,7 +715,7 @@ export const DICTIONARY = {
   },
   forgot_send: {
     en: "Send reset link",
-    pt: "Enviar link",
+    pt: "Enviar link de redefinição",
   },
   forgot_back: {
     en: "Back to log in",
@@ -727,7 +727,7 @@ export const DICTIONARY = {
   },
   reset_done: {
     en: "Password updated. Redirecting you to log in...",
-    pt: "Senha atualizada. Indo para o login...",
+    pt: "Senha atualizada. Redirecionando para o login...",
   },
   reset_new: {
     en: "New password",
@@ -784,7 +784,7 @@ export const DICTIONARY = {
     pt: "Letra (opcional)",
   },
   upload_lyrics_placeholder: {
-    en: "Paste the lyrics if you have them -- powers the synced lyrics player",
+    en: "Paste the lyrics if you have them — they show up synced in the player",
     pt: "Cole a letra, se tiver — ela aparece sincronizada no player",
   },
   upload_err_file: {
@@ -793,7 +793,7 @@ export const DICTIONARY = {
   },
   upload_err_title: {
     en: "Give it a title",
-    pt: "Dê um título",
+    pt: "Dê um título à música",
   },
   upload_failed: {
     en: "Upload failed",
@@ -812,8 +812,8 @@ export const DICTIONARY = {
     pt: "Gravar uma voz",
   },
   voice_intro: {
-    en: "Read something out loud for at least {s} seconds, alone and clearly -- this becomes the singer voice for future generations.",
-    pt: "Leia algo em voz alta por pelo menos {s} segundos, sozinho e com clareza — essa vai ser a voz do cantor nas próximas gerações.",
+    en: "Read something out loud for at least {s} seconds, clearly and with no other voices around — this becomes the singing voice for your future songs.",
+    pt: "Leia algo em voz alta por pelo menos {s} segundos, com clareza e sem outras vozes por perto — essa será a voz que canta nas suas próximas músicas.",
   },
   voice_name: {
     en: "Voice name",
@@ -849,10 +849,10 @@ export const DICTIONARY = {
   },
   voice_err_unsupported: {
     en: "This browser doesn't support microphone recording (or the page isn't on https/localhost).",
-    pt: "Este navegador não permite gravar pelo microfone.",
+    pt: "Este navegador não permite gravar pelo microfone (ou a página não está em https/localhost).",
   },
   voice_err_blocked: {
-    en: "Microphone access was blocked -- allow it for this site in the browser's address-bar permissions and try again.",
+    en: "Microphone access was blocked — allow it for this site in the browser's address-bar permissions and try again.",
     pt: "O acesso ao microfone foi bloqueado — libere para este site nas permissões do navegador (perto da barra de endereço) e tente de novo.",
   },
   voice_err_no_mic: {
@@ -892,8 +892,8 @@ export const DICTIONARY = {
     pt: "Envie seus próprios vídeos e a gente junta tudo num clipe com uma das suas músicas.",
   },
   clip_intro: {
-    en: "Upload {min}-{max} of your own clips (DJ footage, you singing, anything) -- they're stitched together with crossfades and topped with one of your songs.",
-    pt: "Envie de {min} a {max} vídeos seus (tocando, cantando, o que quiser) — eles são unidos com transições suaves e ganham uma das suas músicas por cima.",
+    en: "Upload {min} to {max} of your own clips (DJ footage, you singing, anything) — they're stitched together with crossfades and set to one of your songs.",
+    pt: "Envie de {min} a {max} vídeos seus (discotecando, cantando, o que quiser) — eles são unidos com transições suaves e ganham uma das suas músicas como trilha.",
   },
   clip_song: {
     en: "Song",
@@ -904,7 +904,7 @@ export const DICTIONARY = {
     pt: "Nenhuma música ainda",
   },
   clip_clips: {
-    en: "Clips ({min}-{max} videos)",
+    en: "Clips ({min} to {max} videos)",
     pt: "Vídeos ({min} a {max})",
   },
   clip_selected: {
@@ -912,8 +912,8 @@ export const DICTIONARY = {
     pt: "{n} vídeo(s) selecionado(s)",
   },
   clip_need_more: {
-    en: " -- need at least {min}",
-    pt: " — precisa de pelo menos {min}",
+    en: " — you need at least {min}",
+    pt: " — são necessários pelo menos {min}",
   },
   clip_starting: {
     en: "Starting...",
@@ -924,8 +924,8 @@ export const DICTIONARY = {
     pt: "Gerar vídeo",
   },
   clip_failed_start: {
-    en: "Failed to start video render",
-    pt: "Não foi possível começar o vídeo",
+    en: "Couldn't start the video render",
+    pt: "Não foi possível iniciar a criação do vídeo",
   },
   clip_none: {
     en: "No clip videos yet.",
@@ -1064,8 +1064,8 @@ export const DICTIONARY = {
     pt: "Editar",
   },
   admin_send_reset: {
-    en: "Send new password",
-    pt: "Enviar nova senha",
+    en: "Send reset link",
+    pt: "Enviar link de nova senha",
   },
   admin_reset_sent: {
     en: "Reset link sent to the user's email.",
@@ -1147,6 +1147,125 @@ export const DICTIONARY = {
     en: "or",
     pt: "ou",
   },
+
+  // Nav / home / player / radio (accessibility labels and small bits)
+  nav_switch_language: { en: "Switch language", pt: "Mudar idioma" },
+  nav_open_menu: { en: "Open menu", pt: "Abrir menu" },
+  nav_close_menu: { en: "Close menu", pt: "Fechar menu" },
+  home_logo_alt: { en: "Jake, the Jakebox mascot", pt: "Jake, o mascote do Jakebox" },
+  player_download: { en: "Download", pt: "Baixar" },
+  player_video: { en: "Video", pt: "Vídeo" },
+  player_download_video: { en: "Download video", pt: "Baixar vídeo" },
+  radio_play: { en: "Play", pt: "Tocar" },
+  share_text: {
+    en: "📻 Jakebox Radio is on the air! Songs made with AI on Jakebox, playing live 24 hours a day. Listen now:",
+    pt: "📻 A Rádio Jakebox está no ar! Músicas criadas com inteligência artificial no Jakebox, tocando ao vivo 24 horas por dia. Ouça agora:",
+  },
+  price_per_song: { en: "song", pt: "música" },
+
+  // API errors shown to the user (mapped from the server's English messages
+  // in src/lib/i18n/apiErrors.ts)
+  err_not_signed_in: { en: "You're not logged in. Log in and try again.", pt: "Você não está conectado. Entre e tente novamente." },
+  err_not_found: { en: "Not found.", pt: "Não encontrado." },
+  err_forbidden: { en: "You don't have permission to do this.", pt: "Você não tem permissão para fazer isso." },
+  err_invalid_form: { en: "Invalid form data. Please try again.", pt: "Dados do formulário inválidos. Tente novamente." },
+  err_ref_and_voice: {
+    en: "Use a reference song or a voice, not both",
+    pt: "Use uma música de referência ou uma voz, não as duas",
+  },
+  err_ref_not_found: { en: "Reference song not found", pt: "Música de referência não encontrada" },
+  err_voice_not_found: { en: "Voice not found", pt: "Voz não encontrada" },
+  err_voice_not_ready: { en: "This voice isn't ready yet", pt: "Esta voz ainda não está pronta" },
+  err_upload_empty: { en: "The uploaded file is empty", pt: "O arquivo enviado está vazio" },
+  err_upload_too_large: { en: "File is too large (max 30MB)", pt: "O arquivo é grande demais (máximo de 30 MB)" },
+  err_upload_unreadable: {
+    en: "Couldn't read that audio file — is it a valid audio format?",
+    pt: "Não foi possível ler esse arquivo de áudio — ele está em um formato de áudio válido?",
+  },
+  err_voice_required: { en: "Audio recording is required", pt: "A gravação de áudio é obrigatória" },
+  err_voice_empty: { en: "The recording is empty", pt: "A gravação está vazia" },
+  err_voice_too_large: { en: "Recording is too large (max 20MB)", pt: "A gravação é grande demais (máximo de 20 MB)" },
+  err_voice_unreadable: {
+    en: "Couldn't read that recording — try recording again",
+    pt: "Não foi possível ler essa gravação — tente gravar de novo",
+  },
+  err_invalid_email: { en: "Invalid email", pt: "E-mail inválido" },
+  err_password_rules: {
+    en: "Password requirements: at least 8 characters, including a number and a special character",
+    pt: "Requisitos da senha: no mínimo 8 caracteres, incluindo um número e um caractere especial",
+  },
+  err_accept_terms: { en: "You must accept the Terms of Use", pt: "Você precisa aceitar os Termos de Uso" },
+  err_email_taken: { en: "An account with this email already exists", pt: "Já existe uma conta com este e-mail" },
+  err_reset_missing_token: { en: "Missing reset token", pt: "O código de redefinição está faltando" },
+  err_reset_invalid: {
+    en: "This reset link is invalid or has expired",
+    pt: "Este link de redefinição é inválido ou expirou",
+  },
+  err_plan_exists: { en: "You already have an active plan", pt: "Você já tem um plano ativo" },
+  err_no_plan: { en: "No active plan", pt: "Nenhum plano ativo" },
+  err_song_not_found: { en: "Song not found", pt: "Música não encontrada" },
+  err_song_audio_unreadable: {
+    en: "Couldn't read the song's audio file",
+    pt: "Não foi possível ler o arquivo de áudio da música",
+  },
+  err_clip_count: { en: "Upload {min} to {max} clips", pt: "Envie de {min} a {max} vídeos" },
+  err_clip_too_large: {
+    en: "{name} is too large (max {max}MB per clip)",
+    pt: "{name} é grande demais (máximo de {max} MB por vídeo)",
+  },
+  err_email_not_sent: { en: "The email could not be sent", pt: "Não foi possível enviar o e-mail" },
+  err_cant_ban_owner: { en: "Can't ban the owner", pt: "Não é possível banir o dono" },
+  err_owner_only_delete: { en: "Only the owner can delete users", pt: "Só o dono pode excluir usuários" },
+  err_staff_not_deletable: {
+    en: "Owner/admin accounts can't be deleted here",
+    pt: "Contas de dono/admin não podem ser excluídas aqui",
+  },
+  err_quota_invalid: {
+    en: "Included songs must be a whole number from 0 to 1000",
+    pt: "Músicas incluídas: use um número inteiro de 0 a 1000",
+  },
+  err_credit_delta_invalid: {
+    en: "Credits to add/remove must be a whole number",
+    pt: "Os créditos a adicionar/remover devem ser um número inteiro",
+  },
+
+  // Video Studio / Studio (staff-only tools)
+  vstudio_title: { en: "Lyric Video", pt: "Vídeo com letra" },
+  vstudio_go_studio: { en: "Go to Studio", pt: "Ir para o Estúdio" },
+  vstudio_subtitle: {
+    en: "Turns a song into a Whisper-aligned captioned lyric video via the Video Studio service.",
+    pt: "Transforma uma música em um vídeo com a letra legendada e sincronizada pelo Whisper, usando o serviço Video Studio.",
+  },
+  vstudio_no_renders: { en: "No video renders yet.", pt: "Nenhum vídeo renderizado ainda." },
+  vstudio_working: { en: "Working...", pt: "Processando..." },
+  vstudio_edit_in_studio: { en: "Edit shorts & links in Studio", pt: "Editar cortes e links no Estúdio" },
+  studio_new_video: { en: "+ Generate a video", pt: "+ Gerar um vídeo" },
+  studio_subtitle: {
+    en: "Cut short clips, copy promo hashtags, and save the channel's Spotify/YouTube links for videos rendered in Video Studio.",
+    pt: "Corte clipes curtos, copie as hashtags de divulgação e salve os links do canal no Spotify/YouTube para os vídeos renderizados no Video Studio.",
+  },
+  studio_no_videos: {
+    en: "No finished videos yet — generate one in Video first.",
+    pt: "Nenhum vídeo pronto ainda — gere um em Vídeo primeiro.",
+  },
+  studio_copied: { en: "Copied!", pt: "Copiado!" },
+  studio_copy_promo: { en: "Copy promo text", pt: "Copiar texto de divulgação" },
+  studio_short_clip: { en: "Short clip", pt: "Clipe curto" },
+  studio_not_cut: { en: "Not cut yet", pt: "Ainda não cortado" },
+  studio_start_seconds: { en: "Start (seconds)", pt: "Início (segundos)" },
+  studio_end_seconds: { en: "End (seconds)", pt: "Fim (segundos)" },
+  studio_to: { en: "to", pt: "até" },
+  studio_cut: { en: "Cut", pt: "Cortar" },
+  studio_auto_chorus: { en: "Auto-detect chorus", pt: "Detectar refrão automaticamente" },
+  studio_channel_links: {
+    en: "Channel links (shared across all videos)",
+    pt: "Links do canal (valem para todos os vídeos)",
+  },
+  studio_spotify_link: { en: "Spotify link", pt: "Link do Spotify" },
+  studio_youtube_link: { en: "YouTube link", pt: "Link do YouTube" },
+  studio_cut_failed: { en: "Couldn't cut the short clip", pt: "Não foi possível cortar o clipe curto" },
+  studio_links_failed: { en: "Couldn't save the links", pt: "Não foi possível salvar os links" },
+  studio_job_not_ready: { en: "This video isn't ready yet", pt: "Este vídeo ainda não está pronto" },
 } as const;
 
 export type DictionaryKey = keyof typeof DICTIONARY;

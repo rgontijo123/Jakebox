@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getLocale, getT } from "@/lib/i18n/server";
+import { getT } from "@/lib/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 import { RadioLive } from "@/components/RadioLive";
 import { ShareRadio } from "@/components/ShareRadio";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const { t, locale } = await getT();
   return {
-    ...(await pageMetadata("radio", "/radio", await getLocale())),
+    ...(await pageMetadata("radio", "/radio", locale)),
     manifest: "/radio-app.webmanifest",
-    appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "Rádio Jakebox" },
+    appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: t("radio_title") },
   };
 }
 

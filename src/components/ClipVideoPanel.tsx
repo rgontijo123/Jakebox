@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateApiError } from "@/lib/i18n/apiErrors";
 
 type Song = { id: string; title: string; durationSeconds: number };
 
@@ -81,7 +82,7 @@ export function ClipVideoPanel({ songs }: { songs: Song[] }) {
     const data = await res.json().catch(() => null);
     setSubmitting(false);
     if (!res.ok) {
-      setError(data?.error ?? t("clip_failed_start"));
+      setError(translateApiError(data?.error, t, "clip_failed_start"));
       return;
     }
     setFiles([]);

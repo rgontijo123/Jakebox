@@ -34,13 +34,13 @@ export default async function VideoPage() {
       {isStaff && (
         <div className="w-full max-w-3xl flex flex-col gap-8 border-t border-zinc-800 pt-12">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">Lyric Video</h1>
+            <h1 className="text-2xl font-semibold">{t("vstudio_title")}</h1>
             <a href="/studio" className="text-sm underline text-zinc-400 hover:text-zinc-100">
-              Go to Studio
+              {t("vstudio_go_studio")}
             </a>
           </div>
           <p className="-mt-4 text-sm text-zinc-500">
-            Turns a song into a Whisper-aligned captioned lyric video via the Video Studio service.
+            {t("vstudio_subtitle")}
           </p>
           <VideoStudioPanel songs={songs} />
         </div>

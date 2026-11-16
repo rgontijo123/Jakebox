@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateApiError } from "@/lib/i18n/apiErrors";
 
 const MIN_SECONDS = 10; // MusicAPI's create-voice requires >10s of audio
 
@@ -111,7 +112,7 @@ export function VoiceRecorderModal({
       const res = await fetch("/api/voice-personas", { method: "POST", body: form });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setError(data?.error ?? t("voice_err_failed"));
+        setError(translateApiError(data?.error, t, "voice_err_failed"));
         return;
       }
     } catch {

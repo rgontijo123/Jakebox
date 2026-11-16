@@ -36,7 +36,7 @@ const COPY: Record<PageKey, Record<Locale, Copy>> = {
   explore: {
     en: {
       title: "Community songs — listen and vote",
-      description: "Discover songs made with AI by the Jakebox community. Listen, vote for your favourites and help pick what plays on Jakebox Radio.",
+      description: "Discover songs made with AI by the Jakebox community. Listen, vote for your favorites and help pick what plays on Jakebox Radio.",
     },
     pt: {
       title: "Músicas da comunidade — ouça e vote",

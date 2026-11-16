@@ -4,6 +4,7 @@ import { track } from "@/lib/analytics";
 import { useState } from "react";
 import { CREDIT_PACKS, currencyForLocale, formatMoney, priceCents } from "@/lib/pricing";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateApiError } from "@/lib/i18n/apiErrors";
 import { useCardSelection } from "@/components/useCardSelection";
 import type { DictionaryKey } from "@/lib/i18n/translations";
 
@@ -43,7 +44,7 @@ export function CreditPacks({ showHeading = false }: { showHeading?: boolean }) 
       // "Redirecting..." forever.
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.url) {
-        setError(data?.error ?? t("pack_checkout_error"));
+        setError(translateApiError(data?.error, t, "pack_checkout_error"));
         return;
       }
       window.location.href = data.url;
@@ -97,7 +98,7 @@ export function CreditPacks({ showHeading = false }: { showHeading?: boolean }) 
                   <span className="font-medium">{pack.credits.toLocaleString(locale === "pt" ? "pt-BR" : "en-US")}</span> {t("pack_credits")}
                 </p>
                 <p className="text-xs text-zinc-500">
-                  ≈ {songs} {t("pack_songs_approx")} · {formatMoney(Math.round(price / songs), currency)}/{locale === "pt" ? "música" : "song"}
+                  ≈ {songs} {t("pack_songs_approx")} · {formatMoney(Math.round(price / songs), currency)}/{t("price_per_song")}
                 </p>
               </div>
 

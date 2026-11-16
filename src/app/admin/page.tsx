@@ -53,7 +53,7 @@ export default async function AdminPage({
     <main className="flex flex-1 flex-col items-center px-6 py-16 gap-6">
       <div className="w-full max-w-4xl flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Admin</h1>
+          <h1 className="text-2xl font-semibold">{t("nav_admin")}</h1>
           <p className="text-sm text-zinc-500">{total === 1 ? t("admin_users_one") : t("admin_users_total", { n: total })}</p>
         </div>
         <AdminSearch initial={q?.trim() ?? ""} />

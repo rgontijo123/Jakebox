@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import OAuthButtons from "@/components/OAuthButtons";
 import { PasswordInput } from "@/components/PasswordInput";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateApiError } from "@/lib/i18n/apiErrors";
 import { track } from "@/lib/analytics";
 
 export default function SignupPage() {
@@ -30,7 +31,7 @@ export default function SignupPage() {
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error ?? t("signup_generic_error"));
+      setError(translateApiError(data.error, t, "signup_generic_error"));
       setLoading(false);
       return;
     }

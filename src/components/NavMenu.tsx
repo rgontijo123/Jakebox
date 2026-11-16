@@ -8,12 +8,12 @@ import { useLocale } from "@/lib/i18n/LocaleProvider";
 type NavLink = { href: string; label: string };
 
 function LanguageSwitch() {
-  const { locale, setLocale } = useLocale();
+  const { locale, setLocale, t } = useLocale();
   return (
     <button
       onClick={() => setLocale(locale === "en" ? "pt" : "en")}
       className="text-xs font-medium border border-zinc-700 rounded-full px-2.5 py-1 hover:text-zinc-100 hover:border-zinc-500 transition-colors"
-      aria-label="Switch language"
+      aria-label={t("nav_switch_language")}
     >
       {locale === "en" ? "PT" : "EN"}
     </button>
@@ -124,7 +124,7 @@ export function NavMenu({
       <button
         onClick={() => setOpen((v) => !v)}
         className={`${mobile} text-zinc-400 hover:text-zinc-100 p-1`}
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? t("nav_close_menu") : t("nav_open_menu")}
         aria-expanded={open}
       >
         {open ? (

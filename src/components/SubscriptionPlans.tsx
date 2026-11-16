@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SUBSCRIPTION_PLANS, currencyForLocale, formatMoney, planName, priceCents, type Currency } from "@/lib/pricing";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateApiError } from "@/lib/i18n/apiErrors";
 import { useCardSelection } from "@/components/useCardSelection";
 
 export type CurrentPlan = {
@@ -48,7 +49,7 @@ export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
-        setError(data?.error ?? t("pack_checkout_error"));
+        setError(translateApiError(data?.error, t, "pack_checkout_error"));
         return null;
       }
       return data;
@@ -144,7 +145,7 @@ export function SubscriptionPlans({ current }: { current?: CurrentPlan }) {
                     <span className="font-medium">{plan.songsPerMonth}</span> {t("plan_songs_per_month")}
                   </p>
                   <p className="text-xs text-zinc-500">
-                    {formatMoney(Math.round(priceCents(plan, currency) / plan.songsPerMonth), currency)}/{locale === "pt" ? "música" : "song"}
+                    {formatMoney(Math.round(priceCents(plan, currency) / plan.songsPerMonth), currency)}/{t("price_per_song")}
                   </p>
                 </div>
 

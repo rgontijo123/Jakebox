@@ -7,7 +7,7 @@ import Link from "next/link";
 import { VoiceRecorderModal } from "@/components/VoiceRecorderModal";
 import { GenrePicker } from "@/components/GenrePicker";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
-import type { DictionaryKey } from "@/lib/i18n/translations";
+import { translateApiError } from "@/lib/i18n/apiErrors";
 
 // Keep in sync with src/lib/credits.ts's creditsForDuration -- can't import
 // it directly, that module pulls in the server-only Prisma client.
@@ -28,13 +28,6 @@ function creditsForDuration(durationSeconds: number): number {
 const STYLE_STORAGE_KEY = "jakebox:draft:stylePrompt";
 const LYRICS_STORAGE_KEY = "jakebox:draft:lyricsText";
 const LANGUAGE_STORAGE_KEY = "jakebox:draft:language";
-
-// Known server error messages -> translated text (anything else is shown as-is)
-const API_ERROR_KEYS: Record<string, DictionaryKey> = {
-  "Insufficient credits": "err_insufficient_credits",
-  "Daily generation limit reached, try again tomorrow": "err_daily_limit",
-  "This request was rejected by our content policy.": "err_content_policy",
-};
 
 export type RemixSeed = { stylePrompt: string; lyricsText: string; nonce: number };
 export type StyleSeed = { value: string; nonce: number };
@@ -212,8 +205,7 @@ export function GenerationForm({
     setLoading(false);
 
     if (!res.ok) {
-      const errorKey = API_ERROR_KEYS[data.error];
-      setError(errorKey ? t(errorKey) : (data.error ?? t("err_generic")));
+      setError(translateApiError(data.error, t, "err_generic"));
       setOutOfCredits(res.status === 402);
       // A failed submit is often itself caused by a stale balance (e.g. an
       // admin top-up that landed while this tab was already open) -- refetch

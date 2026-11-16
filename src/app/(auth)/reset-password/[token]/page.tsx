@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateApiError } from "@/lib/i18n/apiErrors";
 import { PasswordInput } from "@/components/PasswordInput";
 
 export default function ResetPasswordPage() {
@@ -34,7 +35,7 @@ export default function ResetPasswordPage() {
     setLoading(false);
 
     if (!res.ok) {
-      setError(data.error ?? t("err_generic"));
+      setError(translateApiError(data.error, t, "err_generic"));
       return;
     }
     setDone(true);

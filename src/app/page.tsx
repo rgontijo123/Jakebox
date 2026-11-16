@@ -69,7 +69,7 @@ export default async function Home() {
       />
 
       <section className="flex flex-col items-center text-center gap-5 sm:gap-6 py-16 sm:py-24 max-w-2xl">
-        <Image src="/branding/jake-logo.svg" alt="Jake, the Jakebox mascot" width={96} height={96} priority />
+        <Image src="/branding/jake-logo.svg" alt={t("home_logo_alt")} width={96} height={96} priority />
         <p className="text-sm font-semibold tracking-[0.2em] uppercase text-[#F5B900]">Jakebox</p>
         <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight leading-tight text-balance">{t("home_h1")}</h1>
         <p className="max-w-md text-base sm:text-lg text-zinc-400">{t("home_subtitle")}</p>

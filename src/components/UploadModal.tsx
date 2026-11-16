@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { translateApiError } from "@/lib/i18n/apiErrors";
 
 export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUploaded: () => void }) {
   const { t } = useLocale();
@@ -40,7 +41,7 @@ export function UploadModal({ onClose, onUploaded }: { onClose: () => void; onUp
     setLoading(false);
 
     if (!res.ok) {
-      setError(data?.error ?? t("upload_failed"));
+      setError(translateApiError(data?.error, t, "upload_failed"));
       return;
     }
 
