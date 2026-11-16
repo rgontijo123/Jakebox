@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getLocale, getT } from "@/lib/i18n/server";
 import { pageMetadata } from "@/lib/seo";
 import { RadioLive } from "@/components/RadioLive";
+import { ShareRadio } from "@/components/ShareRadio";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -21,6 +22,7 @@ export default async function RadioPage() {
           <span className="font-semibold text-zinc-200">{t("radio_title")}</span> · {t("radio_subtitle")}
         </h1>
         <RadioLive />
+        <ShareRadio />
         <Link
           href="/explore"
           className="self-center rounded-full border border-zinc-700 px-5 py-2.5 text-sm text-zinc-200 hover:border-zinc-500 text-center"
