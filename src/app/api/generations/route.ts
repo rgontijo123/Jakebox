@@ -59,10 +59,12 @@ export async function GET(req: Request) {
     db.generation.count({ where }),
   ]);
 
+  const role = (session.user as { role?: string }).role;
   return NextResponse.json({
     total,
     page,
     pageSize: PAGE_SIZE,
+    canManageRadio: role === "owner" || role === "admin",
     generations: generations.map((g) => {
       const song = g.songs[0];
       return {
@@ -82,6 +84,7 @@ export async function GET(req: Request) {
               wordTimestamps: song.wordTimestamps,
               hasVideo: !!song.videoUrl,
               hasThumbnail: !!song.thumbnailUrl,
+              onRadio: !!song.radioAt,
             }
           : null,
       };

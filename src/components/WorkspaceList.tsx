@@ -24,6 +24,7 @@ type GenerationRow = {
     wordTimestamps: WordTimestamp[] | null;
     hasVideo: boolean;
     hasThumbnail: boolean;
+    onRadio: boolean;
   } | null;
 };
 
@@ -78,6 +79,7 @@ export function WorkspaceList({
   // otherwise identical, so the browser would keep showing the old cached
   // image even after the server-side file changes.
   const [coverBust, setCoverBust] = useState<Record<string, number>>({});
+  const [canManageRadio, setCanManageRadio] = useState(false);
   const player = usePlayer();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -89,6 +91,7 @@ export function WorkspaceList({
     const data = await res.json();
     setRows(data.generations);
     setTotal(data.total ?? data.generations.length);
+    setCanManageRadio(!!data.canManageRadio);
   }
 
   // A new search resets to page 1; otherwise keep the current page.
@@ -140,6 +143,16 @@ export function WorkspaceList({
     } finally {
       setRegeneratingCoverId(null);
     }
+  }
+
+  async function handleToggleRadio(songId: string, on: boolean, e: React.MouseEvent) {
+    e.stopPropagation();
+    const res = await fetch(`/api/songs/${songId}/radio`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ on }),
+    });
+    if (res.ok) await load();
   }
 
   async function handleMakeVideo(songId: string, e: React.MouseEvent) {
@@ -334,6 +347,19 @@ export function WorkspaceList({
                         ) : (
                           "🎬"
                         )}
+                      </button>
+                    )}
+                    {canManageRadio && (
+                      <button
+                        onClick={(e) => handleToggleRadio(row.song!.id, !row.song!.onRadio, e)}
+                        title={row.song.onRadio ? t("list_radio_remove") : t("list_radio_add")}
+                        aria-label={row.song.onRadio ? t("list_radio_remove") : t("list_radio_add")}
+                        aria-pressed={row.song.onRadio}
+                        className={`w-7 h-7 flex items-center justify-center rounded-full text-base leading-none hover:bg-zinc-800 ${
+                          row.song.onRadio ? "bg-[#F5B900]/20 ring-1 ring-[#F5B900]" : "opacity-40 hover:opacity-100"
+                        }`}
+                      >
+                        📻
                       </button>
                     )}
                     <button

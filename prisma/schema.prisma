@@ -226,6 +226,10 @@ model Song {
 
   deletedAt DateTime? // soft delete, keeps row for dispute/takedown handling
 
+  // Set when staff puts the song on the public Rádio Jakebox (/radio); null =
+  // not on air. Also the play order (oldest first).
+  radioAt DateTime?
+
   createdAt DateTime @default(now())
 
   supportReports  SupportReport[]
@@ -234,6 +238,7 @@ model Song {
 
   @@index([userId])
   @@index([generationId])
+  @@index([radioAt])
 }
 
 enum ModerationStage {

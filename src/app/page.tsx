@@ -88,6 +88,9 @@ export default async function Home() {
           </a>
         </div>
         <p className="text-xs text-emerald-400">{t("home_free_note")}</p>
+        <a href="/radio" className="text-sm text-zinc-400 hover:text-zinc-100 underline underline-offset-4">
+          📻 {t("radio_listen")} — {t("radio_title")}
+        </a>
       </section>
 
       <section className="w-full max-w-5xl pb-16 sm:pb-20">

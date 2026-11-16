@@ -6,7 +6,7 @@ import type { Locale } from "@/lib/i18n/translations";
 export const SITE_URL = "https://jakeboxmusic.com";
 
 type Copy = { title: string; description: string };
-type PageKey = "home" | "pricing" | "contact" | "terms" | "privacy" | "login" | "signup";
+type PageKey = "home" | "radio" | "pricing" | "contact" | "terms" | "privacy" | "login" | "signup";
 
 const COPY: Record<PageKey, Record<Locale, Copy>> = {
   home: {
@@ -19,6 +19,18 @@ const COPY: Record<PageKey, Record<Locale, Copy>> = {
       title: "Jakebox — Crie músicas com inteligência artificial a partir da sua letra",
       description:
         "Gerador de música com IA: escreva ou cole sua letra, escolha o estilo (sertanejo, funk, pagode, MPB, gospel, rock, reggae) e receba uma música original com videoclipe em minutos. 2 músicas grátis.",
+    },
+  },
+  radio: {
+    en: {
+      title: "Jakebox Radio — live AI music, 24/7",
+      description:
+        "Listen live to Jakebox Radio: original songs created with AI by Jakebox, playing 24 hours a day. Make your own song and hear it on the air.",
+    },
+    pt: {
+      title: "Rádio Jakebox — músicas feitas com IA, ao vivo 24h",
+      description:
+        "Ouça ao vivo a Rádio Jakebox: músicas originais criadas com inteligência artificial no Jakebox, tocando 24 horas por dia. Crie a sua e ouça na rádio.",
     },
   },
   pricing: {
