@@ -188,6 +188,35 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
   };
 }
 
+/** Raw Sonic generation with our own tags/lyrics, bypassing buildTags()'s
+ * "sung vocals, not spoken word" hints -- used for the radio announcer,
+ * which is meant to be spoken. Returns the first finished take as MP3. */
+export async function generateRawSonic(params: { title: string; tags: string; prompt: string }): Promise<Buffer> {
+  if (!MUSICAPI_KEY) throw new Error("MUSICAPI_KEY is not set");
+  const headers = { Authorization: `Bearer ${MUSICAPI_KEY}`, "Content-Type": "application/json" };
+  const createRes = await fetchWithTimeout(
+    `${BASE_URL}/api/v1/sonic/create`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ mv: MODEL_VERSION, title: params.title, tags: params.tags, custom_mode: true, prompt: params.prompt }),
+    },
+    45_000,
+  );
+  if (!createRes.ok) {
+    const body = await createRes.json().catch(() => null);
+    throw new MusicApiError(body?.error ?? `MusicAPI request failed (${createRes.status})`, createRes.status);
+  }
+  const taskId = ((await createRes.json()) as { task_id?: string }).task_id;
+  if (!taskId) throw new MusicApiError("MusicAPI response didn't include a task_id", 502);
+  const song = await pollUntilDone(taskId, headers);
+  if (!song.audio_url) throw new MusicApiError("MusicAPI response didn't include an audio URL", 502);
+  const audioRes = await fetchWithTimeout(song.audio_url, {}, 60_000);
+  if (!audioRes.ok) throw new MusicApiError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
+  const downloaded = Buffer.from(await audioRes.arrayBuffer());
+  return song.audio_url.endsWith(".mp3") ? downloaded : transcodeToMp3(downloaded);
+}
+
 /** Clones a voice from a >10s, single-speaker, publicly-reachable MP3/WAV
  * (per docs.musicapi.ai/create-voice.md) and returns a persona_id reusable
  * across future generations via task_type: "persona_music". UNVERIFIED --

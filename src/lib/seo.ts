@@ -6,7 +6,7 @@ import type { Locale } from "@/lib/i18n/translations";
 export const SITE_URL = "https://jakeboxmusic.com";
 
 type Copy = { title: string; description: string };
-type PageKey = "home" | "radio" | "pricing" | "contact" | "terms" | "privacy" | "login" | "signup";
+type PageKey = "home" | "radio" | "explore" | "pricing" | "contact" | "terms" | "privacy" | "login" | "signup";
 
 const COPY: Record<PageKey, Record<Locale, Copy>> = {
   home: {
@@ -31,6 +31,16 @@ const COPY: Record<PageKey, Record<Locale, Copy>> = {
       title: "Rádio Jakebox — músicas feitas com IA, ao vivo 24h",
       description:
         "Ouça ao vivo a Rádio Jakebox: músicas originais criadas com inteligência artificial no Jakebox, tocando 24 horas por dia. Crie a sua e ouça na rádio.",
+    },
+  },
+  explore: {
+    en: {
+      title: "Community songs — listen and vote",
+      description: "Discover songs made with AI by the Jakebox community. Listen, vote for your favourites and help pick what plays on Jakebox Radio.",
+    },
+    pt: {
+      title: "Músicas da comunidade — ouça e vote",
+      description: "Descubra músicas criadas com inteligência artificial pela comunidade Jakebox. Ouça, vote nas favoritas e ajude a escolher o que toca na Rádio Jakebox.",
     },
   },
   pricing: {

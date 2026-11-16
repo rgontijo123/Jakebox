@@ -30,3 +30,16 @@ body {
 .animate-spin-slow {
   animation: spin-slow 6s linear infinite;
 }
+
+/* Rádio Jakebox display */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+@keyframes eq {
+  0%, 100% { height: 3px; }
+  50% { height: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[marquee"], [class*="animate-[eq"], [class*="animate-[spin"] { animation: none !important; }
+}

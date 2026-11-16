@@ -30,6 +30,7 @@ const NAV_ICONS: Record<string, string> = {
   "/billing": "¤",
   "/admin": "⚙",
   "/radio": "📻",
+  "/explore": "♡",
 };
 const LOGOUT_ICON = "⏻";
 
@@ -56,6 +57,7 @@ export function NavMenu({
         { href: "/library", label: t("nav_library") },
         { href: "/billing", label: t("nav_billing") },
         ...(isStaff ? [{ href: "/admin", label: t("nav_admin") }] : []),
+        { href: "/explore", label: t("nav_explore") },
         { href: "/radio", label: t("nav_radio") },
       ]
     : [];
@@ -97,6 +99,10 @@ export function NavMenu({
           </>
         ) : (
           <>
+            <Link href="/explore" className="flex items-center gap-1.5 hover:text-zinc-100">
+              <span aria-hidden="true">♡</span>
+              {t("nav_explore")}
+            </Link>
             <Link href="/radio" className="flex items-center gap-1.5 hover:text-zinc-100">
               <span aria-hidden="true">📻</span>
               {t("nav_radio")}
@@ -165,6 +171,10 @@ export function NavMenu({
             </>
           ) : (
             <>
+              <Link href="/explore" onClick={() => setOpen(false)} className="flex items-center gap-1.5 py-2 hover:text-zinc-100">
+                <span aria-hidden="true">♡</span>
+                {t("nav_explore")}
+              </Link>
               <Link href="/radio" onClick={() => setOpen(false)} className="flex items-center gap-1.5 py-2 hover:text-zinc-100">
                 <span aria-hidden="true">📻</span>
                 {t("nav_radio")}

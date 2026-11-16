@@ -1,0 +1,30 @@
+{
+  "pt": {
+    "morning": {
+      "file": "greeting-pt-morning.mp3",
+      "durationMs": 9920
+    },
+    "afternoon": {
+      "file": "greeting-pt-afternoon.mp3",
+      "durationMs": 12000
+    },
+    "evening": {
+      "file": "greeting-pt-evening.mp3",
+      "durationMs": 11160
+    }
+  },
+  "en": {
+    "morning": {
+      "file": "greeting-en-morning.mp3",
+      "durationMs": 10160
+    },
+    "afternoon": {
+      "file": "greeting-en-afternoon.mp3",
+      "durationMs": 8360
+    },
+    "evening": {
+      "file": "greeting-en-evening.mp3",
+      "durationMs": 10000
+    }
+  }
+}

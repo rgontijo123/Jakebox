@@ -43,7 +43,10 @@ export default function LoginPage() {
       return;
     }
     setLoading(false);
-    router.push("/create");
+    // ?next=/explore etc. (same-site paths only) brings people back to where
+    // they were, e.g. after "Log in to vote".
+    const next = new URLSearchParams(window.location.search).get("next");
+    router.push(next && /^\/(?!\/)/.test(next) ? next : "/create");
     router.refresh(); // re-fetch server components (Header) so they see the new session
   }
 

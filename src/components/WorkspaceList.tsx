@@ -25,6 +25,7 @@ type GenerationRow = {
     hasVideo: boolean;
     hasThumbnail: boolean;
     onRadio: boolean;
+    isPublic: boolean;
   } | null;
 };
 
@@ -148,6 +149,16 @@ export function WorkspaceList({
   async function handleToggleRadio(songId: string, on: boolean, e: React.MouseEvent) {
     e.stopPropagation();
     const res = await fetch(`/api/songs/${songId}/radio`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ on }),
+    });
+    if (res.ok) await load();
+  }
+
+  async function handleTogglePublic(songId: string, on: boolean, e: React.MouseEvent) {
+    e.stopPropagation();
+    const res = await fetch(`/api/songs/${songId}/public`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ on }),
@@ -349,6 +360,17 @@ export function WorkspaceList({
                         )}
                       </button>
                     )}
+                    <button
+                      onClick={(e) => handleTogglePublic(row.song!.id, !row.song!.isPublic, e)}
+                      title={row.song.isPublic ? t("list_public_remove") : t("list_public_add")}
+                      aria-label={row.song.isPublic ? t("list_public_remove") : t("list_public_add")}
+                      aria-pressed={row.song.isPublic}
+                      className={`w-7 h-7 flex items-center justify-center rounded-full text-base leading-none hover:bg-zinc-800 ${
+                        row.song.isPublic ? "bg-sky-500/20 ring-1 ring-sky-400" : "opacity-40 hover:opacity-100"
+                      }`}
+                    >
+                      🌐
+                    </button>
                     {canManageRadio && (
                       <button
                         onClick={(e) => handleToggleRadio(row.song!.id, !row.song!.onRadio, e)}

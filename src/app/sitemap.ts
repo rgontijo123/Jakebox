@@ -5,6 +5,7 @@ const PAGES: { path: string; priority: number; changeFrequency: "daily" | "weekl
   { path: "/", priority: 1, changeFrequency: "weekly" },
   { path: "/pricing", priority: 0.9, changeFrequency: "monthly" },
   { path: "/radio", priority: 0.8, changeFrequency: "daily" },
+  { path: "/explore", priority: 0.8, changeFrequency: "daily" },
   { path: "/signup", priority: 0.8, changeFrequency: "monthly" },
   { path: "/login", priority: 0.4, changeFrequency: "yearly" },
   { path: "/contact", priority: 0.4, changeFrequency: "yearly" },

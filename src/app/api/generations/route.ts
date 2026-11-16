@@ -85,6 +85,7 @@ export async function GET(req: Request) {
               hasVideo: !!song.videoUrl,
               hasThumbnail: !!song.thumbnailUrl,
               onRadio: !!song.radioAt,
+              isPublic: song.isPublic,
             }
           : null,
       };
