@@ -22,6 +22,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // (optionally in another announcer's voice) without moving the song.
   const newIntro = on && Boolean(body?.newIntro);
   const voice = isRadioVoice(body?.voice) ? body.voice : undefined;
+  // { on: true, noIntro: true } puts the song on air without spending a
+  // MusicAPI generation on its announcer intro (e.g. when credits are low);
+  // a later { on: true, newIntro: true } records it.
+  const noIntro = Boolean(body?.noIntro);
   const song = await db.song.findUnique({ where: { id }, include: { user: { select: { role: true } } } });
   if (!song || song.deletedAt) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (on && !song.isPublic && !isStaffRole(song.user.role)) {
@@ -33,7 +37,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       ? { radioAt: song.radioAt ?? new Date(), ...(newIntro ? { radioIntroKey: null, radioIntroMs: null } : {}) }
       : { radioAt: null, radioIntroKey: null, radioIntroMs: null, radioVoice: null },
   });
-  if (on && !updated.radioIntroKey) after(() => generateRadioIntro(id, voice));
+  if (on && !noIntro && !updated.radioIntroKey) after(() => generateRadioIntro(id, voice));
   if (on && updated.radioDurationMs == null) {
     after(async () => {
       const ms = await exactDurationMs(await readSongAudio(updated.audioUrl)).catch(() => null);
