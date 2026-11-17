@@ -3,7 +3,7 @@ import jingles from "../../public/radio/jingles.json";
 import greetings from "../../public/radio/greetings.json";
 import { readSongAudio } from "@/lib/storage";
 import { exactDurationMs } from "@/lib/exactDuration";
-import { RADIO_EPOCH, type RadioItem, type RadioLang } from "@/lib/radioShared";
+import { RADIO_EPOCH, RADIO_VOICES, type RadioItem, type RadioLang } from "@/lib/radioShared";
 
 export {
   RADIO_EPOCH,
@@ -125,6 +125,7 @@ export async function getRadioProgramme(): Promise<RadioItem[]> {
   const items: RadioItem[] = [];
   const pool = jingles as Jingle[];
   const greet = greetings as unknown as GreetingSet;
+  const turn: Record<RadioLang, number> = { pt: 0, en: 0 };
   ordered.forEach((s, i) => {
     const lang: RadioLang = isNational(s.generation.language) ? "pt" : "en";
     if (pool.length && i % JINGLE_EVERY === 0) {
@@ -139,14 +140,17 @@ export async function getRadioProgramme(): Promise<RadioItem[]> {
         cover: null,
       });
     }
-    // Same announcer for the greeting and the intro of this song.
-    const set = greet[lang]?.[s.radioVoice ?? "male"] ?? greet[lang]?.male;
+    // Same announcer for the greeting and the intro of this song; songs with
+    // no intro rotate through the saved greeting voices (no new generations).
+    const hasIntro = !!(s.radioIntroKey && s.radioIntroMs);
+    const voice = hasIntro && s.radioVoice ? s.radioVoice : RADIO_VOICES[turn[lang]++ % RADIO_VOICES.length];
+    const set = greet[lang]?.[voice] ?? greet[lang]?.male;
     if (set) {
       // The three takes are cut to the same length, so the slot is exact
       // whichever one plays.
       items.push({
         kind: "greeting",
-        id: `greeting-${lang}-${s.radioVoice ?? "male"}#${i}`,
+        id: `greeting-${lang}-${voice}#${i}`,
         title: lang === "pt" ? "Rádio Jakebox" : "Jakebox Radio",
         style: null,
         durationMs: set.afternoon.durationMs,

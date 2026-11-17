@@ -3,57 +3,57 @@
     "male": {
       "morning": {
         "file": "greeting-pt-morning.mp3",
-        "durationMs": 10520
+        "durationMs": 8350
       },
       "afternoon": {
         "file": "greeting-pt-afternoon.mp3",
-        "durationMs": 10600
+        "durationMs": 8350
       },
       "evening": {
         "file": "greeting-pt-evening.mp3",
-        "durationMs": 10560
+        "durationMs": 8350
       }
     },
     "cheerful": {
       "morning": {
         "file": "greeting-pt-cheerful-morning.mp3",
-        "durationMs": 10540
+        "durationMs": 8470
       },
       "afternoon": {
         "file": "greeting-pt-cheerful-afternoon.mp3",
-        "durationMs": 10600
+        "durationMs": 8470
       },
       "evening": {
         "file": "greeting-pt-cheerful-evening.mp3",
-        "durationMs": 10580
+        "durationMs": 8470
       }
     },
     "female": {
       "morning": {
         "file": "greeting-pt-female-morning.mp3",
-        "durationMs": 10580
+        "durationMs": 8850
       },
       "afternoon": {
         "file": "greeting-pt-female-afternoon.mp3",
-        "durationMs": 10600
+        "durationMs": 8850
       },
       "evening": {
         "file": "greeting-pt-female-evening.mp3",
-        "durationMs": 10530
+        "durationMs": 8850
       }
     },
     "young": {
       "afternoon": {
         "file": "greeting-pt-young-afternoon.mp3",
-        "durationMs": 10600
+        "durationMs": 8510
       },
       "evening": {
         "file": "greeting-pt-young-evening.mp3",
-        "durationMs": 10560
+        "durationMs": 8510
       },
       "morning": {
-        "file": "greeting-pt-morning.mp3",
-        "durationMs": 10520
+        "file": "greeting-pt-young-morning.mp3",
+        "durationMs": 8510
       }
     }
   },
@@ -61,57 +61,57 @@
     "male": {
       "morning": {
         "file": "greeting-en-morning.mp3",
-        "durationMs": 10560
+        "durationMs": 7010
       },
       "afternoon": {
         "file": "greeting-en-afternoon.mp3",
-        "durationMs": 10560
+        "durationMs": 7010
       },
       "evening": {
         "file": "greeting-en-evening.mp3",
-        "durationMs": 10600
+        "durationMs": 7010
       }
     },
     "cheerful": {
       "morning": {
         "file": "greeting-en-cheerful-morning.mp3",
-        "durationMs": 10540
+        "durationMs": 6750
       },
       "afternoon": {
         "file": "greeting-en-cheerful-afternoon.mp3",
-        "durationMs": 10590
+        "durationMs": 6750
       },
       "evening": {
         "file": "greeting-en-cheerful-evening.mp3",
-        "durationMs": 10600
+        "durationMs": 6750
       }
     },
     "female": {
       "morning": {
         "file": "greeting-en-female-morning.mp3",
-        "durationMs": 10600
+        "durationMs": 6750
       },
       "afternoon": {
         "file": "greeting-en-female-afternoon.mp3",
-        "durationMs": 10540
+        "durationMs": 6750
       },
       "evening": {
         "file": "greeting-en-female-evening.mp3",
-        "durationMs": 10560
+        "durationMs": 6750
       }
     },
     "young": {
       "morning": {
         "file": "greeting-en-young-morning.mp3",
-        "durationMs": 10520
+        "durationMs": 6550
       },
       "afternoon": {
         "file": "greeting-en-young-afternoon.mp3",
-        "durationMs": 10520
+        "durationMs": 6550
       },
       "evening": {
         "file": "greeting-en-young-evening.mp3",
-        "durationMs": 10580
+        "durationMs": 6550
       }
     }
   }
