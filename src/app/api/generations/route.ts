@@ -4,56 +4,20 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { moderateGenerationRequest } from "@/lib/moderation";
 import { chargeForGeneration, refundForGeneration, creditsForDuration, MAX_GENERATION_SECONDS } from "@/lib/credits";
-import { generateMusic, MusicGenerationError } from "@/lib/musicProvider";
-import { generateWithReference, generateWithPersona } from "@/lib/musicapi";
-import { getAudioDurationSeconds } from "@/lib/audio";
-import {
-  saveSongAudio,
-  newStorageKey,
-  saveSongVideo,
-  newVideoStorageKey,
-  saveSongThumbnail,
-  newThumbnailStorageKey,
-  readSongAudio,
-} from "@/lib/storage";
-import { normalizeLyricsTags, normalizeLyricsPunctuation, deriveFallbackTitle } from "@/lib/lyrics";
-import { generateSongVideo } from "@/lib/video";
-import { generateCoverArt } from "@/lib/coverArt";
-import { publishTempPublicUrl, cleanupTempPublicUrl } from "@/lib/publicHost";
+import { runGenerationJob, startHeartbeat, type GenerationJobParams } from "@/lib/generationJob";
+import { normalizeLyricsTags, normalizeLyricsPunctuation } from "@/lib/lyrics";
 
 const DAILY_GENERATION_LIMIT = 10;
 const MAX_VERSIONS = 2;
 
 const PAGE_SIZE = 10;
 
-/** Jobs run inside the web process, so a restart (every deploy) kills any
- * generation in flight and leaves it "generating" forever. Longer than the
- * slowest provider chain (MusicAPI ~12 min + fallbacks ~10 min) plus cover
- * and video, so a live job is never cut off. */
-const INTERRUPTED_AFTER_MS = 40 * 60 * 1000;
-
-async function failInterruptedGenerations(userId: string) {
-  const stuck = await db.generation.findMany({
-    where: {
-      userId,
-      status: { in: ["pending", "processing"] },
-      createdAt: { lt: new Date(Date.now() - INTERRUPTED_AFTER_MS) },
-    },
-    select: { id: true },
-  });
-  for (const g of stuck) {
-    await refundForGeneration(userId, g.id);
-    await db.generation.update({ where: { id: g.id }, data: { status: "failed", errorMessage: "Interrupted" } });
-  }
-}
 
 export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
-
-  await failInterruptedGenerations(session.user.id);
 
   const url = new URL(req.url);
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
@@ -248,9 +212,22 @@ export async function POST(req: Request) {
     }
   }
 
+  const jobParams: GenerationJobParams = {
+    stylePrompt,
+    lyricsText,
+    instrumental,
+    targetDurationSeconds,
+    language,
+    referenceSong,
+    personaId: resolvedPersonaId,
+  };
   await db.generation.updateMany({
     where: { id: { in: generationIds } },
-    data: { status: "processing" },
+    data: {
+      status: "processing",
+      jobHeartbeatAt: new Date(),
+      jobParams: { referenceSong, personaId: resolvedPersonaId },
+    },
   });
 
   // Chained, not fired in parallel: each runGenerationJob call also does
@@ -262,159 +239,21 @@ export async function POST(req: Request) {
   // Running them one after another keeps peak memory to one generation's
   // worth, at the cost of the second version finishing later.
   (async () => {
-    for (const generationId of generationIds) {
-      try {
-        await runGenerationJob(generationId, userId, isStaff, {
-          stylePrompt,
-          lyricsText,
-          instrumental,
-          targetDurationSeconds,
-          language,
-          referenceSong,
-          personaId: resolvedPersonaId,
-        });
-      } catch (err) {
-        console.error("Background generation job crashed", err);
+    // Versions still queued behind the first are kept alive too, so the
+    // recovery sweep doesn't start them a second time.
+    const stop = startHeartbeat(generationIds);
+    try {
+      for (const generationId of generationIds) {
+        try {
+          await runGenerationJob(generationId, userId, jobParams);
+        } catch (err) {
+          console.error("Background generation job crashed", err);
+        }
       }
+    } finally {
+      stop();
     }
   })();
 
   return NextResponse.json({ batchId });
-}
-
-async function runGenerationJob(
-  generationId: string,
-  userId: string,
-  isStaff: boolean,
-  params: {
-    stylePrompt: string;
-    lyricsText: string;
-    instrumental: boolean;
-    targetDurationSeconds: number;
-    language: string;
-    referenceSong: { id: string; audioUrl: string; format: string } | null;
-    personaId: string | null;
-  },
-) {
-  try {
-    let result;
-    if (params.personaId) {
-      result = await generateWithPersona(params, params.personaId);
-    } else if (params.referenceSong) {
-      const refAudio = await readSongAudio(params.referenceSong.audioUrl);
-      const refContentType = params.referenceSong.format === "wav" ? "audio/wav" : "audio/mpeg";
-      const { publicUrl, objectKey } = await publishTempPublicUrl(
-        refAudio,
-        `ref-${params.referenceSong.id}.${params.referenceSong.format}`,
-        refContentType,
-      );
-      try {
-        result = await generateWithReference(params, publicUrl);
-      } finally {
-        await cleanupTempPublicUrl(objectKey);
-      }
-    } else {
-      result = await generateMusic(params);
-    }
-    const actualDurationSeconds = await getAudioDurationSeconds(result.audio, result.format);
-
-    const storageKey = newStorageKey(generationId, result.format);
-    await saveSongAudio(storageKey, result.audio);
-    const title = result.title ?? deriveFallbackTitle(params.lyricsText, params.stylePrompt);
-
-    const song = await db.song.create({
-      data: {
-        generationId,
-        userId,
-        title,
-        audioUrl: storageKey,
-        format: result.format,
-        durationSeconds: actualDurationSeconds,
-        fileSizeBytes: result.audio.byteLength,
-        wordTimestamps: result.wordTimestamps.length
-          ? (result.wordTimestamps as unknown as object[])
-          : undefined,
-        provider: result.provider,
-      },
-    });
-
-    // Best-effort: an AI-generated cover matching the song's style, never a
-    // reason to fail the generation itself (no GEMINI_API_KEY, quota, etc).
-    // Takes priority over the waveform-video still-frame fallback below.
-    let coverThumbnailKey: string | null = null;
-    try {
-      const cover = await generateCoverArt({
-        title,
-        styleSummary: params.stylePrompt,
-        providerCoverUrl: result.coverImageUrl,
-      });
-      if (cover) {
-        coverThumbnailKey = newThumbnailStorageKey(generationId);
-        await saveSongThumbnail(coverThumbnailKey, cover);
-        await db.song.update({ where: { id: song.id }, data: { thumbnailUrl: coverThumbnailKey } });
-      }
-    } catch (err) {
-      console.error("Cover art generation failed (song itself still succeeded)", err);
-    }
-    // Best-effort: an automatic vertical video (waveform + title/style,
-    // see src/lib/video.ts) is a nice-to-have on top of the song, never a
-    // reason to fail the generation itself if ffmpeg has a bad day.
-    try {
-      const user = await db.user.findUniqueOrThrow({ where: { id: userId } });
-      const { video, thumbnail } = await generateSongVideo({
-        audio: result.audio,
-        title,
-        styleSummary: params.stylePrompt,
-        authorName: user.displayName ?? user.email,
-        language: params.language,
-        lyricsText: params.lyricsText,
-        wordTimestamps: result.wordTimestamps,
-      });
-      const videoKey = newVideoStorageKey(generationId);
-      await saveSongVideo(videoKey, video);
-      // Only fall back to the waveform-frame thumbnail when the AI cover
-      // above didn't produce one -- the cover art always wins.
-      if (coverThumbnailKey) {
-        await db.song.update({ where: { id: song.id }, data: { videoUrl: videoKey } });
-      } else {
-        const fallbackThumbnailKey = newThumbnailStorageKey(generationId);
-        await saveSongThumbnail(fallbackThumbnailKey, thumbnail);
-        await db.song.update({
-          where: { id: song.id },
-          data: { videoUrl: videoKey, thumbnailUrl: fallbackThumbnailKey },
-        });
-      }
-    } catch (err) {
-      console.error("Video generation failed (song itself still succeeded)", err);
-    }
-
-    await db.generation.update({
-      where: { id: generationId },
-      data: {
-        status: "completed",
-        actualDurationSeconds,
-        completedAt: new Date(),
-      },
-    });
-  } catch (err) {
-    // Same lesson as voice-personas' fix: swallowing the raw error here
-    // (previously only ever surfacing err.message for a MusicGenerationError,
-    // silently discarding everything else) left every other failure mode --
-    // a provider schema mismatch, a bug in this file, anything from
-    // cover-art/video generation that somehow escaped their own try/catch --
-    // completely undiagnosable, showing only a bare "Generation failed" with
-    // nothing logged anywhere to explain it.
-    console.error("Generation job failed", generationId, err);
-    const message =
-      err instanceof MusicGenerationError
-        ? err.message
-        : err instanceof Error
-          ? `Generation failed: ${err.message}`
-          : "Generation failed";
-    await refundForGeneration(userId, generationId);
-    await db.generation.update({
-      where: { id: generationId },
-      data: { status: "failed", errorMessage: message },
-    });
-  }
 }

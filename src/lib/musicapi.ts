@@ -124,6 +124,34 @@ async function pollUntilDone(taskId: string, headers: Record<string, string>): P
   throw new MusicApiError("MusicAPI generation timed out", 504);
 }
 
+/** Waits for a Sonic task and downloads the first finished take. Shared by
+ * the normal flow and by resumeMusicApiTask after a server restart. */
+async function finishSonicTask(
+  taskId: string,
+  headers: Record<string, string>,
+  fallbackTitle: string,
+): Promise<GenerateMusicResult> {
+  const song = await pollUntilDone(taskId, headers);
+  const audioUrl = song.audio_url;
+  if (!audioUrl) throw new MusicApiError("MusicAPI response didn't include an audio URL", 502);
+
+  const audioRes = await fetchWithTimeout(audioUrl, {}, 60_000);
+  if (!audioRes.ok) throw new MusicApiError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
+  const downloaded = Buffer.from(await audioRes.arrayBuffer());
+  const sourceFormat = audioUrl.endsWith(".wav") ? "wav" : audioUrl.endsWith(".ogg") ? "ogg" : "mp3";
+  const audio = sourceFormat === "mp3" ? downloaded : await transcodeToMp3(downloaded);
+
+  // No confirmed word-level timestamp support -- see file-level comment.
+  return { audio, format: "mp3", title: song.title ?? fallbackTitle, wordTimestamps: [], coverImageUrl: song.image_url ?? null };
+}
+
+/** Picks up a task created before a server restart: MusicAPI keeps working
+ * on it (and already charged for it), so only the polling has to resume. */
+export async function resumeMusicApiTask(taskId: string, fallbackTitle: string): Promise<GenerateMusicResult> {
+  if (!MUSICAPI_KEY) throw new Error("MUSICAPI_KEY is not set");
+  return finishSonicTask(taskId, { Authorization: `Bearer ${MUSICAPI_KEY}`, "Content-Type": "application/json" }, fallbackTitle);
+}
+
 export async function generateMusic(params: GenerateMusicParams): Promise<GenerateMusicResult> {
   if (!MUSICAPI_KEY) {
     throw new Error("MUSICAPI_KEY is not set");
@@ -164,28 +192,8 @@ export async function generateMusic(params: GenerateMusicParams): Promise<Genera
     throw new MusicApiError("MusicAPI response didn't include a task_id", 502);
   }
 
-  const song = await pollUntilDone(taskId, headers);
-  const audioUrl = song.audio_url;
-  if (!audioUrl) {
-    throw new MusicApiError("MusicAPI response didn't include an audio URL", 502);
-  }
-
-  const audioRes = await fetchWithTimeout(audioUrl, {}, 60_000);
-  if (!audioRes.ok) {
-    throw new MusicApiError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
-  }
-  const downloaded = Buffer.from(await audioRes.arrayBuffer());
-  const sourceFormat = audioUrl.endsWith(".wav") ? "wav" : audioUrl.endsWith(".ogg") ? "ogg" : "mp3";
-  const audio = sourceFormat === "mp3" ? downloaded : await transcodeToMp3(downloaded);
-
-  return {
-    audio,
-    format: "mp3",
-    title: song.title ?? title,
-    // No confirmed word-level timestamp support -- see file-level comment.
-    wordTimestamps: [],
-    coverImageUrl: song.image_url ?? null,
-  };
+  await params.onTask?.("musicapi", taskId);
+  return finishSonicTask(taskId, headers, title);
 }
 
 /** Raw Sonic generation with our own tags/lyrics, bypassing buildTags()'s
@@ -301,17 +309,8 @@ export async function generateWithPersona(
   const taskId = created.task_id;
   if (!taskId) throw new MusicApiError("MusicAPI persona response didn't include a task_id", 502);
 
-  const song = await pollUntilDone(taskId, headers);
-  const audioUrl = song.audio_url;
-  if (!audioUrl) throw new MusicApiError("MusicAPI persona response didn't include an audio URL", 502);
-
-  const audioRes = await fetchWithTimeout(audioUrl, {}, 60_000);
-  if (!audioRes.ok) throw new MusicApiError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
-  const downloaded = Buffer.from(await audioRes.arrayBuffer());
-  const sourceFormat = audioUrl.endsWith(".wav") ? "wav" : audioUrl.endsWith(".ogg") ? "ogg" : "mp3";
-  const audio = sourceFormat === "mp3" ? downloaded : await transcodeToMp3(downloaded);
-
-  return { audio, format: "mp3", title: song.title ?? title, wordTimestamps: [], coverImageUrl: song.image_url ?? null };
+  await params.onTask?.("musicapi", taskId);
+  return finishSonicTask(taskId, headers, title);
 }
 
 /** Generates a new song using an existing (publicly-reachable) track as a
@@ -356,15 +355,6 @@ export async function generateWithReference(
   const taskId = created.task_id;
   if (!taskId) throw new MusicApiError("MusicAPI upload-cover response didn't include a task_id", 502);
 
-  const song = await pollUntilDone(taskId, headers);
-  const audioUrl = song.audio_url;
-  if (!audioUrl) throw new MusicApiError("MusicAPI upload-cover response didn't include an audio URL", 502);
-
-  const audioRes = await fetchWithTimeout(audioUrl, {}, 60_000);
-  if (!audioRes.ok) throw new MusicApiError(`Failed to download generated audio (${audioRes.status})`, audioRes.status);
-  const downloaded = Buffer.from(await audioRes.arrayBuffer());
-  const sourceFormat = audioUrl.endsWith(".wav") ? "wav" : audioUrl.endsWith(".ogg") ? "ogg" : "mp3";
-  const audio = sourceFormat === "mp3" ? downloaded : await transcodeToMp3(downloaded);
-
-  return { audio, format: "mp3", title: song.title ?? title, wordTimestamps: [], coverImageUrl: song.image_url ?? null };
+  await params.onTask?.("musicapi", taskId);
+  return finishSonicTask(taskId, headers, title);
 }

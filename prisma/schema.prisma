@@ -178,6 +178,14 @@ model Generation {
   elevenLabsRequestId String?
   errorMessage        String?
 
+  // Resuming after a server restart (src/lib/generationRecovery.ts): the
+  // provider's task id once the job is accepted, the job's extra inputs, and
+  // a heartbeat the running process keeps fresh while it owns the job.
+  jobProvider    String?
+  jobTaskId      String?
+  jobParams      Json?
+  jobHeartbeatAt DateTime?
+
   createdAt   DateTime  @default(now())
   completedAt DateTime?
 

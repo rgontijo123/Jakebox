@@ -6,6 +6,14 @@ export async function register() {
   // a require it can't satisfy.
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
+  // Generations cut off by a restart (every deploy) are picked up again once
+  // the old process is surely gone (its heartbeat goes stale after 2 min).
+  const { recoverInterruptedGenerations } = await import("./lib/generationJob");
+  const delay = Number(process.env.GENERATION_RECOVERY_DELAY_MS) || 3 * 60_000;
+  console.log(`[startup] generation recovery scheduled in ${Math.round(delay / 1000)}s`);
+  setTimeout(() => void recoverInterruptedGenerations(), delay);
+  setInterval(() => void recoverInterruptedGenerations(), 5 * 60_000).unref();
+
   const { reconcileOrphanedVideos } = await import("./lib/videoReconcile");
   try {
     const { relinked, checked } = await reconcileOrphanedVideos();

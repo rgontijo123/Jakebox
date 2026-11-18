@@ -8,6 +8,9 @@ export type GenerateMusicParams = {
   instrumental: boolean;
   targetDurationSeconds: number;
   language: string; // e.g. "pt-BR", "en"
+  /** Called as soon as a provider accepts the job, so it can be resumed
+   * after a server restart (see src/lib/generationRecovery.ts). */
+  onTask?: (provider: string, taskId: string) => Promise<void> | void;
 };
 
 export type WordTimestamp = { word: string; startMs: number; endMs: number };
