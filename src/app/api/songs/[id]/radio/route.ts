@@ -37,7 +37,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       ? { radioAt: song.radioAt ?? new Date(), ...(newIntro ? { radioIntroKey: null, radioIntroMs: null } : {}) }
       : { radioAt: null, radioIntroKey: null, radioIntroMs: null, radioVoice: null },
   });
-  if (on && !noIntro && !updated.radioIntroKey) after(() => generateRadioIntro(id, voice));
+  // Intros cost MusicAPI credits, which are reserved for users' songs: they
+  // are only recorded when RADIO_INTRO_GENERATION=on is set explicitly.
+  const introsEnabled = process.env.RADIO_INTRO_GENERATION === "on";
+  if (introsEnabled && on && !noIntro && !updated.radioIntroKey) after(() => generateRadioIntro(id, voice));
   if (on && updated.radioDurationMs == null) {
     after(async () => {
       const ms = await exactDurationMs(await readSongAudio(updated.audioUrl)).catch(() => null);
