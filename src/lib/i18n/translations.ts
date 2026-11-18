@@ -497,6 +497,10 @@ export const DICTIONARY = {
     pt: "Algo deu errado",
   },
   err_failure_no_credits: { en: "not enough credits", pt: "créditos insuficientes" },
+  err_failure_interrupted: {
+    en: "it was interrupted (the server restarted). Your credits were returned, please try again",
+    pt: "foi interrompida (o servidor reiniciou). Seus créditos foram devolvidos, tente de novo",
+  },
   err_failure_provider: {
     en: "the music service couldn't create this track",
     pt: "o serviço de música não conseguiu criar esta faixa",

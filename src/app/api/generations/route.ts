@@ -26,11 +26,34 @@ const MAX_VERSIONS = 2;
 
 const PAGE_SIZE = 10;
 
+/** Jobs run inside the web process, so a restart (every deploy) kills any
+ * generation in flight and leaves it "generating" forever. Longer than the
+ * slowest provider chain (MusicAPI ~12 min + fallbacks ~10 min) plus cover
+ * and video, so a live job is never cut off. */
+const INTERRUPTED_AFTER_MS = 40 * 60 * 1000;
+
+async function failInterruptedGenerations(userId: string) {
+  const stuck = await db.generation.findMany({
+    where: {
+      userId,
+      status: { in: ["pending", "processing"] },
+      createdAt: { lt: new Date(Date.now() - INTERRUPTED_AFTER_MS) },
+    },
+    select: { id: true },
+  });
+  for (const g of stuck) {
+    await refundForGeneration(userId, g.id);
+    await db.generation.update({ where: { id: g.id }, data: { status: "failed", errorMessage: "Interrupted" } });
+  }
+}
+
 export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
+
+  await failInterruptedGenerations(session.user.id);
 
   const url = new URL(req.url);
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);

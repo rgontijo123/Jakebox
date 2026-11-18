@@ -89,6 +89,7 @@ export function translateApiError(error: unknown, t: T, fallback: DictionaryKey)
 export function translateFailureReason(reason: string | null | undefined, t: T): string {
   if (!reason) return t("result_unknown_error");
   if (reason === "Insufficient credits") return t("err_failure_no_credits");
+  if (reason === "Interrupted") return t("err_failure_interrupted");
   const translated = translateApiError(reason, t, "result_unknown_error");
   return translated === reason ? t("err_failure_provider") : translated;
 }
