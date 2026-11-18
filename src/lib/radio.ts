@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import jingles from "../../public/radio/jingles.json";
 import greetings from "../../public/radio/greetings.json";
+import promos from "../../public/radio/promos.json";
 import { readSongAudio } from "@/lib/storage";
 import { exactDurationMs } from "@/lib/exactDuration";
 import { RADIO_EPOCH, RADIO_VOICES, type RadioItem, type RadioLang } from "@/lib/radioShared";
@@ -25,6 +26,7 @@ export {
  * own intro ("...Agora: <title>"); every JINGLE_EVERY songs the sung jingle
  * opens the break. */
 const JINGLE_EVERY = 3;
+const PROMO_EVERY = 4;
 
 type Jingle = { file: string; durationMs: number };
 type GreetingSet = Record<RadioLang, Record<string, Record<"morning" | "afternoon" | "evening", Jingle>>>;
@@ -128,6 +130,22 @@ export async function getRadioProgramme(): Promise<RadioItem[]> {
   const turn: Record<RadioLang, number> = { pt: 0, en: 0 };
   ordered.forEach((s, i) => {
     const lang: RadioLang = isNational(s.generation.language) ? "pt" : "en";
+    // Launch promo spots ("o Jakebox chegou", how-it-works) -- each one airs
+    // once per loop, between songs.
+    const ads = promos as Jingle[];
+    if (ads.length && i % PROMO_EVERY === PROMO_EVERY / 2) {
+      const n = Math.floor(i / PROMO_EVERY) % ads.length;
+      const a = ads[n];
+      items.push({
+        kind: "jingle",
+        id: `${a.file}#p${i}`,
+        title: "Rádio Jakebox",
+        style: null,
+        durationMs: a.durationMs,
+        audio: `/radio/${a.file}`,
+        cover: null,
+      });
+    }
     if (pool.length && i % JINGLE_EVERY === 0) {
       const j = pool[(i / JINGLE_EVERY) % pool.length];
       items.push({
