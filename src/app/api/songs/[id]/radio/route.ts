@@ -35,7 +35,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     where: { id },
     data: on
       ? { radioAt: song.radioAt ?? new Date(), ...(newIntro ? { radioIntroKey: null, radioIntroMs: null } : {}) }
-      : { radioAt: null, radioIntroKey: null, radioIntroMs: null, radioVoice: null },
+      : { radioAt: null }, // keep any intro: putting the song back reuses it
   });
   // Intros cost MusicAPI credits, which are reserved for users' songs: they
   // are only recorded when RADIO_INTRO_GENERATION=on is set explicitly.

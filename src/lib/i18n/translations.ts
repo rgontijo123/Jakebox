@@ -89,6 +89,17 @@ export const DICTIONARY = {
   radio_intro: { en: "Coming up", pt: "Vem aí" },
   list_radio_add: { en: "Put on Jakebox Radio", pt: "Colocar na Rádio Jakebox" },
   list_radio_remove: { en: "Take off Jakebox Radio", pt: "Tirar da Rádio Jakebox" },
+  list_radio_badge: { en: "On the radio", pt: "Na rádio" },
+  list_public_badge: { en: "Public", pt: "Pública" },
+  list_radio_added: {
+    en: "Added to Jakebox Radio! It joins the live programme in a moment.",
+    pt: "Adicionada à Rádio Jakebox! Ela entra na programação ao vivo em instantes.",
+  },
+  list_radio_removed: { en: "Taken off Jakebox Radio.", pt: "Retirada da Rádio Jakebox." },
+  list_radio_failed: {
+    en: "Couldn't change the radio. Make the song public (🌐) first, then try again.",
+    pt: "Não deu para mudar a rádio. Deixe a música pública (🌐) e tente de novo.",
+  },
   nav_radio: { en: "Radio", pt: "Rádio" },
   radio_title: { en: "Jakebox Radio", pt: "Rádio Jakebox" },
   radio_subtitle: {

@@ -82,6 +82,8 @@ export function WorkspaceList({
   // image even after the server-side file changes.
   const [coverBust, setCoverBust] = useState<Record<string, number>>({});
   const [canManageRadio, setCanManageRadio] = useState(false);
+  // Confirmation shown on the card after the 📻 button is used.
+  const [radioNotice, setRadioNotice] = useState<{ songId: string; key: DictionaryKey; ok: boolean } | null>(null);
   const player = usePlayer();
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -154,6 +156,8 @@ export function WorkspaceList({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ on }),
     });
+    setRadioNotice({ songId, ok: res.ok, key: res.ok ? (on ? "list_radio_added" : "list_radio_removed") : "list_radio_failed" });
+    setTimeout(() => setRadioNotice((n) => (n?.songId === songId ? null : n)), 5000);
     if (res.ok) await load();
   }
 
@@ -259,7 +263,22 @@ export function WorkspaceList({
                       )}
                       <span className="text-zinc-600">{formatDate(row.createdAt)}</span>
                       {row.song && <span className="text-zinc-500">{formatDuration(row.song.durationSeconds)}</span>}
+                      {row.song?.onRadio && (
+                        <span className="rounded-full bg-[#F5B900]/15 px-2 py-0.5 font-semibold text-[#F5B900]">
+                          📻 {t("list_radio_badge")}
+                        </span>
+                      )}
+                      {row.song?.isPublic && (
+                        <span className="rounded-full bg-sky-500/15 px-2 py-0.5 font-semibold text-sky-300">
+                          🌐 {t("list_public_badge")}
+                        </span>
+                      )}
                     </div>
+                    {row.song && radioNotice?.songId === row.song.id && (
+                      <p role="status" className={`mt-2 text-xs ${radioNotice.ok ? "text-[#F5B900]" : "text-red-400"}`}>
+                        {t(radioNotice.key)}
+                      </p>
+                    )}
                   </div>
 
                 </div>
