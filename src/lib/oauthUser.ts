@@ -22,6 +22,9 @@ export async function upsertOAuthUser(email: string, name: string | null | undef
 
   const isOwner = !!process.env.OWNER_EMAIL && normalizedEmail === process.env.OWNER_EMAIL.trim().toLowerCase();
 
+  // getLocale reads request cookies, which may be unavailable in some auth
+  // callback contexts -- fall back to English rather than skip the email.
+  const locale = await getLocale().catch(() => "en" as const);
   const user = await db.user.create({
     data: {
       email: normalizedEmail,
@@ -33,12 +36,10 @@ export async function upsertOAuthUser(email: string, name: string | null | undef
       tosAcceptedAt: new Date(),
       tosVersion: TOS_VERSION,
       songQuota: FREE_TRIAL_SONGS,
+      locale,
     },
   });
 
-  // getLocale reads request cookies, which may be unavailable in some auth
-  // callback contexts -- fall back to English rather than skip the email.
-  const locale = await getLocale().catch(() => "en" as const);
   await sendWelcomeEmail(user.email, FREE_TRIAL_SONGS, locale).catch((err) =>
     console.error("welcome email failed", err),
   );

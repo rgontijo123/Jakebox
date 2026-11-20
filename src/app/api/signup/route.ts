@@ -38,6 +38,7 @@ export async function POST(req: Request) {
     // requires an existing owner/admin session to use.
     const isOwner = !!process.env.OWNER_EMAIL && email === process.env.OWNER_EMAIL.trim().toLowerCase();
 
+    const locale = await getLocale();
     await db.user.create({
       data: {
         email,
@@ -46,11 +47,12 @@ export async function POST(req: Request) {
         tosAcceptedAt: new Date(),
         tosVersion: TOS_VERSION,
         songQuota: FREE_TRIAL_SONGS,
+        locale,
       },
     });
 
     // never let a mail hiccup fail an account that was already created
-    await sendWelcomeEmail(email, FREE_TRIAL_SONGS, await getLocale()).catch((err) =>
+    await sendWelcomeEmail(email, FREE_TRIAL_SONGS, locale).catch((err) =>
       console.error("welcome email failed", err),
     );
 

@@ -14,6 +14,12 @@ export async function register() {
   setTimeout(() => void recoverInterruptedGenerations(), delay);
   setInterval(() => void recoverInterruptedGenerations(), 5 * 60_000).unref();
 
+  // One "what do you think?" email per new account, a day after signup.
+  // Only when FEEDBACK_EMAILS=on (see src/lib/feedbackRequest.ts).
+  const { sendDueFeedbackRequests } = await import("./lib/feedbackRequest");
+  setTimeout(() => void sendDueFeedbackRequests(), 5 * 60_000).unref();
+  setInterval(() => void sendDueFeedbackRequests(), 60 * 60_000).unref();
+
   const { reconcileOrphanedVideos } = await import("./lib/videoReconcile");
   try {
     const { relinked, checked } = await reconcileOrphanedVideos();

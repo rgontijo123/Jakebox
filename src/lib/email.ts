@@ -149,3 +149,93 @@ export async function sendContactEmail(msg: ContactMessage): Promise<boolean> {
   }
   return true;
 }
+
+/** "How are you liking Jakebox?" -- sent once per account a day after
+ * signup (src/lib/feedbackRequest.ts). A plain reply also reaches us
+ * (replyTo), for people who'd rather not open the form. locale null =
+ * account older than the locale field: send both languages. */
+export async function sendFeedbackRequestEmail(
+  to: string,
+  opts: { locale: EmailLocale | null; name: string | null; songs: number; formUrl: string },
+) {
+  if (!resend) {
+    console.warn(`RESEND_API_KEY not set -- skipping feedback request to ${to} (${opts.formUrl})`);
+    return false;
+  }
+  const first = opts.name?.trim().split(/\s+/)[0];
+  const pt = () => {
+    const hi = first ? `Oi, ${escapeHtml(first)}!` : "Oi!";
+    const used =
+      opts.songs > 0
+        ? `Vi que você já criou ${opts.songs === 1 ? "sua primeira música" : `${opts.songs} músicas`} no Jakebox. 🎶`
+        : "Vi que você criou sua conta no Jakebox, mas ainda não gerou nenhuma música. Travou em alguma parte?";
+    return `<p>${hi}</p>
+      <p>Aqui é o Ricardo, criador do Jakebox. ${used}</p>
+      <p>O Jakebox é novo e eu quero muito saber a sua opinião: o que você achou, o que gostou, o que te incomodou e o que você gostaria que ele fizesse. Leva menos de 1 minuto.</p>
+      <p>Se preferir, é só <b>responder este e-mail</b>: eu leio todas as respostas.</p>`;
+  };
+  const en = () => {
+    const hi = first ? `Hi ${escapeHtml(first)}!` : "Hi!";
+    const used =
+      opts.songs > 0
+        ? `I saw you've already created ${opts.songs === 1 ? "your first song" : `${opts.songs} songs`} on Jakebox. 🎶`
+        : "I saw you signed up for Jakebox but haven't made a song yet. Did you get stuck somewhere?";
+    return `<p>${hi}</p>
+      <p>This is Ricardo, the creator of Jakebox. ${used}</p>
+      <p>Jakebox is brand new and I'd really love to hear what you think: what you liked, what bugged you, and what you'd like it to do. It takes less than a minute.</p>
+      <p>Or just <b>reply to this email</b>: I read every answer.</p>`;
+  };
+  const both = opts.locale === null;
+  const usePt = opts.locale === "pt";
+  const subject = both
+    ? "O que você achou do Jakebox? / What do you think of Jakebox?"
+    : usePt
+      ? "O que você achou do Jakebox?"
+      : "What do you think of Jakebox?";
+  const body = both
+    ? `${pt()}<hr style="border:none;border-top:1px solid #e4e4e7;margin:24px 0">${en()}`
+    : usePt
+      ? pt()
+      : en();
+  const label = both ? "Dar minha opinião / Give feedback" : usePt ? "Dar minha opinião" : "Give feedback";
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    replyTo: CONTACT_TO,
+    subject,
+    html: layout(body, { label, url: opts.formUrl }),
+  });
+  if (error) {
+    console.error("feedback request email failed", error);
+    return false;
+  }
+  return true;
+}
+
+export type FeedbackAnswer = { email: string; name: string | null; songs: number; rating: number | null; liked: string; improve: string };
+
+/** A submitted /feedback form, to the owner's inbox (reply goes to the user). */
+export async function sendFeedbackToOwner(f: FeedbackAnswer) {
+  if (!resend) {
+    console.warn("RESEND_API_KEY not set -- feedback not emailed", f);
+    return false;
+  }
+  const stars = f.rating ? "★".repeat(f.rating) + "☆".repeat(5 - f.rating) : "(sem nota)";
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: CONTACT_TO,
+    replyTo: f.email,
+    subject: `Feedback Jakebox ${f.rating ? `${f.rating}/5 ` : ""}de ${f.name || f.email}`,
+    html: `
+      <p><b>${escapeHtml(f.name || "")}</b> &lt;${escapeHtml(f.email)}&gt; · ${f.songs} música(s) criada(s)</p>
+      <p style="font-size:22px;color:#F5B900;margin:8px 0">${stars}</p>
+      <p><b>O que gostou:</b></p><p style="white-space:pre-wrap">${escapeHtml(f.liked || "-")}</p>
+      <p><b>O que melhorar / sugestões:</b></p><p style="white-space:pre-wrap">${escapeHtml(f.improve || "-")}</p>
+    `,
+  });
+  if (error) {
+    console.error("feedback email to owner failed", error);
+    return false;
+  }
+  return true;
+}

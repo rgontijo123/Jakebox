@@ -1021,6 +1021,35 @@ export const DICTIONARY = {
     en: "Too many messages in a short time. Please try again later.",
     pt: "Muitas mensagens em pouco tempo. Tente de novo mais tarde.",
   },
+  feedback_title: { en: "What do you think of Jakebox?", pt: "O que você achou do Jakebox?" },
+  feedback_body: {
+    en: "Jakebox is brand new and your opinion shapes what comes next. Everything is optional: answer what you want.",
+    pt: "O Jakebox é novo e a sua opinião decide o que vem a seguir. Tudo é opcional: responda o que quiser.",
+  },
+  feedback_rating: { en: "How would you rate Jakebox?", pt: "Que nota você dá para o Jakebox?" },
+  feedback_liked: { en: "What did you like most?", pt: "O que você mais gostou?" },
+  feedback_improve: {
+    en: "What should we improve? Anything missing or confusing?",
+    pt: "O que podemos melhorar? Faltou alguma coisa ou algo ficou confuso?",
+  },
+  feedback_improve_placeholder: {
+    en: "e.g. a genre you missed, a bug, something that took too long...",
+    pt: "ex.: um gênero que faltou, um erro, algo que demorou demais...",
+  },
+  feedback_send: { en: "Send feedback", pt: "Enviar opinião" },
+  feedback_sent: {
+    en: "Thank you! Your feedback went straight to the Jakebox team. 🎶",
+    pt: "Obrigado! Sua opinião foi direto para a equipe do Jakebox. 🎶",
+  },
+  feedback_err_empty: { en: "Pick a rating or write something first.", pt: "Escolha uma nota ou escreva algo primeiro." },
+  feedback_err_send: {
+    en: "We couldn't send it. Please email us at contact@jakeboxmusic.com.",
+    pt: "Não conseguimos enviar. Escreva para contact@jakeboxmusic.com.",
+  },
+  feedback_login_needed: {
+    en: "This link is invalid. Log in to send your feedback:",
+    pt: "Este link não é válido. Entre na sua conta para mandar sua opinião:",
+  },
   contact_err_send: {
     en: "We couldn't send your message. Please email us at contact@jakeboxmusic.com.",
     pt: "Não conseguimos enviar sua mensagem. Escreva para contact@jakeboxmusic.com.",

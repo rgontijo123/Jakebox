@@ -57,10 +57,18 @@ model User {
   failedLoginAttempts Int       @default(0)
   lockedUntil         DateTime?
 
+  // Language the account was created in ("en" | "pt"); null for accounts
+  // older than this field (emails to those go out bilingual).
+  locale String?
+  // Set once the "how are you liking Jakebox?" email went out, so it's sent
+  // at most once per account (see src/lib/feedbackRequest.ts).
+  feedbackRequestedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   creditTransactions  CreditTransaction[]
+  feedbacks           Feedback[]
   payments            Payment[]
   generations         Generation[]
   songs               Song[]
@@ -439,6 +447,19 @@ model SupportReport {
   message String
   status  SupportReportStatus @default(open)
 
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Answers to the feedback form (/feedback), also emailed to the owner.
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int?
+  liked     String?
+  improve   String?
   createdAt DateTime @default(now())
 
   @@index([userId])
