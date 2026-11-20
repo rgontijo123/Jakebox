@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { userIdFromFeedbackToken } from "@/lib/feedbackRequest";
-import { sendFeedbackToOwner } from "@/lib/email";
+import { HEARD_FROM, sendFeedbackToOwner } from "@/lib/email";
 
 const MAX_TEXT = 4000;
 const text = (v: unknown) => (typeof v === "string" ? v.trim().slice(0, MAX_TEXT) : "");
@@ -21,7 +21,14 @@ export async function POST(req: Request) {
   const validRating = Number.isInteger(rating) && rating >= 1 && rating <= 5 ? rating : null;
   const createdSong = ["yes", "partly", "no"].includes(String(body?.createdSong)) ? String(body!.createdSong) : null;
   const ease = ["easy", "ok", "hard"].includes(String(body?.ease)) ? String(body!.ease) : null;
-  if (!validRating && !createdSong && !ease && !liked && !improve) return NextResponse.json({ error: "empty" }, { status: 400 });
+  const heardKey = String(body?.heardFrom ?? "");
+  const heardOther = text(body?.heardOther).slice(0, 200);
+  const heardFrom = (HEARD_FROM as readonly string[]).includes(heardKey)
+    ? heardKey === "other" && heardOther
+      ? `other:${heardOther}`
+      : heardKey
+    : null;
+  if (!validRating && !createdSong && !ease && !heardFrom && !liked && !improve) return NextResponse.json({ error: "empty" }, { status: 400 });
 
   const user = await db.user.findUnique({
     where: { id: userId },
@@ -31,7 +38,7 @@ export async function POST(req: Request) {
   // a person writing a lot is welcome; a script hammering the link isn't
   if (user._count.feedbacks >= 20) return NextResponse.json({ error: "too_many" }, { status: 429 });
 
-  await db.feedback.create({ data: { userId, rating: validRating, createdSong, ease, liked: liked || null, improve: improve || null } });
+  await db.feedback.create({ data: { userId, rating: validRating, createdSong, ease, heardFrom, liked: liked || null, improve: improve || null } });
   await sendFeedbackToOwner({
     email: user.email,
     name: user.displayName,
@@ -39,6 +46,7 @@ export async function POST(req: Request) {
     rating: validRating,
     createdSong,
     ease,
+    heardFrom,
     liked,
     improve,
   }).catch((err) => console.error("feedback email to owner failed", err));

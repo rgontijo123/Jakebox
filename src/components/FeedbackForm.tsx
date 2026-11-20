@@ -10,6 +10,17 @@ const CREATED: [string, DictionaryKey][] = [
   ["partly", "feedback_created_partly"],
   ["no", "feedback_created_no"],
 ];
+const HEARD: [string, DictionaryKey][] = [
+  ["instagram", "feedback_heard_instagram"],
+  ["facebook", "feedback_heard_facebook"],
+  ["tiktok", "feedback_heard_tiktok"],
+  ["youtube", "feedback_heard_youtube"],
+  ["linkedin", "feedback_heard_linkedin"],
+  ["whatsapp", "feedback_heard_whatsapp"],
+  ["friend", "feedback_heard_friend"],
+  ["google", "feedback_heard_google"],
+  ["other", "feedback_heard_other"],
+];
 const EASE: [string, DictionaryKey][] = [
   ["easy", "feedback_ease_easy"],
   ["ok", "feedback_ease_ok"],
@@ -58,6 +69,8 @@ export function FeedbackForm({ token }: { token: string | null }) {
   const [rating, setRating] = useState(0);
   const [createdSong, setCreatedSong] = useState("");
   const [ease, setEase] = useState("");
+  const [heardFrom, setHeardFrom] = useState("");
+  const [heardOther, setHeardOther] = useState("");
   const [liked, setLiked] = useState("");
   const [improve, setImprove] = useState("");
   const [sending, setSending] = useState(false);
@@ -67,7 +80,7 @@ export function FeedbackForm({ token }: { token: string | null }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!rating && !createdSong && !ease && !liked.trim() && !improve.trim()) {
+    if (!rating && !createdSong && !ease && !heardFrom && !liked.trim() && !improve.trim()) {
       setError(t("feedback_err_empty"));
       return;
     }
@@ -76,7 +89,7 @@ export function FeedbackForm({ token }: { token: string | null }) {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ t: token, rating: rating || null, createdSong, ease, liked, improve }),
+        body: JSON.stringify({ t: token, rating: rating || null, createdSong, ease, heardFrom, heardOther, liked, improve }),
       });
       if (!res.ok) {
         setError(t("feedback_err_send"));
@@ -96,6 +109,16 @@ export function FeedbackForm({ token }: { token: string | null }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+      <Choice label={t("feedback_heard")} options={HEARD} value={heardFrom} onChange={setHeardFrom} />
+      {heardFrom === "other" && (
+        <input
+          maxLength={200}
+          value={heardOther}
+          onChange={(e) => setHeardOther(e.target.value)}
+          placeholder={t("feedback_heard_other_placeholder")}
+          className={`${INPUT_CLASS} -mt-2`}
+        />
+      )}
       <Choice label={t("feedback_created")} options={CREATED} value={createdSong} onChange={setCreatedSong} />
       <Choice label={t("feedback_ease")} options={EASE} value={ease} onChange={setEase} />
       <div className="flex flex-col gap-2 text-sm">

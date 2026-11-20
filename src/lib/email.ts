@@ -167,6 +167,7 @@ export function feedbackRequestEmail(opts: FeedbackRequestOpts) {
       <p>Aqui é a equipe do Jakebox. ${used}</p>
       <p>O Jakebox é novo e a gente quer muito saber como foi para você:</p>
       <ul style="padding-left:20px;margin:0 0 12px">
+        <li>Como você ficou sabendo do Jakebox?</li>
         <li>Você conseguiu criar a sua música?</li>
         <li>Foi fácil de usar?</li>
         <li>O que você mais gostou?</li>
@@ -184,6 +185,7 @@ export function feedbackRequestEmail(opts: FeedbackRequestOpts) {
       <p>This is the Jakebox team. ${used}</p>
       <p>Jakebox is brand new and we'd really love to know how it went for you:</p>
       <ul style="padding-left:20px;margin:0 0 12px">
+        <li>How did you hear about Jakebox?</li>
         <li>Were you able to create your song?</li>
         <li>Was it easy to use?</li>
         <li>What did you like most?</li>
@@ -229,12 +231,31 @@ export type FeedbackAnswer = {
   rating: number | null;
   createdSong: string | null;
   ease: string | null;
+  heardFrom: string | null;
   liked: string;
   improve: string;
 };
 
 const CREATED_PT: Record<string, string> = { yes: "Sim", partly: "Mais ou menos", no: "Não" };
 const EASE_PT: Record<string, string> = { easy: "Fácil", ok: "Normal", hard: "Difícil" };
+// where people heard about Jakebox; "other:<text>" keeps what they typed
+export const HEARD_FROM = ["instagram", "facebook", "tiktok", "youtube", "linkedin", "whatsapp", "friend", "google", "other"] as const;
+const HEARD_PT: Record<string, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+  linkedin: "LinkedIn",
+  whatsapp: "WhatsApp",
+  friend: "Indicação de amigo",
+  google: "Google / pesquisa",
+  other: "Outro",
+};
+export function heardFromLabel(v: string | null | undefined) {
+  if (!v) return "-";
+  if (v.startsWith("other:")) return `Outro: ${v.slice(6)}`;
+  return HEARD_PT[v] ?? v;
+}
 export const feedbackLabels = { created: CREATED_PT, ease: EASE_PT };
 
 /** A submitted /feedback form, to the owner's inbox (reply goes to the user). */
@@ -252,6 +273,7 @@ export async function sendFeedbackToOwner(f: FeedbackAnswer) {
     html: `
       <p><b>${escapeHtml(f.name || "")}</b> &lt;${escapeHtml(f.email)}&gt; · ${f.songs} música(s) criada(s)</p>
       <p style="font-size:22px;color:#F5B900;margin:8px 0">${stars}</p>
+      <p><b>Como ficou sabendo do Jakebox?</b> ${escapeHtml(heardFromLabel(f.heardFrom))}</p>
       <p><b>Conseguiu criar a música?</b> ${f.createdSong ? CREATED_PT[f.createdSong] ?? "-" : "-"}</p>
       <p><b>Foi fácil de usar?</b> ${f.ease ? EASE_PT[f.ease] ?? "-" : "-"}</p>
       <p><b>O que mais gostou:</b></p><p style="white-space:pre-wrap">${escapeHtml(f.liked || "-")}</p>

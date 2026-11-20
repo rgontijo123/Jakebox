@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getLocale } from "@/lib/i18n/server";
 import { isStaffRole } from "@/lib/staff";
-import { feedbackRequestEmail, feedbackLabels } from "@/lib/email";
+import { feedbackRequestEmail, feedbackLabels, heardFromLabel } from "@/lib/email";
 import { feedbackUrl } from "@/lib/feedbackRequest";
 import { AdminFeedbackSend } from "@/components/AdminFeedbackSend";
 
@@ -109,6 +109,11 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               {fmt(f.createdAt)}{" "}
               {f.rating && <span className="text-[#F5B900] text-base">{"★".repeat(f.rating) + "☆".repeat(5 - f.rating)}</span>}
             </p>
+            {f.heardFrom && (
+              <p>
+                <b>{L("Como conheceu:", "Heard about us:")}</b> {heardFromLabel(f.heardFrom)}
+              </p>
+            )}
             {f.createdSong && (
               <p>
                 <b>{L("Conseguiu criar a música?", "Created a song?")}</b> {feedbackLabels.created[f.createdSong] ?? f.createdSong}

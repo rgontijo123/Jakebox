@@ -462,6 +462,8 @@ model Feedback {
   createdSong String?
   // "easy" | "ok" | "hard"
   ease      String?
+  // where they heard about Jakebox (HEARD_FROM keys in lib/email.ts) + free text for "other"
+  heardFrom String?
   liked     String?
   improve   String?
   createdAt DateTime @default(now())
