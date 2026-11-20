@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { AdminUserList } from "@/components/AdminUserList";
 import { AdminSearch } from "@/components/AdminSearch";
 import { getT } from "@/lib/i18n/server";
+import { sourceLabel } from "@/lib/signupSource";
 
 const PAGE_SIZE = 100;
 
@@ -43,11 +44,18 @@ export default async function AdminPage({
         songQuota: true,
         planId: true,
         planStatus: true,
+        signupSource: true,
         _count: { select: { songs: { where: { deletedAt: null } }, feedbacks: true } },
       },
     }),
     db.user.count({ where }),
   ]);
+  const sources = await db.user.groupBy({
+    by: ["signupSource"],
+    where: { role: "user", signupSource: { not: null } },
+    _count: true,
+  });
+  sources.sort((a, b) => b._count - a._count);
 
   return (
     <main className="flex flex-1 flex-col items-center px-6 py-16 gap-6">
@@ -58,6 +66,13 @@ export default async function AdminPage({
         </div>
         <AdminSearch initial={q?.trim() ?? ""} />
       </div>
+
+      {sources.length > 0 && (
+        <p className="w-full max-w-4xl text-xs text-zinc-400">
+          <span className="text-zinc-500">Origem dos cadastros: </span>
+          {sources.map((s) => `${sourceLabel(s.signupSource)} ${s._count}`).join(" · ")}
+        </p>
+      )}
 
       <AdminUserList
         isOwner={session?.user?.role === "owner"}

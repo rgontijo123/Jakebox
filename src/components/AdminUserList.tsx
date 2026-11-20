@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { translateApiError } from "@/lib/i18n/apiErrors";
+import { sourceLabel } from "@/lib/signupSource";
 
 export type AdminUser = {
   id: string;
@@ -19,6 +20,7 @@ export type AdminUser = {
   planStatus: string | null;
   songCount: number;
   feedbackCount: number;
+  signupSource: string | null;
 };
 
 type Panel = "edit" | "delete" | null;
@@ -78,6 +80,7 @@ function UserRow({ user, isOwner, onDeleted }: { user: AdminUser; isOwner: boole
           </Link>
           <p className="text-xs text-zinc-500 flex flex-wrap gap-x-2">
             <span>{new Date(user.createdAt).toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US")}</span>
+            {user.signupSource && <span>· {sourceLabel(user.signupSource)}</span>}
             <span>· {t("admin_songs_n", { n: user.songCount })}</span>
             <span>· {t("admin_credits_n", { n: user.creditBalance })}</span>
             <span>· {t("admin_quota_n", { n: user.songQuota })}</span>

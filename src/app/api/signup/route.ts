@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { FREE_TRIAL_SONGS } from "@/lib/pricing";
 import { sendWelcomeEmail } from "@/lib/email";
 import { getLocale } from "@/lib/i18n/server";
+import { cookies } from "next/headers";
+import { SOURCE_COOKIE, parseSourceCookie } from "@/lib/signupSource";
 import { isPasswordValid, PASSWORD_REQUIREMENTS_HINT } from "@/lib/passwordPolicy";
 
 const TOS_VERSION = "2026-07-13";
@@ -48,6 +50,7 @@ export async function POST(req: Request) {
         tosVersion: TOS_VERSION,
         songQuota: FREE_TRIAL_SONGS,
         locale,
+        ...parseSourceCookie((await cookies()).get(SOURCE_COOKIE)?.value),
       },
     });
 

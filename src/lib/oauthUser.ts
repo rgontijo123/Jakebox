@@ -2,6 +2,8 @@ import { db } from "@/lib/db";
 import { FREE_TRIAL_SONGS } from "@/lib/pricing";
 import { sendWelcomeEmail } from "@/lib/email";
 import { getLocale } from "@/lib/i18n/server";
+import { cookies } from "next/headers";
+import { SOURCE_COOKIE, parseSourceCookie } from "@/lib/signupSource";
 
 const TOS_VERSION = "2026-07-13";
 
@@ -25,6 +27,9 @@ export async function upsertOAuthUser(email: string, name: string | null | undef
   // getLocale reads request cookies, which may be unavailable in some auth
   // callback contexts -- fall back to English rather than skip the email.
   const locale = await getLocale().catch(() => "en" as const);
+  const sourceCookie = await cookies()
+    .then((c) => c.get(SOURCE_COOKIE)?.value)
+    .catch(() => undefined);
   const user = await db.user.create({
     data: {
       email: normalizedEmail,
@@ -37,6 +42,7 @@ export async function upsertOAuthUser(email: string, name: string | null | undef
       tosVersion: TOS_VERSION,
       songQuota: FREE_TRIAL_SONGS,
       locale,
+      ...parseSourceCookie(sourceCookie),
     },
   });
 

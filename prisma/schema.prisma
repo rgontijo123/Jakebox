@@ -63,6 +63,12 @@ model User {
   // Set once the "how are you liking Jakebox?" email went out, so it's sent
   // at most once per account (see src/lib/feedbackRequest.ts).
   feedbackRequestedAt DateTime?
+  // Where the account came from (src/lib/signupSource.ts): "instagram",
+  // "linkedin", "search", "direct"... plus the referring site and the first
+  // page seen. Null for accounts older than this field.
+  signupSource   String?
+  signupReferrer String?
+  signupLanding  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -6,6 +6,7 @@ import { getLocale } from "@/lib/i18n/server";
 import { isStaffRole } from "@/lib/staff";
 import { feedbackRequestEmail, feedbackLabels, heardFromLabel } from "@/lib/email";
 import { feedbackUrl } from "@/lib/feedbackRequest";
+import { sourceLabel } from "@/lib/signupSource";
 import { AdminFeedbackSend } from "@/components/AdminFeedbackSend";
 
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
@@ -72,6 +73,16 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <Stat label={L("Cadastro", "Signed up")} value={fmt(user.createdAt)} />
           <Stat label={L("Login", "Sign-in")} value={signIn} />
+          <Stat
+            label={L("Origem do cadastro", "Signup source")}
+            value={
+              <>
+                {sourceLabel(user.signupSource)}
+                {user.signupReferrer && <span className="block text-xs text-zinc-500 break-all">{user.signupReferrer}</span>}
+                {user.signupLanding && <span className="block text-xs text-zinc-500 break-all">{user.signupLanding}</span>}
+              </>
+            }
+          />
           <Stat label={L("Idioma", "Language")} value={user.locale ?? "-"} />
           <Stat label={L("Status", "Status")} value={`${user.role} · ${user.status}`} />
           <Stat label={L("Músicas", "Songs")} value={liveSongs.length} />
