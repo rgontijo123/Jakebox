@@ -150,61 +150,71 @@ export async function sendContactEmail(msg: ContactMessage): Promise<boolean> {
   return true;
 }
 
-/** "How are you liking Jakebox?" -- sent once per account a day after
- * signup (src/lib/feedbackRequest.ts). A plain reply also reaches us
- * (replyTo), for people who'd rather not open the form. locale null =
- * account older than the locale field: send both languages. */
-export async function sendFeedbackRequestEmail(
-  to: string,
-  opts: { locale: EmailLocale | null; name: string | null; songs: number; formUrl: string },
-) {
-  if (!resend) {
-    console.warn(`RESEND_API_KEY not set -- skipping feedback request to ${to} (${opts.formUrl})`);
-    return false;
-  }
+export type FeedbackRequestOpts = { locale: EmailLocale | null; name: string | null; songs: number; formUrl: string };
+
+/** "What do you think of Jakebox?" -- built separately from sending so the
+ * admin page can preview exactly what a given person will get. locale null
+ * = account older than the locale field: both languages. */
+export function feedbackRequestEmail(opts: FeedbackRequestOpts) {
   const first = opts.name?.trim().split(/\s+/)[0];
   const pt = () => {
     const hi = first ? `Oi, ${escapeHtml(first)}!` : "Oi!";
     const used =
       opts.songs > 0
         ? `Vimos que você já criou ${opts.songs === 1 ? "sua primeira música" : `${opts.songs} músicas`} no Jakebox. 🎶`
-        : "Vimos que você criou sua conta no Jakebox, mas ainda não gerou nenhuma música. Travou em alguma parte?";
+        : "Vimos que você criou sua conta no Jakebox, mas ainda não gerou nenhuma música.";
     return `<p>${hi}</p>
       <p>Aqui é a equipe do Jakebox. ${used}</p>
-      <p>O Jakebox é novo e a gente quer muito saber a sua opinião: o que você achou, o que gostou, o que te incomodou e o que você gostaria que ele fizesse. Leva menos de 1 minuto.</p>
-      <p>Se preferir, é só <b>responder este e-mail</b>: a gente lê todas as respostas.</p>`;
+      <p>O Jakebox é novo e a gente quer muito saber como foi para você:</p>
+      <ul style="padding-left:20px;margin:0 0 12px">
+        <li>Você conseguiu criar a sua música?</li>
+        <li>Foi fácil de usar?</li>
+        <li>O que você mais gostou?</li>
+        <li>Do que você não gostou ou o que podemos melhorar?</li>
+      </ul>
+      <p>Leva menos de 1 minuto. Se preferir, é só <b>responder este e-mail</b>: a gente lê todas as respostas.</p>`;
   };
   const en = () => {
     const hi = first ? `Hi ${escapeHtml(first)}!` : "Hi!";
     const used =
       opts.songs > 0
         ? `We saw you've already created ${opts.songs === 1 ? "your first song" : `${opts.songs} songs`} on Jakebox. 🎶`
-        : "We saw you signed up for Jakebox but haven't made a song yet. Did you get stuck somewhere?";
+        : "We saw you signed up for Jakebox but haven't made a song yet.";
     return `<p>${hi}</p>
       <p>This is the Jakebox team. ${used}</p>
-      <p>Jakebox is brand new and we'd really love to hear what you think: what you liked, what bugged you, and what you'd like it to do. It takes less than a minute.</p>
-      <p>Or just <b>reply to this email</b>: we read every answer.</p>`;
+      <p>Jakebox is brand new and we'd really love to know how it went for you:</p>
+      <ul style="padding-left:20px;margin:0 0 12px">
+        <li>Were you able to create your song?</li>
+        <li>Was it easy to use?</li>
+        <li>What did you like most?</li>
+        <li>What didn't you like, or what should we improve?</li>
+      </ul>
+      <p>It takes less than a minute. Or just <b>reply to this email</b>: we read every answer.</p>`;
   };
   const both = opts.locale === null;
   const usePt = opts.locale === "pt";
   const subject = both
-    ? "O que você achou do Jakebox? / What do you think of Jakebox?"
+    ? "Como foi criar sua música no Jakebox? / How was creating your song on Jakebox?"
     : usePt
-      ? "O que você achou do Jakebox?"
-      : "What do you think of Jakebox?";
+      ? "Como foi criar sua música no Jakebox?"
+      : "How was creating your song on Jakebox?";
   const body = both
     ? `${pt()}<hr style="border:none;border-top:1px solid #e4e4e7;margin:24px 0">${en()}`
     : usePt
       ? pt()
       : en();
   const label = both ? "Dar minha opinião / Give feedback" : usePt ? "Dar minha opinião" : "Give feedback";
-  const { error } = await resend.emails.send({
-    from: FROM,
-    to,
-    replyTo: CONTACT_TO,
-    subject,
-    html: layout(body, { label, url: opts.formUrl }),
-  });
+  return { subject, html: layout(body, { label, url: opts.formUrl }) };
+}
+
+/** A plain reply also reaches us (replyTo). */
+export async function sendFeedbackRequestEmail(to: string, opts: FeedbackRequestOpts) {
+  if (!resend) {
+    console.warn(`RESEND_API_KEY not set -- skipping feedback request to ${to} (${opts.formUrl})`);
+    return false;
+  }
+  const { subject, html } = feedbackRequestEmail(opts);
+  const { error } = await resend.emails.send({ from: FROM, to, replyTo: CONTACT_TO, subject, html });
   if (error) {
     console.error("feedback request email failed", error);
     return false;
@@ -212,7 +222,20 @@ export async function sendFeedbackRequestEmail(
   return true;
 }
 
-export type FeedbackAnswer = { email: string; name: string | null; songs: number; rating: number | null; liked: string; improve: string };
+export type FeedbackAnswer = {
+  email: string;
+  name: string | null;
+  songs: number;
+  rating: number | null;
+  createdSong: string | null;
+  ease: string | null;
+  liked: string;
+  improve: string;
+};
+
+const CREATED_PT: Record<string, string> = { yes: "Sim", partly: "Mais ou menos", no: "Não" };
+const EASE_PT: Record<string, string> = { easy: "Fácil", ok: "Normal", hard: "Difícil" };
+export const feedbackLabels = { created: CREATED_PT, ease: EASE_PT };
 
 /** A submitted /feedback form, to the owner's inbox (reply goes to the user). */
 export async function sendFeedbackToOwner(f: FeedbackAnswer) {
@@ -229,8 +252,10 @@ export async function sendFeedbackToOwner(f: FeedbackAnswer) {
     html: `
       <p><b>${escapeHtml(f.name || "")}</b> &lt;${escapeHtml(f.email)}&gt; · ${f.songs} música(s) criada(s)</p>
       <p style="font-size:22px;color:#F5B900;margin:8px 0">${stars}</p>
-      <p><b>O que gostou:</b></p><p style="white-space:pre-wrap">${escapeHtml(f.liked || "-")}</p>
-      <p><b>O que melhorar / sugestões:</b></p><p style="white-space:pre-wrap">${escapeHtml(f.improve || "-")}</p>
+      <p><b>Conseguiu criar a música?</b> ${f.createdSong ? CREATED_PT[f.createdSong] ?? "-" : "-"}</p>
+      <p><b>Foi fácil de usar?</b> ${f.ease ? EASE_PT[f.ease] ?? "-" : "-"}</p>
+      <p><b>O que mais gostou:</b></p><p style="white-space:pre-wrap">${escapeHtml(f.liked || "-")}</p>
+      <p><b>Do que não gostou / o que melhorar:</b></p><p style="white-space:pre-wrap">${escapeHtml(f.improve || "-")}</p>
     `,
   });
   if (error) {

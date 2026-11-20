@@ -458,6 +458,10 @@ model Feedback {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   rating    Int?
+  // "yes" | "partly" | "no" -- managed to create a song?
+  createdSong String?
+  // "easy" | "ok" | "hard"
+  ease      String?
   liked     String?
   improve   String?
   createdAt DateTime @default(now())

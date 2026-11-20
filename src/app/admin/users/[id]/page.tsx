@@ -4,6 +4,9 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { getLocale } from "@/lib/i18n/server";
 import { isStaffRole } from "@/lib/staff";
+import { feedbackRequestEmail, feedbackLabels } from "@/lib/email";
+import { feedbackUrl } from "@/lib/feedbackRequest";
+import { AdminFeedbackSend } from "@/components/AdminFeedbackSend";
 
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -45,6 +48,12 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
 
   const liveSongs = user.songs.filter((s) => !s.deletedAt);
   const paid = user.payments.filter((p) => p.status === "completed");
+  const preview = feedbackRequestEmail({
+    locale: user.locale === "pt" || user.locale === "en" ? user.locale : null,
+    name: user.displayName,
+    songs: user.songs.length,
+    formUrl: feedbackUrl(user.id),
+  });
   const signIn = user.passwordHash ? L("e-mail e senha", "email + password") : "Google / Facebook";
 
   const section = "w-full max-w-4xl flex flex-col gap-3";
@@ -80,7 +89,19 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
       </div>
 
       <div className={section}>
-        <h2 className={h2}>Feedback</h2>
+        <h2 className={h2}>{L("E-mail de feedback", "Feedback email")}</h2>
+        <AdminFeedbackSend
+          userId={user.id}
+          email={user.email}
+          subject={preview.subject}
+          html={preview.html}
+          sentAt={user.feedbackRequestedAt?.toISOString() ?? null}
+          pt={pt}
+        />
+      </div>
+
+      <div className={section}>
+        <h2 className={h2}>{L("Respostas de feedback", "Feedback answers")}</h2>
         {user.feedbacks.length === 0 && <p className="text-sm text-zinc-500">{L("Ainda não respondeu.", "No answers yet.")}</p>}
         {user.feedbacks.map((f) => (
           <div key={f.id} className="rounded-md border border-zinc-800 p-3 text-sm flex flex-col gap-1">
@@ -88,6 +109,16 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               {fmt(f.createdAt)}{" "}
               {f.rating && <span className="text-[#F5B900] text-base">{"★".repeat(f.rating) + "☆".repeat(5 - f.rating)}</span>}
             </p>
+            {f.createdSong && (
+              <p>
+                <b>{L("Conseguiu criar a música?", "Created a song?")}</b> {feedbackLabels.created[f.createdSong] ?? f.createdSong}
+              </p>
+            )}
+            {f.ease && (
+              <p>
+                <b>{L("Foi fácil?", "Easy to use?")}</b> {feedbackLabels.ease[f.ease] ?? f.ease}
+              </p>
+            )}
             {f.liked && (
               <p className="whitespace-pre-wrap">
                 <b>{L("Gostou:", "Liked:")}</b> {f.liked}

@@ -3,11 +3,61 @@
 import { useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
+import type { DictionaryKey } from "@/lib/i18n/translations";
+
+const CREATED: [string, DictionaryKey][] = [
+  ["yes", "feedback_created_yes"],
+  ["partly", "feedback_created_partly"],
+  ["no", "feedback_created_no"],
+];
+const EASE: [string, DictionaryKey][] = [
+  ["easy", "feedback_ease_easy"],
+  ["ok", "feedback_ease_ok"],
+  ["hard", "feedback_ease_hard"],
+];
+
+function Choice({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: [string, DictionaryKey][];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const { t } = useLocale();
+  return (
+    <div className="flex flex-col gap-2 text-sm">
+      {label}
+      <div className="flex flex-wrap gap-2" role="radiogroup">
+        {options.map(([v, key]) => (
+          <button
+            key={v}
+            type="button"
+            role="radio"
+            aria-checked={value === v}
+            onClick={() => onChange(value === v ? "" : v)}
+            className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+              value === v ? "border-[#F5B900] bg-[#F5B900] text-black" : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
+            }`}
+          >
+            {t(key)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const INPUT_CLASS = "rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm";
 
 export function FeedbackForm({ token }: { token: string | null }) {
   const { t } = useLocale();
   const [rating, setRating] = useState(0);
+  const [createdSong, setCreatedSong] = useState("");
+  const [ease, setEase] = useState("");
   const [liked, setLiked] = useState("");
   const [improve, setImprove] = useState("");
   const [sending, setSending] = useState(false);
@@ -17,7 +67,7 @@ export function FeedbackForm({ token }: { token: string | null }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!rating && !liked.trim() && !improve.trim()) {
+    if (!rating && !createdSong && !ease && !liked.trim() && !improve.trim()) {
       setError(t("feedback_err_empty"));
       return;
     }
@@ -26,7 +76,7 @@ export function FeedbackForm({ token }: { token: string | null }) {
       const res = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ t: token, rating: rating || null, liked, improve }),
+        body: JSON.stringify({ t: token, rating: rating || null, createdSong, ease, liked, improve }),
       });
       if (!res.ok) {
         setError(t("feedback_err_send"));
@@ -46,6 +96,8 @@ export function FeedbackForm({ token }: { token: string | null }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+      <Choice label={t("feedback_created")} options={CREATED} value={createdSong} onChange={setCreatedSong} />
+      <Choice label={t("feedback_ease")} options={EASE} value={ease} onChange={setEase} />
       <div className="flex flex-col gap-2 text-sm">
         {t("feedback_rating")}
         <div className="flex gap-1" role="radiogroup">

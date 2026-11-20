@@ -19,7 +19,9 @@ export async function POST(req: Request) {
   const liked = text(body?.liked);
   const improve = text(body?.improve);
   const validRating = Number.isInteger(rating) && rating >= 1 && rating <= 5 ? rating : null;
-  if (!validRating && !liked && !improve) return NextResponse.json({ error: "empty" }, { status: 400 });
+  const createdSong = ["yes", "partly", "no"].includes(String(body?.createdSong)) ? String(body!.createdSong) : null;
+  const ease = ["easy", "ok", "hard"].includes(String(body?.ease)) ? String(body!.ease) : null;
+  if (!validRating && !createdSong && !ease && !liked && !improve) return NextResponse.json({ error: "empty" }, { status: 400 });
 
   const user = await db.user.findUnique({
     where: { id: userId },
@@ -29,12 +31,14 @@ export async function POST(req: Request) {
   // a person writing a lot is welcome; a script hammering the link isn't
   if (user._count.feedbacks >= 20) return NextResponse.json({ error: "too_many" }, { status: 429 });
 
-  await db.feedback.create({ data: { userId, rating: validRating, liked: liked || null, improve: improve || null } });
+  await db.feedback.create({ data: { userId, rating: validRating, createdSong, ease, liked: liked || null, improve: improve || null } });
   await sendFeedbackToOwner({
     email: user.email,
     name: user.displayName,
     songs: user._count.songs,
     rating: validRating,
+    createdSong,
+    ease,
     liked,
     improve,
   }).catch((err) => console.error("feedback email to owner failed", err));
