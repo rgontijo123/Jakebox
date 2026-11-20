@@ -167,23 +167,23 @@ export async function sendFeedbackRequestEmail(
     const hi = first ? `Oi, ${escapeHtml(first)}!` : "Oi!";
     const used =
       opts.songs > 0
-        ? `Vi que você já criou ${opts.songs === 1 ? "sua primeira música" : `${opts.songs} músicas`} no Jakebox. 🎶`
-        : "Vi que você criou sua conta no Jakebox, mas ainda não gerou nenhuma música. Travou em alguma parte?";
+        ? `Vimos que você já criou ${opts.songs === 1 ? "sua primeira música" : `${opts.songs} músicas`} no Jakebox. 🎶`
+        : "Vimos que você criou sua conta no Jakebox, mas ainda não gerou nenhuma música. Travou em alguma parte?";
     return `<p>${hi}</p>
-      <p>Aqui é o Ricardo, criador do Jakebox. ${used}</p>
-      <p>O Jakebox é novo e eu quero muito saber a sua opinião: o que você achou, o que gostou, o que te incomodou e o que você gostaria que ele fizesse. Leva menos de 1 minuto.</p>
-      <p>Se preferir, é só <b>responder este e-mail</b>: eu leio todas as respostas.</p>`;
+      <p>Aqui é a equipe do Jakebox. ${used}</p>
+      <p>O Jakebox é novo e a gente quer muito saber a sua opinião: o que você achou, o que gostou, o que te incomodou e o que você gostaria que ele fizesse. Leva menos de 1 minuto.</p>
+      <p>Se preferir, é só <b>responder este e-mail</b>: a gente lê todas as respostas.</p>`;
   };
   const en = () => {
     const hi = first ? `Hi ${escapeHtml(first)}!` : "Hi!";
     const used =
       opts.songs > 0
-        ? `I saw you've already created ${opts.songs === 1 ? "your first song" : `${opts.songs} songs`} on Jakebox. 🎶`
-        : "I saw you signed up for Jakebox but haven't made a song yet. Did you get stuck somewhere?";
+        ? `We saw you've already created ${opts.songs === 1 ? "your first song" : `${opts.songs} songs`} on Jakebox. 🎶`
+        : "We saw you signed up for Jakebox but haven't made a song yet. Did you get stuck somewhere?";
     return `<p>${hi}</p>
-      <p>This is Ricardo, the creator of Jakebox. ${used}</p>
-      <p>Jakebox is brand new and I'd really love to hear what you think: what you liked, what bugged you, and what you'd like it to do. It takes less than a minute.</p>
-      <p>Or just <b>reply to this email</b>: I read every answer.</p>`;
+      <p>This is the Jakebox team. ${used}</p>
+      <p>Jakebox is brand new and we'd really love to hear what you think: what you liked, what bugged you, and what you'd like it to do. It takes less than a minute.</p>
+      <p>Or just <b>reply to this email</b>: we read every answer.</p>`;
   };
   const both = opts.locale === null;
   const usePt = opts.locale === "pt";

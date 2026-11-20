@@ -43,7 +43,7 @@ export default async function AdminPage({
         songQuota: true,
         planId: true,
         planStatus: true,
-        _count: { select: { songs: { where: { deletedAt: null } } } },
+        _count: { select: { songs: { where: { deletedAt: null } }, feedbacks: true } },
       },
     }),
     db.user.count({ where }),
@@ -65,6 +65,7 @@ export default async function AdminPage({
           ...u,
           createdAt: createdAt.toISOString(),
           songCount: _count.songs,
+          feedbackCount: _count.feedbacks,
         }))}
       />
     </main>

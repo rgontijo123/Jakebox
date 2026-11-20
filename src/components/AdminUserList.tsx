@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { translateApiError } from "@/lib/i18n/apiErrors";
@@ -17,6 +18,7 @@ export type AdminUser = {
   planId: string | null;
   planStatus: string | null;
   songCount: number;
+  feedbackCount: number;
 };
 
 type Panel = "edit" | "delete" | null;
@@ -69,10 +71,11 @@ function UserRow({ user, isOwner, onDeleted }: { user: AdminUser; isOwner: boole
     <div className="flex flex-col gap-3 px-4 py-3 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-medium truncate">
+          <Link href={`/admin/users/${user.id}`} className="block font-medium truncate hover:text-[#F5B900]">
             {user.email}
             {user.displayName && <span className="text-zinc-500 font-normal"> · {user.displayName}</span>}
-          </p>
+            <span className="text-zinc-500 font-normal"> ›</span>
+          </Link>
           <p className="text-xs text-zinc-500 flex flex-wrap gap-x-2">
             <span>{new Date(user.createdAt).toLocaleDateString(locale === "pt" ? "pt-BR" : "en-US")}</span>
             <span>· {t("admin_songs_n", { n: user.songCount })}</span>
@@ -81,6 +84,7 @@ function UserRow({ user, isOwner, onDeleted }: { user: AdminUser; isOwner: boole
             {hasPlan && <span className="text-[#F5B900]">· {t("admin_plan", { plan: user.planId! })}</span>}
             {isStaff && <span className="text-sky-400">· {user.role}</span>}
             {banned && <span className="text-red-400">· {t("admin_banned")}</span>}
+            {user.feedbackCount > 0 && <span className="text-green-400">· 💬 feedback</span>}
           </p>
         </div>
         <div className="flex flex-wrap gap-1.5">
