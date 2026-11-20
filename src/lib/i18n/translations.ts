@@ -1211,6 +1211,19 @@ export const DICTIONARY = {
     en: "Continue with Facebook",
     pt: "Continuar com Facebook",
   },
+  oauth_failed: {
+    en: "The sign-in didn't finish. Please try again. If you opened Jakebox from Instagram, Facebook or TikTok, open it in your browser (Chrome or Safari) first.",
+    pt: "O login não foi concluído. Tente de novo. Se você abriu o Jakebox pelo Instagram, Facebook ou TikTok, abra no navegador (Chrome ou Safari) antes.",
+  },
+  oauth_inapp: {
+    en: "You're in the Instagram/Facebook/TikTok browser, where Google sign-in doesn't work. Open Jakebox in your browser to sign in with Google.",
+    pt: "Você está no navegador do Instagram/Facebook/TikTok, onde o login com Google não funciona. Abra o Jakebox no navegador para entrar com o Google.",
+  },
+  oauth_inapp_ios: {
+    en: "Tap ··· (top right) and choose \"Open in browser\".",
+    pt: "Toque em ··· (no canto de cima) e escolha \"Abrir no navegador\".",
+  },
+  oauth_open_chrome: { en: "Open in Chrome", pt: "Abrir no Chrome" },
   oauth_or: {
     en: "or",
     pt: "ou",

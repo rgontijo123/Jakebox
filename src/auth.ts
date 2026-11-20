@@ -17,6 +17,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
+    // Failed Google/Facebook round trips (e.g. the login cookie was lost
+    // because it started in Instagram's in-app browser) land back on the
+    // login page with ?error=..., which explains it -- instead of Auth.js's
+    // English "problem with the server configuration" page.
+    error: "/login",
   },
   providers: [
     Credentials({
