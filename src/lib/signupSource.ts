@@ -12,6 +12,7 @@ const KNOWN: [RegExp, string][] = [
   [/(^|\.)(t\.co|x\.com|twitter\.com)$/i, "x"],
   [/(^|\.)google\.[a-z.]+$|(^|\.)bing\.com$|(^|\.)duckduckgo\.com$|(^|\.)yahoo\.com$/i, "search"],
   [/(^|\.)spotify\.com$/i, "spotify"],
+  [/(^|\.)(t\.me|telegram\.(org|me))$|^telegram$/i, "telegram"],
 ];
 
 /** "instagram" / "linkedin" / ... or the bare host for anything else. */
@@ -43,6 +44,10 @@ export const SOURCE_LABELS: Record<string, string> = {
   x: "X / Twitter",
   search: "Google / pesquisa",
   spotify: "Spotify",
+  telegram: "Telegram",
+  email: "E-mail",
+  copy: "Link copiado",
+  share: "Compartilhado pelo celular",
   direct: "Direto / sem origem",
 };
 export const sourceLabel = (s: string | null | undefined) => (s ? (SOURCE_LABELS[s] ?? s) : "-");

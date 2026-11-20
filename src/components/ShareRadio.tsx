@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
 const RADIO_URL = "https://jakeboxmusic.com/radio";
+// ?ref= tells signup attribution (src/lib/signupSource.ts) where a listener
+// came from -- WhatsApp/Telegram apps send no Referer of their own.
+const radioUrl = (ref: string) => `${RADIO_URL}?ref=${ref}`;
 
 /** "Spread the word" block on /radio: ready-made post text + link for each
  * network. Instagram has no web share link, so it gets the copy-text and a
@@ -15,12 +18,12 @@ export function ShareRadio() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- browser capability, unknown during SSR
   useEffect(() => setCanShare("share" in navigator), []);
   const text = t("share_text");
-  const full = `${text} ${RADIO_URL}`;
+  const full = (ref: string) => `${text} ${radioUrl(ref)}`;
   const enc = encodeURIComponent;
 
   async function copy(what: "text" | "link") {
     try {
-      await navigator.clipboard.writeText(what === "text" ? full : RADIO_URL);
+      await navigator.clipboard.writeText(what === "text" ? full("copy") : radioUrl("copy"));
       setCopied(what);
       setTimeout(() => setCopied(null), 2000);
     } catch {
@@ -30,17 +33,17 @@ export function ShareRadio() {
 
   async function nativeShare() {
     try {
-      await navigator.share({ title: t("radio_title"), text, url: RADIO_URL });
+      await navigator.share({ title: t("radio_title"), text, url: radioUrl("share") });
     } catch {
       // user closed the sheet
     }
   }
 
   const links = [
-    { label: "WhatsApp", href: `https://wa.me/?text=${enc(full)}`, cls: "bg-[#25D366] text-black" },
-    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${enc(RADIO_URL)}`, cls: "bg-[#1877F2] text-white" },
-    { label: "X", href: `https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(RADIO_URL)}`, cls: "bg-white text-black" },
-    { label: "Telegram", href: `https://t.me/share/url?url=${enc(RADIO_URL)}&text=${enc(text)}`, cls: "bg-[#229ED9] text-white" },
+    { label: "WhatsApp", href: `https://wa.me/?text=${enc(full("whatsapp"))}`, cls: "bg-[#25D366] text-black" },
+    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${enc(radioUrl("facebook"))}`, cls: "bg-[#1877F2] text-white" },
+    { label: "X", href: `https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(radioUrl("x"))}`, cls: "bg-white text-black" },
+    { label: "Telegram", href: `https://t.me/share/url?url=${enc(radioUrl("telegram"))}&text=${enc(text)}`, cls: "bg-[#229ED9] text-white" },
   ];
 
   const btn = "rounded-full px-4 py-2 text-sm font-medium transition-opacity hover:opacity-85";
