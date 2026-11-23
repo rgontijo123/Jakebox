@@ -227,6 +227,38 @@ export const GENRES: Genre[] = [
     ],
   },
   {
+    id: "romantic",
+    emoji: "🌹",
+    name: { en: "Romantic", pt: "Romântico" },
+    styles: [
+      {
+        name: { en: "Crooner standard", pt: "Standard crooner" },
+        prompt:
+          "Classic romantic jazz standard, 1950s crooner style, 72 BPM, lush string orchestra, soft brushed drums, upright bass, piano fills, muted trumpet, warm velvety baritone male vocal, elegant and romantic",
+      },
+      {
+        name: { en: "Big band swing", pt: "Swing com big band" },
+        prompt:
+          "Big band swing, 1950s style, 128 BPM, brass section hits, saxophone section, walking upright bass, swinging ride cymbal, piano, smooth charismatic crooner male vocal, joyful and romantic",
+      },
+      {
+        name: { en: "Piano bar ballad", pt: "Balada de piano-bar" },
+        prompt:
+          "Intimate late-night jazz ballad, 66 BPM, solo piano with soft upright bass and brushes, tenor saxophone fills, smoky piano-bar atmosphere, tender sultry vocal, romantic and nostalgic",
+      },
+      {
+        name: { en: "Romantic bolero", pt: "Bolero romântico" },
+        prompt:
+          "Romantic bolero, 80 BPM, nylon-string guitar requinto melodies, soft bongos and maracas, warm strings, upright bass, passionate heartfelt vocal, nostalgic and dreamy",
+      },
+      {
+        name: { en: "Romantic duet", pt: "Dueto romântico" },
+        prompt:
+          "Romantic orchestral duet ballad, 70 BPM, piano, lush strings, soft drums, male and female vocals alternating verses and harmonizing in the chorus, timeless and heartfelt",
+      },
+    ],
+  },
+  {
     id: "hiphop",
     emoji: "🎤",
     name: { en: "Hip hop / Rap", pt: "Hip hop / Rap" },
