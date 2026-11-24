@@ -52,3 +52,7 @@ body {
     display: none;
   }
 }
+
+/* Android app (see src/lib/appMode.ts): no purchases inside the app. */
+html.in-app .web-only { display: none !important; }
+html:not(.in-app) .app-only { display: none !important; }

@@ -65,7 +65,7 @@ export default async function BillingPage({
       <div className="w-full max-w-2xl flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">{t("billing_title")}</h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="web-only text-sm text-zinc-500 mt-1">
             {t("billing_price_explainer")}
           </p>
           {!isUnlimited && (user?.songQuota ?? 0) > 0 && !user?.planId && (
@@ -80,7 +80,7 @@ export default async function BillingPage({
         </span>
       </div>
 
-      <div className="w-full max-w-2xl flex flex-col gap-10">
+      <div className="web-only w-full max-w-2xl flex flex-col gap-10">
         <SubscriptionPlans
           current={{
             planId: user?.planId ?? null,

@@ -505,6 +505,14 @@ export const DICTIONARY = {
     en: "the music service couldn't create this track",
     pt: "o serviço de música não conseguiu criar esta faixa",
   },
+  err_insufficient_credits_app: {
+    en: "You've used your free songs.",
+    pt: "Suas músicas grátis acabaram.",
+  },
+  app_page_unavailable: {
+    en: "This page isn't available in the app.",
+    pt: "Esta página não está disponível no app.",
+  },
   err_insufficient_credits: {
     en: "You've used your free songs. Pick a plan or buy credits to keep creating.",
     pt: "Suas músicas grátis acabaram. Escolha um plano ou compre créditos para continuar criando.",

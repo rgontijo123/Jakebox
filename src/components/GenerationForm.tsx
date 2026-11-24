@@ -4,6 +4,7 @@ import { track } from "@/lib/analytics";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { isInApp } from "@/lib/appMode";
 import { VoiceRecorderModal } from "@/components/VoiceRecorderModal";
 import { GenrePicker } from "@/components/GenrePicker";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
@@ -205,7 +206,9 @@ export function GenerationForm({
     setLoading(false);
 
     if (!res.ok) {
-      setError(translateApiError(data.error, t, "err_generic"));
+      setError(
+        res.status === 402 && isInApp() ? t("err_insufficient_credits_app") : translateApiError(data.error, t, "err_generic"),
+      );
       setOutOfCredits(res.status === 402);
       // A failed submit is often itself caused by a stale balance (e.g. an
       // admin top-up that landed while this tab was already open) -- refetch
@@ -458,7 +461,7 @@ export function GenerationForm({
           {outOfCredits && (
             <Link
               href="/billing"
-              className="rounded-full bg-[#F5B900] text-black px-4 py-1.5 text-sm font-medium hover:bg-[#ffcc33] transition-colors"
+              className="web-only rounded-full bg-[#F5B900] text-black px-4 py-1.5 text-sm font-medium hover:bg-[#ffcc33] transition-colors"
             >
               {t("gen_see_plans")}
             </Link>

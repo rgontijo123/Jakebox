@@ -8,6 +8,7 @@ import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { Analytics } from "@/components/Analytics";
 import { getLocale } from "@/lib/i18n/server";
 import { pageMetadata, SITE_URL } from "@/lib/seo";
+import { APP_MODE_SCRIPT } from "@/lib/appMode";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,7 +70,12 @@ export default async function RootLayout({
     <html
       lang={locale === "pt" ? "pt-BR" : "en"}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      // APP_MODE_SCRIPT may add "in-app" before hydration
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: APP_MODE_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col text-zinc-50">
         <Providers locale={locale}>
           <Header />

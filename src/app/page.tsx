@@ -82,7 +82,7 @@ export default async function Home() {
           </a>
           <a
             href="/pricing"
-            className="rounded-full border border-zinc-700 px-6 py-3 text-sm font-medium hover:border-zinc-500 transition-colors"
+            className="web-only rounded-full border border-zinc-700 px-6 py-3 text-sm font-medium hover:border-zinc-500 transition-colors"
           >
             {t("home_pricing")}
           </a>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/lib/i18n/LocaleProvider";
 
-type NavLink = { href: string; label: string };
+type NavLink = { href: string; label: string; webOnly?: boolean };
 
 function LanguageSwitch() {
   const { locale, setLocale, t } = useLocale();
@@ -55,7 +55,7 @@ export function NavMenu({
         { href: "/video", label: t("nav_video") },
         { href: "/studio", label: t("nav_studio") },
         { href: "/library", label: t("nav_library") },
-        { href: "/billing", label: t("nav_billing") },
+        { href: "/billing", label: t("nav_billing"), webOnly: true },
         ...(isStaff ? [{ href: "/admin", label: t("nav_admin") }] : []),
         { href: "/explore", label: t("nav_explore") },
         { href: "/radio", label: t("nav_radio") },
@@ -81,7 +81,7 @@ export function NavMenu({
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-1.5 ${pathname === link.href ? "text-zinc-100" : "hover:text-zinc-100"}`}
+                className={`${link.webOnly ? "web-only " : ""}flex items-center gap-1.5 ${pathname === link.href ? "text-zinc-100" : "hover:text-zinc-100"}`}
               >
                 <span aria-hidden="true">{NAV_ICONS[link.href]}</span>
                 {link.label}
@@ -147,7 +147,7 @@ export function NavMenu({
                   key={link.href}
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className={`flex items-center gap-1.5 py-2 ${pathname === link.href ? "text-zinc-100" : "hover:text-zinc-100"}`}
+                  className={`${link.webOnly ? "web-only " : ""}flex items-center gap-1.5 py-2 ${pathname === link.href ? "text-zinc-100" : "hover:text-zinc-100"}`}
                 >
                   <span aria-hidden="true">{NAV_ICONS[link.href]}</span>
                   {link.label}
