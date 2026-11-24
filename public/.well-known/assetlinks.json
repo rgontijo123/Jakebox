@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.jakeboxmusic.app",
+      "sha256_cert_fingerprints": [
+        "7D:4E:62:8C:13:56:3E:26:02:C7:BC:91:78:47:19:77:D7:08:42:FB:FA:89:60:4D:FC:58:9D:77:0E:F8:D5:C0"
+      ]
+    }
+  }
+]
